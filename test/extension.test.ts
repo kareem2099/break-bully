@@ -1,7 +1,7 @@
 import * as assert from 'assert';
 import * as vscode from 'vscode';
 import * as path from 'path';
-import 'mocha';
+import { describe, it, before, after } from 'mocha';
 
 // Test suite for Break Bully Extension
 describe('Break Bully Extension Tests', function(this: Mocha.Suite) {
@@ -11,7 +11,7 @@ describe('Break Bully Extension Tests', function(this: Mocha.Suite) {
 
   before(async function(this: Mocha.Context) {
     // Activate the extension
-    const extensionId = 'your-publisher.break-bully';
+    const extensionId = 'FreeRave.break-bully';
     extension = vscode.extensions.getExtension(extensionId);
 
     if (extension) {
