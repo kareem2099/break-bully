@@ -242,7 +242,7 @@
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
     "copy-views": "mkdir -p out/src/views && cp src/views/* out/src/views/",
-    "test": "npm run compile && node ./out/test/runTest.js",
+    "test": "npm run compile && xvfb-run -a node ./out/test/runTest.js",
     "test:ci": "npm run compile && xvfb-run -a node ./out/test/runTest.js",
     "test:watch": "npm run compile && mocha out/test/**/*.test.js --watch"
   },
