@@ -1,0 +1,262 @@
+{
+  "name": "break-bully",
+  "displayName": "Break Bully",
+  "description": "A gentle reminder extension to help developers take breaks and relax",
+  "version": "1.0.3",
+  "engines": {
+    "vscode": "^1.60.0"
+  },
+  "icon": "assets/images/icon.png",
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "wellness",
+    "breaks",
+    "health",
+    "productivity",
+    "reminder",
+    "annoying",
+    "bully",
+    "persistent",
+    "nagging"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./out/src/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "breakBully.showReminder",
+        "title": "Bully Me Into a Break"
+      },
+      {
+        "command": "breakBully.toggleReminders",
+        "title": "Enable/Disable the Bully"
+      },
+      {
+        "command": "breakBully.openSettings",
+        "title": "Tame the Break Bully"
+      },
+      {
+        "command": "breakBully.takeBreak",
+        "title": "Take a Break",
+        "icon": "$(megaphone)"
+      },
+      {
+        "command": "breakBully.quickStretch",
+        "title": "Quick Stretch",
+        "icon": "$(heart)"
+      },
+      {
+        "command": "breakBully.eyeExercise",
+        "title": "Eye Exercise",
+        "icon": "$(flame)"
+      },
+      {
+        "command": "breakBully.changeWorkout",
+        "title": "Change Workout Model",
+        "icon": "$(sync)"
+      },
+      {
+        "command": "breakBully.forceUnblock",
+        "title": "Force Unblock Screen (Emergency)",
+        "icon": "$(unlock)"
+      },
+      {
+        "command": "breakBully.createCustomExercise",
+        "title": "Create Custom Exercise",
+        "icon": "$(add)"
+      },
+      {
+        "command": "breakBully.showCustomExerciseLibrary",
+        "title": "Custom Exercise Library",
+        "icon": "$(library)"
+      },
+      {
+        "command": "breakBully.triggerGitBreakSuggestion",
+        "title": "Check Git Productivity & Suggest Break",
+        "icon": "$(git-commit)"
+      },
+      {
+        "command": "breakBully.showUpdatePanel",
+        "title": "What's New in Break Bully",
+        "icon": "$(info)"
+      }
+    ],
+    "configuration": {
+      "title": "Break Bully",
+      "properties": {
+        "breakBully.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable break reminders"
+        },
+        "breakBully.interval": {
+          "type": "number",
+          "default": 30,
+          "minimum": 5,
+          "maximum": 180,
+          "description": "Reminder interval in minutes"
+        },
+        "breakBully.showNotification": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show notification popup"
+        },
+        "breakBully.playSound": {
+          "type": "boolean",
+          "default": false,
+          "description": "Play notification sound"
+        },
+        "breakBully.reminderType": {
+          "type": "string",
+          "enum": [
+            "gentle",
+            "motivational",
+            "funny",
+            "mindful",
+            "annoying"
+          ],
+          "default": "gentle",
+          "description": "Type of reminder messages"
+        },
+        "breakBully.annoyanceLevel": {
+          "type": "string",
+          "enum": [
+            "mild",
+            "moderate",
+            "extreme",
+            "nuclear"
+          ],
+          "default": "moderate",
+          "description": "How annoying should the reminders be?"
+        },
+        "breakBully.persistentNagging": {
+          "type": "boolean",
+          "default": false,
+          "description": "Keep nagging every 30 seconds until break is taken"
+        },
+        "breakBully.enableEyeExercises": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable eye exercises and screen break reminders"
+        },
+        "breakBully.screenBreakInterval": {
+          "type": "number",
+          "default": 45,
+          "minimum": 20,
+          "maximum": 120,
+          "description": "Minutes of continuous screen time before suggesting eye breaks"
+        },
+        "breakBully.enableGoals": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable wellness goals and challenges"
+        },
+        "breakBully.enableAchievements": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable achievement system and badges"
+        },
+        "breakBully.workRestModel": {
+          "type": "string",
+          "default": "who-45min-work-15min-rest",
+          "enum": [
+            "pomodoro-classic",
+            "who-1hour-work-30min-rest",
+            "who-2hour-work-1hour-rest",
+            "who-45min-work-15min-rest",
+            "who-90min-work-30min-rest",
+            "custom-flexible"
+          ],
+          "description": "Current work-rest model for break timing"
+        },
+        "breakBully.enableGitIntegration": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable Git commit-based break suggestions"
+        },
+        "breakBully.gitCommitThreshold": {
+          "type": "number",
+          "default": 3,
+          "minimum": 1,
+          "maximum": 10,
+          "description": "Number of commits before suggesting a break"
+        },
+        "breakBully.gitProductivityCheckInterval": {
+          "type": "number",
+          "default": 15,
+          "minimum": 5,
+          "maximum": 60,
+          "description": "Minutes between automatic Git productivity checks"
+        },
+        "breakBully.showExerciseCompletionNotification": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show notification when exercises are completed"
+        },
+        "breakBully.playExerciseCompletionSound": {
+          "type": "boolean",
+          "default": true,
+          "description": "Play sound when exercises are completed"
+        }
+      }
+    },
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "breakBully.showReminder"
+        },
+        {
+          "command": "breakBully.toggleReminders"
+        },
+        {
+          "command": "breakBully.openSettings"
+        }
+      ]
+    },
+    "views": {
+      "breakBully": [
+        {
+          "id": "breakBullyMain",
+          "name": "Break Bully",
+          "type": "webview",
+          "contextualTitle": "Break Bully"
+        }
+      ]
+    },
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "breakBully",
+          "title": "Break Bully",
+          "icon": "$(megaphone)"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile && npm run copy-views",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "copy-views": "mkdir -p out/src/views && cp src/views/* out/src/views/",
+    "test": "npm run compile && mocha out/test/**/*.test.js",
+    "test:watch": "npm run compile && mocha out/test/**/*.test.js --watch"
+  },
+  "devDependencies": {
+    "@types/mocha": "^10.0.10",
+    "@types/node": "16.x",
+    "@types/vscode": "^1.60.0",
+    "mocha": "^10.0.0",
+    "typescript": "^4.9.4"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kareem209/break-bully"
+  },
+  "author": "FreeRave",
+  "license": "MIT",
+  "publisher": "FreeRave"
+}

@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Break Bully</title>
+    <link rel="stylesheet" href="base.css">
+    <link rel="stylesheet" href="components.css">
+    <link rel="stylesheet" href="features.css">
+    <link rel="stylesheet" href="onboarding.css">
+</head>
+<body>
+    <!-- Onboarding Overlay -->
+    <div class="onboarding-overlay hidden" id="onboardingOverlay">
+        <div class="onboarding-modal">
+            <div class="onboarding-header">
+                <h2>Welcome to Break Bully! 🎉</h2>
+                <p>Your personal wellness companion for healthier coding habits</p>
+            </div>
+
+            <div class="onboarding-steps" id="onboardingSteps">
+                <div class="onboarding-step active" data-step="1">
+                    <div class="step-icon">🎯</div>
+                    <h3>Choose Your Work-Rest Model</h3>
+                    <p><strong>This is the core of Break Bully!</strong> Select a scientifically-backed work-rest model that fits your needs. You'll follow structured cycles with mandatory rest periods.</p>
+                    <div class="work-rest-onboarding">
+                        <select id="onboardingWorkRestSelect" style="width: 100%; padding: 8px; margin: 10px 0; border-radius: 4px;">
+                            <option value="">Select your preferred model...</option>
+                        </select>
+                        <div id="onboardingModelInfo" style="background: var(--vscode-editorWidget-background, #252526); padding: 12px; border-radius: 8px; margin-top: 10px;">
+                            <p>Choose a model based on WHO health research or popular techniques like Pomodoro.</p>
+                        </div>
+                    </div>
+                    <button class="onboarding-btn primary" id="modelSelectBtn" onclick="selectWorkRestModel()" disabled>Continue with Selected Model</button>
+                </div>
+
+                <div class="onboarding-step" data-step="2">
+                    <div class="step-icon">🛡️</div>
+                    <h3>Strict Enforcement System</h3>
+                    <p>Break Bully will <strong>strictly enforce</strong> your chosen work-rest cycles. During rest periods, coding activity is monitored and blocked based on your annoyance level settings.</p>
+                    <div class="feature-preview">
+                        <div class="enforcement-preview">
+                            <div style="background: #ff6b6b20; padding: 10px; border-radius: 4px; margin: 5px 0;">
+                                <strong>Mild/Moderate:</strong> 10s warning, then typing blocked
+                            </div>
+                            <div style="background: #ff444420; padding: 10px; border-radius: 4px; margin: 5px 0;">
+                                <strong>Extreme/Nuclear:</strong> Full screen block until rest completes
+                            </div>
+                        </div>
+                    </div>
+                    <button class="onboarding-btn primary" onclick="nextOnboardingStep()">Understood</button>
+                </div>
+
+                <div class="onboarding-step" data-step="3">
+                    <div class="step-icon">⏰</div>
+                    <h3>How It Works</h3>
+                    <p>Work periods run automatically. When complete, you must manually confirm rest periods. During rest, your screen is monitored for coding activity.</p>
+                    <div class="feature-preview">
+                        <div class="workflow-preview">
+                            <div class="workflow-step">💼 Work → ⏰ Timer ends → 🔔 Rest notification</div>
+                            <div class="workflow-step">👆 You click "Start Rest" → 🛡️ Screen monitoring begins</div>
+                            <div class="workflow-step">⚠️ Code detected? → 🚫 Blocking activates</div>
+                            <div class="workflow-step">⏰ Rest ends → 🔓 Screen unlocks automatically</div>
+                        </div>
+                    </div>
+                    <button class="onboarding-btn primary" onclick="nextOnboardingStep()">Got It</button>
+                </div>
+
+                <div class="onboarding-step" data-step="4">
+                    <div class="step-icon">🎯</div>
+                    <h3>Manual Rest Confirmation</h3>
+                    <p><strong>Important:</strong> Rest periods require your explicit confirmation. You can snooze work periods but must complete rest periods once started.</p>
+                    <div class="feature-preview">
+                        <div class="confirmation-preview">
+                            <div style="background: var(--vscode-notificationsInfoIcon-foreground, #3794ff)20; padding: 10px; border-radius: 4px; margin: 5px 0;">
+                                ✅ "Take Break Now" - Starts rest immediately
+                            </div>
+                            <div style="background: var(--vscode-notificationsWarningIcon-foreground, #ffcc0020); padding: 10px; border-radius: 4px; margin: 5px 0;">
+                                ⏰ "Snooze 10 min" - Extends work period
+                            </div>
+                        </div>
+                    </div>
+                    <button class="onboarding-btn primary" onclick="nextOnboardingStep()">Ready to Start</button>
+                </div>
+
+                <div class="onboarding-step" data-step="5">
+                    <div class="step-icon">🚀</div>
+                    <h3>You're All Set!</h3>
+                    <p>Break Bully will now enforce healthy work-rest cycles. Your chosen model will guide structured breaks for optimal health and productivity.</p>
+                    <div class="feature-preview">
+                        <div class="final-preview">
+                            <div class="final-item">🎯 Work-Rest cycles enforced</div>
+                            <div class="final-item">🛡️ Screen blocking when needed</div>
+                            <div class="final-item">📊 Progress tracking</div>
+                            <div class="final-item">⚙️ Adjustable annoyance levels</div>
+                        </div>
+                    </div>
+                    <button class="onboarding-btn primary" onclick="completeOnboarding()">Start My First Session!</button>
+                </div>
+            </div>
+
+            <div class="onboarding-progress">
+                <div class="progress-dots">
+                    <span class="dot active" data-step="1"></span>
+                    <span class="dot" data-step="2"></span>
+                    <span class="dot" data-step="3"></span>
+                    <span class="dot" data-step="4"></span>
+                    <span class="dot" data-step="5"></span>
+                </div>
+                <button class="onboarding-btn secondary" onclick="skipOnboarding()">Skip Tutorial</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <h1 class="title">Break Bully</h1>
+            <div class="status-indicator" id="statusIndicator"></div>
+            <div class="current-time" id="currentTime">
+                <div class="time-display" id="timeDisplay">--:--:--</div>
+                <div class="date-display" id="dateDisplay">Loading...</div>
+            </div>
+        </div>
+
+        <div class="stats-section">
+            <h3>Break Statistics</h3>
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-value" id="breaksTaken">0</div>
+                    <div class="stat-label">Total Breaks</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="timeSaved">0</div>
+                    <div class="stat-label">Minutes Saved</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="streakDays">0</div>
+                    <div class="stat-label">Day Streak</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="timer-section" id="timerSection">
+            <h3>Next Reminder</h3>
+            <div class="timer-display" id="timerDisplay">--:--:--</div>
+            <div class="timer-label" id="timerLabel">Time until next break reminder</div>
+        </div>
+
+        <div class="actions-section">
+            <h3>Quick Actions</h3>
+            <div class="actions-grid">
+                <button class="action-btn primary" onclick="takeBreak()" id="takeBreakBtn">
+                    <span class="btn-icon">🎉</span>
+                    Take Break
+                </button>
+                <button class="action-btn secondary" onclick="openChangeWorkoutPanel()">
+                    <span class="btn-icon">🔄</span>
+                    Change Workout
+                </button>
+                <button class="action-btn secondary" onclick="openSettings()">
+                    <span class="btn-icon">⚙️</span>
+                    Settings
+                </button>
+                <button class="action-btn secondary" onclick="showStretch()">
+                    <span class="btn-icon">🤸</span>
+                    Stretch
+                </button>
+                <button class="action-btn secondary" onclick="breathingExercise()">
+                    <span class="btn-icon">🧘</span>
+                    Breathe
+                </button>
+                <button class="action-btn secondary" onclick="showEyeExercise()">
+                    <span class="btn-icon">👀</span>
+                    Eye Break
+                </button>
+                <button class="action-btn secondary" onclick="showWaterReminder()">
+                    <span class="btn-icon">💧</span>
+                    Water
+                </button>
+                <button class="action-btn secondary" onclick="createCustomExercise()">
+                    <span class="btn-icon">➕</span>
+                    Custom Exercise
+                </button>
+                <button class="action-btn secondary" onclick="showCustomExerciseLibrary()">
+                    <span class="btn-icon">📚</span>
+                    Exercise Library
+                </button>
+                <button class="action-btn secondary" onclick="checkGitProductivity()">
+                    <span class="btn-icon">🚀</span>
+                    Git Productivity
+                </button>
+            </div>
+        </div>
+
+        <!-- Settings Modal -->
+        <div class="settings-modal-overlay hidden" id="settingsModalOverlay">
+            <div class="settings-modal">
+                <div class="settings-header">
+                    <h2>⚙️ Work-Rest Model Settings</h2>
+                    <button class="settings-close-btn" onclick="closeSettingsModal()">×</button>
+                </div>
+
+                <div class="settings-content">
+                    <div class="settings-section">
+                        <h3>🎯 Work-Rest Model</h3>
+                        <p>Start or change your work-rest model for structured break cycles.</p>
+                        <div class="work-rest-settings">
+                            <select id="settingsWorkRestSelect" style="width: 100%; padding: 8px; margin: 10px 0; border-radius: 4px;">
+                                <option value="">Select your preferred model...</option>
+                            </select>
+                            <div id="settingsModelInfo" style="background: var(--vscode-editorWidget-background, #252526); padding: 12px; border-radius: 8px; margin-top: 10px;">
+                                <p>Choose a model based on WHO health research or popular techniques like Pomodoro.</p>
+                            </div>
+                            <div class="session-controls" style="margin-top: 12px; display: flex; gap: 8px;">
+                                <button class="settings-btn primary" onclick="startWorkRestSession()" style="flex: 1;">
+                                    <span class="btn-icon">▶️</span>
+                                    Start Session
+                                </button>
+                                <button class="settings-btn secondary" onclick="stopWorkRestSession()" style="flex: 1;">
+                                    <span class="btn-icon">⏹️</span>
+                                    Stop Session
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="settings-section">
+                        <h3>🤖 Activity Integration</h3>
+                        <p>Make breaks smarter by analyzing your coding activity patterns.</p>
+
+                        <div class="activity-level-selector">
+                            <label class="radio-option">
+                                <input type="radio" name="activityLevel" value="none" checked>
+                                <span class="option-content">
+                                    <strong>○ None (Default)</strong><br>
+                                    <small>Standard work-rest cycles only</small>
+                                </span>
+                            </label>
+
+                            <label class="radio-option">
+                                <input type="radio" name="activityLevel" value="basic">
+                                <span class="option-content">
+                                    <strong>● Basic Tracking</strong><br>
+                                    <small>📊 Track coding activity & show basic feedback</small><br>
+                                    <small class="performance-note">⚙️ Minimal performance impact</small>
+                                </span>
+                            </label>
+
+                            <label class="radio-option">
+                                <input type="radio" name="activityLevel" value="smart">
+                                <span class="option-content">
+                                    <strong>○ Smart Scheduling</strong><br>
+                                    <small>🧠 Detect flow states & adjust breaks dynamically</small><br>
+                                    <small class="performance-note">⚙️ Moderate performance impact</small>
+                                </span>
+                            </label>
+
+                            <label class="radio-option">
+                                <input type="radio" name="activityLevel" value="advanced">
+                                <span class="option-content">
+                                    <strong>○ Advanced Analytics</strong><br>
+                                    <small>📈 AI-powered insights & personalized recommendations</small><br>
+                                    <small class="performance-note">⚙️ Higher performance impact</small>
+                                </span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="settings-actions">
+                        <button class="settings-btn secondary" onclick="closeSettingsModal()">Cancel</button>
+                        <button class="settings-btn primary" onclick="applySettingsChanges()" id="applySettingsBtn">
+                            <span class="btn-icon">💾</span>
+                            Save Settings
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="screen-time-section hidden" id="screenTimeSection">
+            <h3>Screen Time Today</h3>
+            <div class="screen-time-display">
+                <div class="screen-time-item">
+                    <div class="screen-time-value" id="totalScreenTime">0</div>
+                    <div class="screen-time-label">Total Minutes</div>
+                </div>
+                <div class="screen-time-item">
+                    <div class="screen-time-value" id="continuousScreenTime">0</div>
+                    <div class="screen-time-label">Continuous</div>
+                </div>
+                <div class="screen-time-item">
+                    <div class="screen-time-value" id="activityStatus">Active</div>
+                    <div class="screen-time-label">Status</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="activity-section" id="activitySection">
+            <h3>Activity Monitor</h3>
+            <div class="activity-status">
+                <div class="activity-indicator" id="activityIndicator">
+                    <span class="activity-dot"></span>
+                    <span class="activity-text" id="activityText">Monitoring activity...</span>
+                </div>
+                <div class="session-info" id="sessionInfo">
+                    <span class="session-time" id="sessionTime">--:--</span>
+                    <span class="session-label">Current session</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="goals-section" id="goalsSection">
+            <h3>Today's Goals</h3>
+            <div class="goals-list" id="goalsList">
+                <!-- Goals will be populated dynamically -->
+            </div>
+        </div>
+
+        <div class="challenges-section hidden" id="challengesSection">
+            <h3>Active Challenges</h3>
+            <div class="challenges-list" id="challengesList">
+                <!-- Challenges will be populated dynamically -->
+            </div>
+        </div>
+
+
+
+        <div class="analytics-section">
+            <h3>Analytics</h3>
+            <div class="analytics-actions">
+                <button class="action-btn secondary" onclick="showAnalytics()">
+                    <span class="btn-icon">📊</span>
+                    View Report
+                </button>
+            </div>
+        </div>
+
+        <div class="achievements-section" id="achievementsSection">
+            <h3>Recent Achievements</h3>
+            <div class="achievements-list" id="achievementsList">
+                <!-- Achievements will be populated dynamically by the extension -->
+            </div>
+        </div>
+
+        <div class="achievement-stats-section hidden" id="achievementStatsSection">
+            <h3>Achievement Statistics</h3>
+            <div class="achievement-stats" id="achievementStats">
+                <div class="stat-item">
+                    <div class="stat-value" id="totalAchievements">0/0</div>
+                    <div class="stat-label">Total Progress</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="completionRate">0%</div>
+                    <div class="stat-label">Completion Rate</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="mostUnlockedCategory">-</div>
+                    <div class="stat-label">Top Category</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="averageRarity">-</div>
+                    <div class="stat-label">Avg. Rarity</div>
+                </div>
+            </div>
+            <div class="analytics-actions">
+                <button class="action-btn secondary" onclick="exportAchievements()">
+                    <span class="btn-icon">📤</span>
+                    Export Achievements
+                </button>
+                <button class="action-btn secondary" onclick="showAchievementStats()">
+                    <span class="btn-icon">📊</span>
+                    View Details
+                </button>
+            </div>
+        </div>
+
+        <div class="wellness-insights-section" id="wellnessInsightsSection">
+            <h3>Wellness Insights</h3>
+            <div class="insights-controls">
+                <select id="insightsTimeRange" onchange="updateWellnessInsights()">
+                    <option value="week">This Week</option>
+                    <option value="month">This Month</option>
+                    <option value="all">All Time</option>
+                </select>
+            </div>
+            <div class="insights-grid" id="insightsGrid">
+                <div class="insight-card">
+                    <div class="insight-icon">🎯</div>
+                    <div class="insight-content">
+                        <div class="insight-value" id="totalGoalsCompleted">0</div>
+                        <div class="insight-label">Goals Completed</div>
+                    </div>
+                </div>
+                <div class="insight-card">
+                    <div class="insight-icon">🏃‍♂️</div>
+                    <div class="insight-content">
+                        <div class="insight-value" id="averageBreaksPerDay">0</div>
+                        <div class="insight-label">Avg. Breaks/Day</div>
+                    </div>
+                </div>
+                <div class="insight-card">
+                    <div class="insight-icon">⏰</div>
+                    <div class="insight-content">
+                        <div class="insight-value" id="averageScreenTime">0m</div>
+                        <div class="insight-label">Avg. Screen Time</div>
+                    </div>
+                </div>
+                <div class="insight-card">
+                    <div class="insight-icon">📈</div>
+                    <div class="insight-content">
+                        <div class="insight-value" id="goalCompletionRate">0%</div>
+                        <div class="insight-label">Success Rate</div>
+                    </div>
+                </div>
+            </div>
+            <div class="insights-recommendations" id="insightsRecommendations">
+                <h4>💡 Recommendations</h4>
+                <div id="recommendationsList"></div>
+            </div>
+        </div>
+
+        <div class="custom-goals-section hidden" id="customGoalsSection">
+            <h3>Custom Goals</h3>
+            <div class="custom-goals-actions">
+                <button class="action-btn primary" onclick="createCustomGoal()">
+                    <span class="btn-icon">➕</span>
+                    Create Goal
+                </button>
+            </div>
+            <div class="custom-goals-list" id="customGoalsList">
+                <!-- Custom goals will be populated dynamically -->
+            </div>
+        </div>
+
+        <div class="challenges-section hidden" id="challengesSection">
+            <h3>Active Challenges</h3>
+            <div class="challenges-actions">
+                <button class="action-btn primary" onclick="createChallenge()">
+                    <span class="btn-icon">🏁</span>
+                    Start Challenge
+                </button>
+            </div>
+            <div class="challenges-list" id="challengesList">
+                <!-- Challenges will be populated dynamically -->
+            </div>
+        </div>
+
+        <div class="custom-exercises-section hidden" id="customExercisesSection">
+            <h3>Custom Exercises</h3>
+            <div class="custom-exercises-actions">
+                <button class="action-btn primary" onclick="createCustomExercise()">
+                    <span class="btn-icon">💪</span>
+                    Create Exercise
+                </button>
+            </div>
+            <div class="custom-exercises-list" id="customExercisesList">
+                <!-- Custom exercises will be populated dynamically -->
+            </div>
+        </div>
+
+        <div class="motivation-section">
+            <div class="motivation-quote" id="motivationQuote">
+                "Your health is more important than your code"
+            </div>
+        </div>
+    </div>
+
+    <!-- Celebration Elements -->
+    <div class="confetti-container" id="confettiContainer"></div>
+
+    <script src="ui.js"></script>
+    <script src="onboarding.js"></script>
+    <script src="animations.js"></script>
+    <script src="main.js"></script>
+</body>
+</html>
