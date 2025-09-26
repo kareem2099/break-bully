@@ -242,6 +242,7 @@ describe('Performance Tests', function() {
   it('should not leak memory with frequent timer operations', function(done) {
     let timerCount = 0;
     const timers: NodeJS.Timeout[] = [];
+    let completedTimers = 0;
 
     // Create and destroy many timers quickly
     for (let i = 0; i < 100; i++) {
@@ -254,7 +255,8 @@ describe('Performance Tests', function() {
       // Clear timer after short delay
       setTimeout(() => {
         clearInterval(timer);
-        if (timers.length === 100) {
+        completedTimers++;
+        if (completedTimers === 100) {
           // All timers created and cleared
           setTimeout(() => {
             assert.ok(timerCount >= 0, 'Timer operations completed');
