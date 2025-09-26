@@ -242,13 +242,15 @@
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
     "copy-views": "mkdir -p out/src/views && cp src/views/* out/src/views/",
-    "test": "npm run compile && mocha out/test/**/*.test.js",
+    "test": "npm run compile && node ./out/test/runTest.js",
     "test:watch": "npm run compile && mocha out/test/**/*.test.js --watch"
   },
   "devDependencies": {
+    "@types/glob": "^8.1.0",
     "@types/mocha": "^10.0.10",
     "@types/node": "16.x",
     "@types/vscode": "^1.60.0",
+    "@vscode/test-electron": "^2.5.2",
     "mocha": "^10.0.0",
     "typescript": "^4.9.4"
   },
