@@ -1,151 +1,232 @@
-# Break Bully VS Code Extension
+# Break Bully - Wellness Extension for VS Code
 
-**The most annoyingly persistent break reminder extension that won't take no for an answer!**
+**Your intelligent wellness companion that helps developers maintain healthy work habits through smart break reminders, exercise guidance, and productivity tracking.**
 
-Meet your new digital wellness coach who's not afraid to get aggressive about your health. Break Bully doesn't just remind you to take breaks - it **bullies** you into taking them, whether you like it or not! 😤
+Break Bully has evolved from a simple reminder system into a comprehensive wellness platform that actively monitors your activity, provides personalized break suggestions, and helps you build sustainable work habits. Whether you need gentle nudges or firm motivation, Break Bully adapts to your needs! 💪
 
-## 🚨 Features That Make It Unbearable
+## ✨ Key Features
 
-- **4 Levels of Bullying**: From mild nagging to full nuclear harassment
-- **Persistent Nagging**: Won't stop bothering you until you comply
-- **Escalating Aggression**: Gets more annoying the longer you ignore it
-- **Multiple Notification Attacks**: Spam you with popups in nuclear mode
-- **Aggressive Status Bar**: Flashing warnings and angry messages
-- **No-Escape Mode**: Limited/no snoozing in higher annoyance levels
-- **Bully Personality Types**: Choose your tormentor's style
+### 🔔 Intelligent Break Reminders
+- **4 Annoyance Levels**: From gentle reminders to persistent nagging
+- **Smart Timing**: Adapts based on your work patterns and activity
+- **Multiple Personalities**: Choose from gentle, motivational, funny, mindful, or annoying styles
+- **Work-Rest Models**: Pomodoro, WHO guidelines, and custom timing
 
-## 😈 Annoyance Levels
+### 👁️ Eye Health & Screen Management
+- **Screen Time Tracking**: Monitor continuous screen usage
+- **Eye Exercise Library**: 20-20-20 rule and specialized exercises
+- **Automatic Break Suggestions**: Smart eye break recommendations
+- **Activity Monitoring**: Real-time tracking of coding sessions
 
-### **Mild**
-Basic reminders (boring!)
+### 🏆 Achievement System
+- **Progress Tracking**: Unlock badges and achievements
+- **Goal Setting**: Daily and weekly wellness objectives
+- **Streak Rewards**: Build healthy habits with streak tracking
+- **Statistics Dashboard**: Comprehensive wellness analytics
 
-### **Moderate**
-Switches to aggressive mode after you ignore a few reminders
+### 🏃‍♂️ Exercise Library
+- **Built-in Exercises**: Stretches, breathing, and eye exercises
+- **Custom Exercises**: Create and save your own routines
+- **Guided Workflows**: Step-by-step exercise instructions
+- **Completion Tracking**: Monitor your exercise habits
 
-### **Extreme**
-- Warning notifications instead of gentle info
-- Nags every 15 seconds
-- Only allows 2-minute snoozes
-- Angry status bar messages
-
-### **Nuclear** ☢️
-- Multiple ERROR notifications fired rapidly
-- Nags every 10 seconds
-- NO snoozing allowed
-- Status bar constantly flashes warnings
-- Refuses to take no for an answer
-
-## 🎭 Bully Personalities
-
-- **Annoying**: "🚨 BREAK TIME! BREAK TIME! Your health is NOT optional! 🚨"
-- **Gentle**: Soft reminders for weaklings
-- **Motivational**: Energetic productivity coach
-- **Funny**: Humorous developer jokes
-- **Mindful**: Meditation-focused (still annoying)
+### 🔗 Git Integration
+- **Productivity Tracking**: Monitor commit patterns
+- **Smart Break Suggestions**: Break recommendations based on activity
+- **Workflow Integration**: Seamless integration with development workflow
 
 ## 📱 Installation
 
-1. Clone this repository
-2. Run `npm install`
-3. Open in VS Code
-4. Press `F5` to unleash the bully
-5. **WARNING**: Prepare for harassment!
+### From VSCode Marketplace
+1. Open VSCode
+2. Go to Extensions (Ctrl+Shift+X)
+3. Search for "Break Bully"
+4. Click Install
 
-## ⚙️ Taming the Bully
+### From Source
+```bash
+git clone https://github.com/kareem2099/break-bully.git
+cd break-bully
+npm install
+npm run compile
+```
 
-Access settings via Command Palette > "Tame the Break Bully" or search for "breakBully":
+## 🎮 Complete Command Reference
 
-- **Enable/Disable**: Unleash or tame your bully
-- **Interval**: How often it bothers you (5-180 minutes)
-- **Annoyance Level**: Choose your poison (mild to nuclear)
-- **Persistent Nagging**: Enable for maximum annoyance
-- **Personality**: Pick your bully's style
+### Core Commands
+- **`Break Bully: Show Reminder`** - Get an immediate break reminder
+- **`Break Bully: Toggle Reminders`** - Enable/disable break reminders
+- **`Break Bully: Open Settings`** - Access extension configuration
+- **`Break Bully: Take a Break`** - Start a break session immediately
 
-## 🎮 Commands
+### Exercise Commands
+- **`Break Bully: Quick Stretch`** - Launch a quick stretching exercise
+- **`Break Bully: Eye Exercise`** - Start an eye health exercise
+- **`Break Bully: Breathing Exercise`** - Begin a breathing exercise
 
-- `Bully Me Into a Break` - Get immediate harassment
-- `Enable/Disable the Bully` - Unleash or tame the beast
-- `Tame the Break Bully` - Open settings to reduce suffering
+### Advanced Features
+- **`Break Bully: Change Workout Model`** - Switch between work-rest timing models
+- **`Break Bully: Force Unblock Screen`** - Emergency screen unblock (admin feature)
+- **`Break Bully: Create Custom Exercise`** - Add a new custom exercise
+- **`Break Bully: Show Custom Exercise Library`** - Browse your custom exercises
+- **`Break Bully: Trigger Git Break Suggestion`** - Check productivity and suggest breaks
+- **`Break Bully: Show Update Panel`** - View latest features and updates
 
-## 🔥 Nuclear Mode Warning
+## ⚙️ Configuration Options
 
-**DO NOT enable Nuclear mode unless you're prepared for digital warfare!**
+### Break Reminders
+- **Enabled**: Toggle break reminders on/off
+- **Interval**: Reminder frequency (5-180 minutes)
+- **Show Notification**: Enable/disable popup notifications
+- **Play Sound**: Audio notifications for reminders
+- **Reminder Type**: Choose personality (gentle, motivational, funny, mindful, annoying)
+- **Annoyance Level**: Escalation intensity (mild, moderate, extreme, nuclear)
+- **Persistent Nagging**: Continuous reminders until break is taken
 
-Nuclear mode will:
-- Spam you with multiple error notifications
-- Nag you every 10 seconds
-- Refuse all snooze attempts
-- Flash angry warnings constantly
-- Generally make your life miserable until you rest
+### Eye Health
+- **Enable Eye Exercises**: Toggle eye health features
+- **Screen Break Interval**: Minutes before eye break suggestions
 
-*You have been warned!* ⚠️
+### Goals & Achievements
+- **Enable Goals**: Daily/weekly wellness objectives
+- **Enable Achievements**: Badge and reward system
 
-## 💡 Break Suggestions
+### Work-Rest Models
+- **Work-Rest Model**: Choose timing pattern:
+  - `pomodoro-classic`: 25min work, 5min rest
+  - `who-45min-work-15min-rest`: WHO recommended
+  - `who-1hour-work-30min-rest`: Extended sessions
+  - `who-2hour-work-1hour-rest`: Long work blocks
+  - `who-90min-work-30min-rest`: Research-based
+  - `custom-flexible`: Custom timing
 
-When the bully finally breaks you down:
+### Git Integration
+- **Enable Git Integration**: Productivity tracking
+- **Commit Threshold**: Commits before break suggestion
+- **Productivity Check Interval**: Minutes between checks
 
-- **Physical**: Stand, stretch, walk, exercise
-- **Visual**: Look away from screen, focus on distance
-- **Mental**: Deep breathing, meditation, mindfulness
-- **Hydration**: Water, tea, healthy snacks
+### Notifications
+- **Show Exercise Completion**: Completion notifications
+- **Play Exercise Completion Sound**: Audio feedback
 
-## 🛠️ Development
+## 🏗️ Architecture
 
+### Modular Design
+- **Core Engine**: Break timing and reminder logic
+- **UI System**: Modern webview interface with VSCode theming
+- **Service Layer**: Specialized services for different features
+- **Storage System**: Persistent data management
+- **Analytics**: Comprehensive usage tracking
+
+### File Structure
+```
+src/
+├── extension.ts          # Main extension entry point
+├── types.ts             # TypeScript type definitions
+├── models/
+│   └── state.ts         # Global state management
+├── services/            # Feature-specific services
+│   ├── breakService.ts
+│   ├── exerciseService.ts
+│   ├── wellnessService.ts
+│   ├── achievementService.ts
+│   └── analyticsService.ts
+├── ui/                  # User interface components
+│   ├── activityBarProvider.ts
+│   ├── changeWorkoutPanel.ts
+│   └── updatePanel.ts
+├── views/               # Webview HTML/CSS/JS
+├── core/                # Core functionality
+└── utils/               # Utility functions
+```
+
+## 🧪 Testing
+
+```bash
+npm test          # Run all tests
+npm run test:ci   # CI environment testing
+```
+
+**Test Coverage:**
+- ✅ Extension activation and registration
+- ✅ Command execution and validation
+- ✅ Configuration management
+- ✅ UI component functionality
+- ✅ Service layer operations
+- ✅ Error handling and edge cases
+
+## 📊 Wellness Insights
+
+Break Bully provides comprehensive analytics:
+- **Break Patterns**: Frequency and consistency tracking
+- **Screen Time**: Daily usage monitoring
+- **Goal Completion**: Progress toward wellness objectives
+- **Achievement Progress**: Badge earning statistics
+- **Exercise Habits**: Usage patterns and preferences
+
+## 🔧 Development
+
+### Prerequisites
+- Node.js 18+
+- VSCode 1.60+
+- TypeScript 4.9+
+
+### Setup
 ```bash
 npm install          # Install dependencies
-npm run compile      # Build the bully
+npm run compile      # Build the extension
+npm run watch        # Watch mode for development
 ```
 
-Press `F5` to test your creation of digital torment.
-
-## 📦 Publishing Your Bully
-
+### Testing
 ```bash
-npm install -g vsce
-vsce package
-vsce publish
+npm test            # Run test suite
+npm run test:ci     # CI testing
 ```
 
-## 🎯 Perfect For
-
-- Developers who ignore gentle reminders
-- People who need aggressive motivation
-- Anyone wanting digital accountability
-- Masochists who enjoy being nagged
-- Teams implementing wellness policies
-
-## ⚡ Pro Tips
-
-1. Start with "moderate" - nuclear is not for beginners
-2. Enable persistent nagging for maximum effect
-3. Use with annoying personality for best results
-4. Don't blame us when you want to uninstall it
-5. Remember: The bully cares about your health!
+### Publishing
+```bash
+npm run vscode:prepublish  # Prepare for publishing
+vsce package               # Create .vsix package
+vsce publish               # Publish to marketplace
+```
 
 ## 🤝 Contributing
 
-Want to make Break Bully even more annoying? We welcome contributions!
+We welcome contributions! Break Bully is open source and we appreciate help in making it better.
 
-1. Fork the repo
-2. Add more harassment features
-3. Submit a pull request
-4. Help us torment developers worldwide!
+### Ways to Contribute
+- **Bug Reports**: Found an issue? Let us know!
+- **Feature Requests**: Have ideas for new wellness features?
+- **Code Contributions**: Help improve the codebase
+- **Documentation**: Improve guides and documentation
+- **Testing**: Add more test coverage
+
+### Development Process
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests for new features
+5. Submit a pull request
 
 ## 📄 License
 
-MIT License - Feel free to bully responsibly!
+MIT License - See LICENSE file for details.
 
-## 📊 Version History
+## 🙏 Acknowledgments
 
-### 1.0.0 - "The Birth of a Bully"
-- Initial release of maximum annoyance
-- 4 levels of harassment
-- Nuclear option for the brave
-- Persistent nagging system
-- Status bar intimidation
+- Built with VSCode Extension API
+- Inspired by wellness research and developer health initiatives
+- Thanks to the VSCode community for extension development resources
+
+## 📞 Support
+
+- **Issues**: [GitHub Issues](https://github.com/kareem2099/break-bully/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/kareem2099/break-bully/discussions)
+- **Documentation**: See CHANGELOG.md for version details
 
 ---
 
-**Remember**: Break Bully might be annoying, but it cares about your health! 💪
+**Break Bully**: Because your health is too important to ignore! 💚
 
-*"The extension developers hate but their bodies love!"* 😄
+*Helping developers worldwide maintain healthy work-life balance, one smart break at a time.*
