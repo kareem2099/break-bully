@@ -1,0 +1,355 @@
+/* ===== MAIN UI COMPONENTS ===== */
+
+/* Header Section */
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 0 16px;
+    border-bottom: 1px solid var(--vscode-panel-border, #3e3e42);
+    margin-bottom: 8px;
+    position: relative;
+}
+
+.header::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg,
+        transparent 0%,
+        var(--vscode-panel-border, #3e3e42) 20%,
+        var(--vscode-panel-border, #3e3e42) 80%,
+        transparent 100%);
+}
+
+.title {
+    font-size: 18px;
+    font-weight: 700;
+    margin: 0;
+    background: linear-gradient(135deg, #ff6b6b 0%, #4ecdc4 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.status-indicator {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--vscode-charts-green, #89d185), #5cb85c);
+    animation: pulse 2s infinite;
+    box-shadow: 0 0 8px rgba(137, 209, 133, 0.4);
+    position: relative;
+}
+
+.status-indicator::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    border-radius: 50%;
+    background: inherit;
+    opacity: 0.3;
+    animation: pulse 2s infinite 0.5s;
+}
+
+.status-indicator.disabled {
+    background: linear-gradient(135deg, var(--vscode-charts-red, #f44747), #d9534f);
+    box-shadow: 0 0 8px rgba(244, 71, 71, 0.4);
+    animation: none;
+}
+
+.status-indicator.disabled::before {
+    display: none;
+}
+
+/* Stats Section */
+.stats-section h3 {
+    font-size: 14px;
+    font-weight: 600;
+    margin: 0 0 12px 0;
+    color: var(--vscode-foreground, #d4d4d4);
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+}
+
+.stat-item {
+    text-align: center;
+    padding: 8px;
+    background: var(--vscode-editorWidget-background, #252526);
+    border-radius: 6px;
+    border: 1px solid var(--vscode-panel-border, #3e3e42);
+}
+
+.stat-value {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--vscode-charts-blue, #4f8bd6);
+    margin-bottom: 4px;
+}
+
+.stat-value.updated {
+    animation: statUpdate 0.5s ease-out;
+}
+
+.stat-label {
+    font-size: 11px;
+    color: var(--vscode-descriptionForeground, #cccccc99);
+    font-weight: 500;
+}
+
+/* Timer Section */
+.timer-section {
+    padding: 12px;
+    background: var(--vscode-editorWidget-background, #252526);
+    border-radius: 6px;
+    border: 1px solid var(--vscode-panel-border, #3e3e42);
+    text-align: center;
+}
+
+.timer-section h3 {
+    font-size: 14px;
+    font-weight: 600;
+    margin: 0 0 8px 0;
+    color: var(--vscode-foreground, #d4d4d4);
+}
+
+.timer-display {
+    font-size: 24px;
+    font-weight: 700;
+    font-family: 'Courier New', monospace;
+    color: var(--vscode-charts-orange, #d18616);
+    margin-bottom: 4px;
+}
+
+.timer-active .timer-display {
+    animation: timer-pulse 2s ease-in-out infinite;
+}
+
+.timer-label {
+    font-size: 11px;
+    color: var(--vscode-descriptionForeground, #cccccc99);
+}
+
+/* Actions Section */
+.actions-section h3 {
+    font-size: 14px;
+    font-weight: 600;
+    margin: 0 0 12px 0;
+    color: var(--vscode-foreground, #d4d4d4);
+}
+
+.actions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 8px;
+}
+
+.action-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 8px 12px;
+    border: none;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: center;
+}
+
+.action-btn.primary {
+    background: linear-gradient(135deg, #ff6b6b 0%, #4ecdc4 100%);
+    color: white;
+}
+
+.action-btn.primary:hover {
+    background: linear-gradient(135deg, #ff5252 0%, #45b7d1 100%);
+}
+
+.action-btn.secondary {
+    background: var(--vscode-button-secondaryBackground, #3c3c3c);
+    color: var(--vscode-foreground, #d4d4d4);
+    border: 1px solid var(--vscode-panel-border, #3e3e42);
+}
+
+.action-btn.secondary:hover {
+    background: var(--vscode-button-secondaryHoverBackground, #505050);
+}
+
+.btn-icon {
+    font-size: 14px;
+}
+
+/* Screen Time Section */
+.screen-time-section {
+    padding: 12px;
+    background: var(--vscode-editorWidget-background, #252526);
+    border-radius: 6px;
+    border: 1px solid var(--vscode-panel-border, #3e3e42);
+}
+
+.screen-time-section h3 {
+    font-size: 14px;
+    font-weight: 600;
+    margin: 0 0 12px 0;
+    color: var(--vscode-foreground, #d4d4d4);
+}
+
+.screen-time-display {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+.screen-time-item {
+    text-align: center;
+    padding: 8px;
+    background: var(--vscode-editorWidget-background, #252526);
+    border-radius: 4px;
+    border: 1px solid var(--vscode-panel-border, #3e3e42);
+}
+
+.screen-time-value {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--vscode-charts-blue, #4f8bd6);
+    margin-bottom: 4px;
+}
+
+.screen-time-label {
+    font-size: 10px;
+    color: var(--vscode-descriptionForeground, #cccccc99);
+    font-weight: 500;
+}
+
+/* Activity Section */
+.activity-section {
+    padding: 12px;
+    background: var(--vscode-editorWidget-background, #252526);
+    border-radius: 6px;
+    border: 1px solid var(--vscode-panel-border, #3e3e42);
+}
+
+.activity-section h3 {
+    font-size: 14px;
+    font-weight: 600;
+    margin: 0 0 12px 0;
+    color: var(--vscode-foreground, #d4d4d4);
+}
+
+.activity-status {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.activity-indicator {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.activity-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--vscode-charts-green, #89d185);
+    animation: pulse 2s infinite;
+}
+
+.activity-text {
+    font-size: 12px;
+    color: var(--vscode-foreground, #d4d4d4);
+}
+
+.session-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px;
+    background: var(--vscode-editorWidget-background, #252526);
+    border-radius: 4px;
+    border: 1px solid var(--vscode-panel-border, #3e3e42);
+}
+
+.session-time {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--vscode-charts-blue, #4f8bd6);
+}
+
+.session-label {
+    font-size: 10px;
+    color: var(--vscode-descriptionForeground, #cccccc99);
+}
+
+/* Goals Section */
+.goals-section {
+    padding: 12px;
+    background: var(--vscode-editorWidget-background, #252526);
+    border-radius: 6px;
+    border: 1px solid var(--vscode-panel-border, #3e3e42);
+}
+
+.goals-section h3 {
+    font-size: 14px;
+    font-weight: 600;
+    margin: 0 0 12px 0;
+    color: var(--vscode-foreground, #d4d4d4);
+}
+
+.goals-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.goal-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px;
+    background: var(--vscode-editorWidget-background, #252526);
+    border-radius: 4px;
+    border: 1px solid var(--vscode-panel-border, #3e3e42);
+}
+
+.goal-text {
+    font-size: 12px;
+    color: var(--vscode-foreground, #d4d4d4);
+}
+
+.goal-progress {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--vscode-charts-green, #89d185);
+}
+
+/* Motivation Section */
+.motivation-section {
+    padding: 12px;
+    background: var(--vscode-editorWidget-background, #252526);
+    border-radius: 6px;
+    border: 1px solid var(--vscode-panel-border, #3e3e42);
+    text-align: center;
+}
+
+.motivation-quote {
+    font-size: 12px;
+    font-style: italic;
+    color: var(--vscode-charts-green, #89d185);
+    margin: 0;
+}

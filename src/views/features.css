@@ -1,0 +1,1259 @@
+/* ===== SETTINGS MODAL ===== */
+.settings-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.settings-modal-overlay:not(.hidden) {
+    opacity: 1;
+    visibility: visible;
+}
+
+.settings-modal {
+    background: var(--vscode-editor-background, #1e1e1e);
+    border: 1px solid var(--vscode-panel-border, #3e3e42);
+    border-radius: 12px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    max-width: 500px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+    transform: scale(0.9) translateY(20px);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.settings-modal-overlay:not(.hidden) .settings-modal {
+    transform: scale(1) translateY(0);
+}
+
+.settings-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px 16px;
+    border-bottom: 1px solid var(--vscode-panel-border, #3e3e42);
+    background: linear-gradient(135deg,
+        var(--vscode-editorWidget-background, #252526) 0%,
+        rgba(37, 37, 38, 0.9) 100%);
+    border-radius: 12px 12px 0 0;
+}
+
+.settings-header h2 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--vscode-foreground, #d4d4d4);
+}
+
+.settings-close-btn {
+    background: none;
+    border: none;
+    color: var(--vscode-descriptionForeground, #cccccc99);
+    font-size: 24px;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.settings-close-btn:hover {
+    background: var(--vscode-toolbar-hoverBackground, #37373d);
+    color: var(--vscode-foreground, #d4d4d4);
+}
+
+.settings-content {
+    padding: 24px;
+}
+
+.settings-content p {
+    margin: 0 0 20px 0;
+    color: var(--vscode-descriptionForeground, #cccccc99);
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.work-rest-settings {
+    margin-bottom: 24px;
+}
+
+.work-rest-settings select {
+    width: 100%;
+    padding: 10px 12px;
+    background: var(--vscode-input-background, #3c3c3c);
+    border: 1px solid var(--vscode-input-border, #3e3e42);
+    border-radius: 6px;
+    color: var(--vscode-input-foreground, #cccccc);
+    font-size: 13px;
+    margin-bottom: 12px;
+    transition: border-color 0.2s ease;
+}
+
+.work-rest-settings select:focus {
+    outline: none;
+    border-color: var(--vscode-focusBorder, #0078d4);
+}
+
+.settings-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+}
+
+.settings-btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.settings-btn.primary {
+    background: linear-gradient(135deg, #ff6b6b 0%, #4ecdc4 100%);
+    color: white;
+}
+
+.settings-btn.primary:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3);
+}
+
+.settings-btn.secondary {
+    background: var(--vscode-button-secondaryBackground, #5f5f5f);
+    color: var(--vscode-button-secondaryForeground, #ffffff);
+}
+
+.settings-btn.secondary:hover {
+    background: var(--vscode-button-secondaryHoverBackground, #6f6f6f);
+}
+
+.settings-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+/* Activity Integration Settings */
+.activity-level-selector {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 24px;
+}
+
+.radio-option {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 16px;
+    background: var(--vscode-editorWidget-background, #252526);
+    border: 1px solid var(--vscode-panel-border, #3e3e42);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.radio-option:hover {
+    background: var(--vscode-toolbar-hoverBackground, #37373d);
+    border-color: var(--vscode-focusBorder, #0078d4);
+    transform: translateY(-1px);
+}
+
+.radio-option input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.radio-option input[type="radio"]:checked + .option-content::before {
+    background: linear-gradient(135deg, #ff6b6b 0%, #4ecdc4 100%);
+    border-color: #ff6b6b;
+    box-shadow: 0 0 0 2px rgba(255, 107, 107, 0.3);
+}
+
+.radio-option input[type="radio"]:checked + .option-content strong {
+    color: var(--vscode-textLink-foreground, #4f8bd6);
+}
+
+.option-content {
+    flex: 1;
+    position: relative;
+    padding-left: 28px;
+}
+
+.option-content::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 4px;
+    width: 16px;
+    height: 16px;
+    border: 2px solid var(--vscode-input-border, #3e3e42);
+    border-radius: 50%;
+    background: var(--vscode-input-background, #3c3c3c);
+    transition: all 0.2s ease;
+}
+
+.option-content strong {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--vscode-foreground, #d4d4d4);
+    margin-bottom: 4px;
+    transition: color 0.2s ease;
+}
+
+.option-content small {
+    display: block;
+    font-size: 12px;
+    color: var(--vscode-descriptionForeground, #cccccc99);
+    line-height: 1.4;
+}
+
+.performance-note {
+    color: var(--vscode-charts-orange, #d18616) !important;
+    font-weight: 500;
+}
+
+/* ===== FEATURE-SPECIFIC COMPONENTS ===== */
+
+/* Analytics Section */
+.analytics-section {
+    padding: 12px;
+    background: var(--vscode-editorWidget-background, #252526);
+    border-radius: 6px;
+    border: 1px solid var(--vscode-panel-border, #3e3e42);
+}
+
+.analytics-section h3 {
+    font-size: 14px;
+    font-weight: 600;
+    margin: 0 0 12px 0;
+    color: var(--vscode-foreground, #d4d4d4);
+}
+
+.analytics-actions {
+    display: flex;
+    gap: 8px;
+}
+
+/* Wellness Insights Section */
+.wellness-insights-section {
+    padding: 12px;
+    background: var(--vscode-editorWidget-background, #252526);
+    border-radius: 8px;
+    border: 1px solid var(--vscode-panel-border, #3e3e42);
+    position: relative;
+    overflow: hidden;
+}
+
+.wellness-insights-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg,
+        var(--vscode-charts-green, #89d185) 0%,
+        var(--vscode-charts-blue, #4f8bd6) 50%,
+        var(--vscode-charts-purple, #c586c0) 100%);
+    opacity: 0.6;
+}
+
+.wellness-insights-section h3 {
+    font-size: 14px;
+    font-weight: 600;
+    margin: 0 0 12px 0;
+    color: var(--vscode-foreground, #d4d4d4);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.wellness-insights-section h3::before {
+    content: '📊';
+    font-size: 16px;
+    opacity: 0.8;
+}
+
+.insights-controls {
+    margin-bottom: 16px;
+}
+
+.insights-controls select {
+    width: 100%;
+    padding: 6px 8px;
+    background: var(--vscode-input-background, #3c3c3c);
+    border: 1px solid var(--vscode-input-border, #3e3e42);
+    border-radius: 4px;
+    color: var(--vscode-input-foreground, #cccccc);
+    font-size: 12px;
+}
+
+.insights-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.insight-card {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    background: var(--vscode-editorWidget-background, #252526);
+    border-radius: 6px;
+    border: 1px solid var(--vscode-panel-border, #3e3e42);
+    transition: all 0.2s ease;
+}
+
+.insight-card:hover {
+    background: var(--vscode-toolbar-hoverBackground, #37373d);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.insight-icon {
+    font-size: 18px;
+    flex-shrink: 0;
+}
+
+.insight-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.insight-value {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--vscode-charts-blue, #4f8bd6);
+    margin-bottom: 2px;
+}
+
+.insight-label {
+    font-size: 10px;
+    color: var(--vscode-descriptionForeground, #cccccc99);
+    font-weight: 500;
+}
+
+.insights-recommendations {
+    border-top: 1px solid var(--vscode-panel-border, #3e3e42);
+    padding-top: 12px;
+}
+
+.insights-recommendations h4 {
+    font-size: 12px;
+    font-weight: 600;
+    margin: 0 0 8px 0;
+    color: var(--vscode-foreground, #d4d4d4);
+}
+
+#recommendationsList {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.recommendation-item {
+    padding: 8px 10px;
+    background: var(--vscode-notificationsInfoIcon-foreground, #3794ff)15;
+    border: 1px solid var(--vscode-notificationsInfoIcon-foreground, #3794ff)30;
+    border-radius: 4px;
+    font-size: 11px;
+    color: var(--vscode-foreground, #d4d4d4);
+    line-height: 1.4;
+}
+
+/* Custom Goals Section */
+.custom-goals-section {
+    padding: 12px;
+    background: var(--vscode-editorWidget-background, #252526);
+    border-radius: 8px;
+    border: 1px solid var(--vscode-panel-border, #3e3e42);
+}
+
+.custom-goals-section h3 {
+    font-size: 14px;
+    font-weight: 600;
+    margin: 0 0 12px 0;
+    color: var(--vscode-foreground, #d4d4d4);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.custom-goals-section h3::before {
+    content: '🎯';
+    font-size: 16px;
+    opacity: 0.8;
+}
+
+.custom-goals-actions {
+    margin-bottom: 12px;
+}
+
+.custom-goals-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.custom-goal-item {
+    padding: 12px;
+    background: var(--vscode-editorWidget-background, #252526);
+    border-radius: 6px;
+    border: 1px solid var(--vscode-panel-border, #3e3e42);
+    position: relative;
+}
+
+.custom-goal-item.completed {
+    background: var(--vscode-charts-green, #89d185)10;
+    border-color: var(--vscode-charts-green, #89d185)50;
+}
+
+.custom-goal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 8px;
+}
+
+.custom-goal-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--vscode-foreground, #d4d4d4);
+    margin: 0;
+    flex: 1;
+}
+
+.custom-goal-type {
+    font-size: 10px;
+    color: var(--vscode-descriptionForeground, #cccccc99);
+    background: var(--vscode-badge-background, #4f8bd6);
+    padding: 2px 6px;
+    border-radius: 10px;
+    margin-left: 8px;
+    flex-shrink: 0;
+}
+
+.custom-goal-progress {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.custom-goal-progress-bar {
+    flex: 1;
+    height: 4px;
+    background: var(--vscode-progressBar-background, #3c3c3c);
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.custom-goal-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #ff6b6b 0%, #4ecdc4 100%);
+    border-radius: 2px;
+    transition: width 0.5s ease;
+}
+
+.custom-goal-progress-text {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--vscode-charts-green, #89d185);
+}
+
+.custom-goal-actions {
+    display: flex;
+    gap: 6px;
+}
+
+.custom-goal-actions button {
+    padding: 4px 8px;
+    font-size: 10px;
+    border-radius: 3px;
+}
+
+/* Challenges Section */
+.challenges-section {
+    padding: 12px;
+    background: var(--vscode-editorWidget-background, #252526);
+    border-radius: 8px;
+    border: 1px solid var(--vscode-panel-border, #3e3e42);
+}
+
+.challenges-section h3 {
+    font-size: 14px;
+    font-weight: 600;
+    margin: 0 0 12px 0;
+    color: var(--vscode-foreground, #d4d4d4);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.challenges-section h3::before {
+    content: '🏁';
+    font-size: 16px;
+    opacity: 0.8;
+}
+
+.challenges-actions {
+    margin-bottom: 12px;
+}
+
+.challenges-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.challenge-item {
+    padding: 12px;
+    background: var(--vscode-editorWidget-background, #252526);
+    border-radius: 6px;
+    border: 1px solid var(--vscode-panel-border, #3e3e42);
+}
+
+.challenge-item.completed {
+    background: var(--vscode-charts-green, #89d185)10;
+    border-color: var(--vscode-charts-green, #89d185)50;
+}
+
+.challenge-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 8px;
+}
+
+.challenge-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--vscode-foreground, #d4d4d4);
+    margin: 0;
+    flex: 1;
+}
+
+.challenge-duration {
+    font-size: 10px;
+    color: var(--vscode-descriptionForeground, #cccccc99);
+    background: var(--vscode-badge-background, #c586c0);
+    padding: 2px 6px;
+    border-radius: 10px;
+    margin-left: 8px;
+    flex-shrink: 0;
+}
+
+.challenge-description {
+    font-size: 12px;
+    color: var(--vscode-descriptionForeground, #cccccc99);
+    margin-bottom: 12px;
+    line-height: 1.4;
+}
+
+.challenge-goals {
+    margin-bottom: 12px;
+}
+
+.challenge-goal-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: var(--vscode-foreground, #d4d4d4);
+    margin-bottom: 4px;
+}
+
+.challenge-goal-item.completed .goal-status {
+    color: var(--vscode-charts-green, #89d185);
+}
+
+.challenge-goal-item .goal-status {
+    font-size: 10px;
+    color: var(--vscode-descriptionForeground, #cccccc99);
+}
+
+.challenge-progress {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.challenge-progress-bar {
+    flex: 1;
+    height: 6px;
+    background: var(--vscode-progressBar-background, #3c3c3c);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.challenge-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #ff6b6b 0%, #4ecdc4 100%);
+    border-radius: 3px;
+    transition: width 0.3s ease;
+}
+
+.challenge-progress-text {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--vscode-charts-green, #89d185);
+}
+
+/* Custom Exercises Section */
+.custom-exercises-section {
+    padding: 12px;
+    background: var(--vscode-editorWidget-background, #252526);
+    border-radius: 8px;
+    border: 1px solid var(--vscode-panel-border, #3e3e42);
+}
+
+.custom-exercises-section h3 {
+    font-size: 14px;
+    font-weight: 600;
+    margin: 0 0 12px 0;
+    color: var(--vscode-foreground, #d4d4d4);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.custom-exercises-section h3::before {
+    content: '💪';
+    font-size: 16px;
+    opacity: 0.8;
+}
+
+.custom-exercises-actions {
+    margin-bottom: 12px;
+}
+
+.custom-exercises-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.custom-exercise-item {
+    padding: 12px;
+    background: var(--vscode-editorWidget-background, #252526);
+    border-radius: 6px;
+    border: 1px solid var(--vscode-panel-border, #3e3e42);
+    position: relative;
+}
+
+.custom-exercise-item.favorite {
+    border-color: var(--vscode-charts-orange, #d18616);
+    background: var(--vscode-charts-orange, #d18616)10;
+}
+
+.custom-exercise-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 8px;
+}
+
+.custom-exercise-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--vscode-foreground, #d4d4d4);
+    margin: 0;
+    flex: 1;
+}
+
+.custom-exercise-category {
+    font-size: 10px;
+    color: var(--vscode-descriptionForeground, #cccccc99);
+    background: var(--vscode-badge-background, #c586c0);
+    padding: 2px 6px;
+    border-radius: 10px;
+    margin-left: 8px;
+    flex-shrink: 0;
+}
+
+.custom-exercise-difficulty {
+    font-size: 10px;
+    color: var(--vscode-descriptionForeground, #cccccc99);
+    background: var(--vscode-badge-background, #4f8bd6);
+    padding: 2px 6px;
+    border-radius: 10px;
+    margin-left: 4px;
+    flex-shrink: 0;
+}
+
+.custom-exercise-description {
+    font-size: 12px;
+    color: var(--vscode-descriptionForeground, #cccccc99);
+    margin-bottom: 8px;
+    line-height: 1.4;
+}
+
+.custom-exercise-duration {
+    font-size: 11px;
+    color: var(--vscode-charts-blue, #4f8bd6);
+    font-weight: 500;
+    margin-bottom: 8px;
+}
+
+.custom-exercise-actions {
+    display: flex;
+    gap: 6px;
+}
+
+.custom-exercise-actions button {
+    padding: 4px 8px;
+    font-size: 10px;
+    border-radius: 3px;
+}
+
+/* Achievements Section */
+.achievements-section {
+    padding: 16px;
+    background: linear-gradient(135deg,
+        var(--vscode-editorWidget-background, #252526) 0%,
+        rgba(37, 37, 38, 0.9) 100%);
+    border-radius: 12px;
+    border: 1px solid var(--vscode-panel-border, #3e3e42);
+    position: relative;
+    overflow: hidden;
+}
+
+.achievements-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg,
+        var(--vscode-charts-blue, #4f8bd6) 0%,
+        var(--vscode-charts-green, #89d185) 50%,
+        var(--vscode-charts-orange, #d18616) 100%);
+    opacity: 0.8;
+}
+
+.achievements-section h3 {
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0 0 16px 0;
+    color: var(--vscode-foreground, #d4d4d4);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.achievements-section h3::before {
+    content: '🏆';
+    font-size: 18px;
+    opacity: 0.8;
+}
+
+.achievements-tabs {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 16px;
+    border-bottom: 1px solid var(--vscode-panel-border, #3e3e42);
+    padding-bottom: 12px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.achievements-tabs::-webkit-scrollbar {
+    display: none;
+}
+
+.achievement-tab {
+    padding: 8px 14px;
+    background: var(--vscode-editorWidget-background, #252526);
+    border: 1px solid var(--vscode-panel-border, #3e3e42);
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--vscode-foreground, #cccccc);
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    white-space: nowrap;
+    flex-shrink: 0;
+    position: relative;
+    overflow: hidden;
+}
+
+.achievement-tab::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+    transition: left 0.5s ease;
+}
+
+.achievement-tab:hover::before {
+    left: 100%;
+}
+
+.achievement-tab.active {
+    background: linear-gradient(135deg, var(--vscode-focusBorder, #0078d4), var(--vscode-charts-blue, #4f8bd6));
+    color: var(--vscode-editor-background, #1e1e1e);
+    border-color: var(--vscode-focusBorder, #0078d4);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 120, 212, 0.3);
+}
+
+.achievement-tab:hover {
+    background: var(--vscode-toolbar-hoverBackground, #37373d);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.achievements-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-height: 300px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--vscode-scrollbarSlider-background, #3e3e42) transparent;
+}
+
+.achievements-list::-webkit-scrollbar {
+    width: 4px;
+}
+
+.achievements-list::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.achievements-list::-webkit-scrollbar-thumb {
+    background: var(--vscode-scrollbarSlider-background, #3e3e42);
+    border-radius: 2px;
+}
+
+.achievements-list::-webkit-scrollbar-thumb:hover {
+    background: var(--vscode-scrollbarSlider-hoverBackground, #5f5f5f);
+}
+
+.achievement-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    background: linear-gradient(135deg,
+        var(--vscode-editorWidget-background, #252526) 0%,
+        rgba(37, 37, 38, 0.8) 100%);
+    border-radius: 10px;
+    border: 1px solid var(--vscode-panel-border, #3e3e42);
+    position: relative;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    min-height: 52px;
+}
+
+.achievement-item:hover {
+    background: linear-gradient(135deg,
+        var(--vscode-toolbar-hoverBackground, #37373d) 0%,
+        rgba(55, 55, 61, 0.9) 100%);
+    transform: translateY(-2px) scale(1.01);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+    border-color: var(--vscode-focusBorder, #0078d4);
+}
+
+.achievement-item:active {
+    transform: translateY(-1px) scale(1.005);
+    transition-duration: 0.1s;
+}
+
+.achievement-item.locked {
+    opacity: 0.8;
+    border-style: dashed;
+    background: linear-gradient(135deg,
+        var(--vscode-editorWidget-background, #252526) 0%,
+        rgba(128, 128, 128, 0.1) 100%);
+}
+
+.achievement-item.locked .achievement-icon {
+    filter: grayscale(100%) brightness(0.4) contrast(0.8);
+    opacity: 0.6;
+}
+
+.achievement-item.locked .achievement-text {
+    color: var(--vscode-descriptionForeground, #cccccc99);
+}
+
+.achievement-item.locked .achievement-progress {
+    color: var(--vscode-descriptionForeground, #cccccc80);
+}
+
+.achievement-icon {
+    font-size: 24px;
+    flex-shrink: 0;
+    position: relative;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    background: linear-gradient(135deg,
+        var(--vscode-editorWidget-background, #252526),
+        rgba(37, 37, 38, 0.9));
+    border: 1px solid var(--vscode-panel-border, #3e3e42);
+}
+
+.achievement-item:hover .achievement-icon {
+    transform: scale(1.1) rotate(5deg);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.achievement-rarity {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    border: 2px solid var(--vscode-editor-background, #1e1e1e);
+    animation: rarity-pulse 2s ease-in-out infinite;
+    box-shadow: 0 0 8px currentColor;
+}
+
+@keyframes rarity-pulse {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.2);
+        opacity: 0.8;
+    }
+}
+
+.achievement-rarity.common {
+    background: linear-gradient(45deg, #cccccc, #999999);
+    color: #cccccc;
+}
+
+.achievement-rarity.rare {
+    background: linear-gradient(45deg, #4f8bd6, #3c7dd1);
+    color: #4f8bd6;
+}
+
+.achievement-rarity.epic {
+    background: linear-gradient(45deg, #c586c0, #b16cb5);
+    color: #c586c0;
+}
+
+.achievement-rarity.legendary {
+    background: linear-gradient(45deg, #ff6b6b, #d18616, #c586c0);
+    color: #ff6b6b;
+    animation: legendary-shine 3s ease-in-out infinite;
+}
+
+@keyframes legendary-shine {
+    0%, 100% {
+        filter: brightness(1) hue-rotate(0deg);
+    }
+    25% {
+        filter: brightness(1.2) hue-rotate(90deg);
+    }
+    50% {
+        filter: brightness(1.4) hue-rotate(180deg);
+    }
+    75% {
+        filter: brightness(1.2) hue-rotate(270deg);
+    }
+}
+
+.achievement-content {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.achievement-text {
+    font-size: 14px;
+    color: var(--vscode-foreground, #d4d4d4);
+    font-weight: 600;
+    line-height: 1.3;
+    margin: 0;
+    transition: color 0.2s ease;
+}
+
+.achievement-item:hover .achievement-text {
+    color: var(--vscode-textLink-foreground, #4f8bd6);
+}
+
+.achievement-description {
+    font-size: 11px;
+    color: var(--vscode-descriptionForeground, #cccccc99);
+    line-height: 1.4;
+    margin: 0;
+    display: none;
+}
+
+.achievement-item:hover .achievement-description {
+    display: block;
+}
+
+.achievement-progress {
+    font-size: 11px;
+    color: var(--vscode-descriptionForeground, #cccccc99);
+    font-weight: 500;
+    margin-top: 4px;
+    transition: color 0.2s ease;
+}
+
+.achievement-item:hover .achievement-progress {
+    color: var(--vscode-charts-green, #89d185);
+}
+
+.achievement-progress-bar {
+    width: 100%;
+    height: 5px;
+    background: var(--vscode-progressBar-background, #3c3c3c);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-top: 8px;
+    position: relative;
+}
+
+.achievement-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg,
+        var(--vscode-charts-red, #f44747) 0%,
+        var(--vscode-charts-orange, #d18616) 50%,
+        var(--vscode-charts-green, #89d185) 100%);
+    border-radius: 3px;
+    transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.achievement-progress-fill::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg,
+        transparent,
+        rgba(255, 255, 255, 0.4),
+        transparent);
+    animation: progress-shine 2.5s ease-in-out infinite;
+}
+
+.achievement-progress-fill::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg,
+        transparent 0%,
+        rgba(255, 255, 255, 0.1) 50%,
+        transparent 100%);
+    animation: progress-glow 3s ease-in-out infinite;
+}
+
+@keyframes progress-glow {
+    0%, 100% { opacity: 0; }
+    50% { opacity: 1; }
+}
+
+.achievement-tooltip {
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%) translateY(8px);
+    background: var(--vscode-editorWidget-background, #252526);
+    border: 1px solid var(--vscode-panel-border, #3e3e42);
+    border-radius: 10px;
+    padding: 14px 18px;
+    font-size: 12px;
+    color: var(--vscode-foreground, #d4d4d4);
+    white-space: normal;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 1000;
+    pointer-events: none;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+    max-width: 320px;
+    word-wrap: break-word;
+    line-height: 1.5;
+}
+
+.achievement-item:hover .achievement-tooltip {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(-8px);
+}
+
+.achievement-tooltip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 8px solid transparent;
+    border-top-color: var(--vscode-editorWidget-background, #252526);
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+}
+
+.achievement-tooltip strong {
+    color: var(--vscode-textLink-foreground, #4f8bd6);
+    font-weight: 600;
+}
+
+/* Achievement Statistics Section */
+.achievement-stats-section {
+    padding: 16px;
+    background: linear-gradient(135deg,
+        var(--vscode-editorWidget-background, #252526) 0%,
+        rgba(37, 37, 38, 0.9) 100%);
+    border-radius: 12px;
+    border: 1px solid var(--vscode-panel-border, #3e3e42);
+}
+
+.achievement-stats-section h3 {
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0 0 16px 0;
+    color: var(--vscode-foreground, #d4d4d4);
+}
+
+.achievement-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 16px;
+}
+
+/* Progress Bar Animation */
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #ff6b6b 0%, #4ecdc4 100%);
+    border-radius: 3px;
+    transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.progress-fill::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    animation: progress-shine 2s ease-in-out infinite;
+}
+
+/* Achievement Empty State */
+.achievement-empty-state {
+    text-align: center;
+    padding: 48px 24px;
+    color: var(--vscode-descriptionForeground, #cccccc99);
+    background: linear-gradient(135deg,
+        var(--vscode-editorWidget-background, #252526) 0%,
+        rgba(37, 37, 38, 0.8) 100%);
+    border-radius: 12px;
+    border: 1px solid var(--vscode-panel-border, #3e3e42);
+    position: relative;
+    overflow: hidden;
+}
+
+.achievement-empty-state::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(circle at 30% 20%, rgba(79, 139, 214, 0.05) 0%, transparent 50%),
+                radial-gradient(circle at 70% 80%, rgba(137, 209, 133, 0.05) 0%, transparent 50%);
+    pointer-events: none;
+}
+
+.achievement-empty-state .empty-icon {
+    font-size: 56px;
+    margin-bottom: 20px;
+    opacity: 0.7;
+    filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.2));
+    animation: achievement-glow 3s ease-in-out infinite alternate;
+}
+
+@keyframes achievement-glow {
+    0% { filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.2)); }
+    100% { filter: drop-shadow(0 2px 12px rgba(79, 139, 214, 0.3)); }
+}
+
+.achievement-empty-state .empty-title {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    color: var(--vscode-foreground, #d4d4d4);
+    background: linear-gradient(135deg, var(--vscode-charts-blue, #4f8bd6), var(--vscode-charts-green, #89d185));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.achievement-empty-state .empty-description {
+    font-size: 13px;
+    line-height: 1.5;
+    max-width: 300px;
+    margin: 0 auto;
+    opacity: 0.8;
+}
+
+/* Streak Fire Animation */
+.streak-fire {
+    display: inline-block;
+    position: relative;
+    animation: streak-glow 1.5s ease-in-out infinite alternate;
+}
+
+.streak-fire::before {
+    content: '🔥';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    animation: fire-flicker 0.5s ease-in-out infinite alternate;
+}
