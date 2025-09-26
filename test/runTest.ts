@@ -15,7 +15,7 @@ async function main() {
 	await runTests({
 		extensionDevelopmentPath,
 		extensionTestsPath,
-		launchArgs: ['--no-sandbox', '--disable-gpu', '--disable-extensions']
+		launchArgs: ['--no-sandbox', '--disable-gpu', '--disable-extensions', '--disable-web-security']
 	});
 	} catch (err) {
 		console.error('Failed to run tests');
