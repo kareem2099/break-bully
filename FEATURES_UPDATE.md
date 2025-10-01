@@ -179,6 +179,39 @@
 - **Git Integration**: Commit-based break suggestions
 - **Calendar Integration**: Meeting-aware break scheduling
 - **Wearable Integration**: Heart rate and activity data sync
+- **CodeTune Integration**: Spiritual wellness through Quran listening during breaks (✅ IMPLEMENTED)
+
+## 🤝 Feature 7: CodeTune Integration ✅ (NEW)
+
+### **Spiritual Wellness Enhancement**
+- **Quran Listening During Breaks**: Introspective break activity suggestion
+- **Intelligent Integration**: Only shows when CodeTune extension is installed
+- **User-Controlled Preferences**: Complete enable/disable control per user
+- **Non-Intrusive Suggestions**: Respectful spiritual wellness option during breaks
+
+### **Smart Integration Features**
+- **Automatic Detection**: Checks for CodeTune extension availability
+- **Configurable Suggestions**: Enable/disable CodeTune break suggestions
+- **Persistent User Choice**: "Never Show Again" option with permanent setting
+- **Graceful Fallback**: Silent handling when CodeTune is not available
+
+### **User Experience Flow**
+1. **Break Taken** → Success notification displays
+2. **CodeTune Suggests** → "How about some peaceful Quran during your break?"
+3. **User Choice** → "Open CodeTune" / "Not Now" / "Never Show Again"
+4. **Smart Learning** → Respects user preferences for future suggestions
+
+### **Configuration Settings**
+```
+breakBully.suggestCodeTuneDuringBreaks: true/false (default: true)
+breakBully.codeTunePermanentlyIgnored: true/false (user-settable)
+```
+
+### **Wellness Philosophy**
+- **Holistic Health**: Combines physical breaks with spiritual nourishment
+- **Cultural Inclusivity**: Available to all users, not faith-specific
+- **Respectful Approach**: Graceful handling of different user preferences
+- **Optional Integration**: No forced religious content, completely user-controlled
 
 ---
 
@@ -186,7 +219,8 @@
 
 This update transforms Break Bully from a simple reminder system into a comprehensive wellness companion that actively monitors user activity, provides intelligent break suggestions, and offers a rich set of exercise and health tracking features. The extension now provides real-time insights into user behavior and offers personalized wellness recommendations to improve productivity and health.
 
-**Total Features Implemented**: 3 major feature sets with 9+ sub-features
+**Total Features Implemented**: 4 major feature sets with 11+ sub-features
 **UI Components Added**: 4 new sections with real-time updates
-**Technical Improvements**: Enhanced architecture with activity monitoring and smart timers
+**Technical Improvements**: Enhanced architecture with activity monitoring, smart timers, and external integrations
 **User Experience**: Seamless integration with VSCode workflow with intelligent suggestions
+**Spiritual Wellness**: New CodeTune integration for complete mind-body-spirit wellness

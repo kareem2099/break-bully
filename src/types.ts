@@ -81,6 +81,9 @@ export interface BreakBullyConfiguration {
   gitProductivityCheckInterval: number;
   showExerciseCompletionNotification: boolean;
   playExerciseCompletionSound: boolean;
+  // CodeTune Integration
+  suggestCodeTuneDuringBreaks: boolean;
+  codeTunePermanentlyIgnored: boolean;
 }
 
 export type ReminderType = 'gentle' | 'motivational' | 'funny' | 'mindful' | 'annoying' | 'hybrid';

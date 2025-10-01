@@ -20,6 +20,13 @@ export function takeBreak(): void {
             // Update break statistics when manually starting rest
             updateBreakStatistics();
             vscode.window.showInformationMessage('🛋️ Rest period started! Screen will be monitored for coding activity.');
+
+            // Show CodeTune suggestion for work-rest session break
+            import('./codeTuneIntegration').then(codeTune => {
+              codeTune.CodeTuneIntegration.showCodeTuneBreakSuggestion();
+            }).catch(error => {
+              console.debug('CodeTune integration not available:', error);
+            });
             return;
           }
         }
@@ -52,6 +59,13 @@ export function takeBreak(): void {
   // Normal break logic (not in work-rest session)
   updateBreakStatistics();
   vscode.window.showInformationMessage('🎉 Great job! Break taken! Keep up the healthy habits!');
+
+  // Show CodeTune suggestion after break
+  import('./codeTuneIntegration').then(codeTune => {
+    codeTune.CodeTuneIntegration.showCodeTuneBreakSuggestion();
+  }).catch(error => {
+    console.debug('CodeTune integration not available:', error);
+  });
 }
 
 function updateBreakStatistics(): void {

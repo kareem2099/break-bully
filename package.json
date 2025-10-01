@@ -2,7 +2,7 @@
   "name": "break-bully",
   "displayName": "Break Bully",
   "description": "A gentle reminder extension to help developers take breaks and relax",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "engines": {
     "vscode": "^1.60.0"
   },
@@ -201,6 +201,16 @@
           "type": "boolean",
           "default": true,
           "description": "Play sound when exercises are completed"
+        },
+        "breakBully.suggestCodeTuneDuringBreaks": {
+          "type": "boolean",
+          "default": true,
+          "description": "Suggest CodeTune (Quran player) during break times"
+        },
+        "breakBully.codeTunePermanentlyIgnored": {
+          "type": "boolean",
+          "default": false,
+          "description": "Permanently ignore CodeTune suggestions (set when user chooses 'Never Show Again')"
         }
       }
     },
