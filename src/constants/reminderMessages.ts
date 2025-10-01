@@ -6,7 +6,8 @@ export const reminderMessages: ReminderMessages = {
     "Remember to breathe deeply and stretch for a moment 🌸",
     "How about a quick walk or some fresh air? 🚶‍♂️",
     "Time to hydrate and give your brain a rest 💧",
-    "Take a moment to appreciate your progress today ✨"
+    "Take a moment to appreciate your progress today ✨",
+    "🎵 Consider listening to some peaceful Quran during your break 🕌"
   ],
   motivational: [
     "You're doing great! Time for a power break to recharge 💪",

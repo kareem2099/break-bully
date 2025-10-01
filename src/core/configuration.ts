@@ -20,6 +20,9 @@ export function getConfiguration(): BreakBullyConfiguration {
     gitCommitThreshold: config.get('gitCommitThreshold', 3),
     gitProductivityCheckInterval: config.get('gitProductivityCheckInterval', 15),
     showExerciseCompletionNotification: config.get('showExerciseCompletionNotification', true),
-    playExerciseCompletionSound: config.get('playExerciseCompletionSound', true)
+    playExerciseCompletionSound: config.get('playExerciseCompletionSound', true),
+    // CodeTune Integration
+    suggestCodeTuneDuringBreaks: config.get('suggestCodeTuneDuringBreaks', true),
+    codeTunePermanentlyIgnored: config.get('codeTunePermanentlyIgnored', false)
   };
 }
