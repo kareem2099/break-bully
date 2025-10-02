@@ -1,9 +1,10 @@
 import * as vscode from 'vscode';
 import { WorkRestModel } from '../types';
-import { getWorkRestModelById, getDefaultWorkRestModel } from '../constants/workRestModels';
+import { getWorkRestModelById, getDefaultWorkRestModel, workRestModels } from '../constants/workRestModels';
 import { getConfiguration } from '../core/configuration';
 import { state } from '../models/state';
 import { startRestEnforcement, stopRestEnforcement } from './screenBlockingService';
+import { usageAnalytics } from './usageAnalyticsService';
 
 export interface WorkRestSession {
   model: WorkRestModel;
@@ -15,7 +16,7 @@ export interface WorkRestSession {
 }
 
 let currentSession: WorkRestSession | null = null;
-let sessionTimer: NodeJS.Timeout | null = null;
+let sessionTimer: ReturnType<typeof setTimeout> | null = null;
 
 export function initializeWorkRestModel(): void {
   const config = getConfiguration();
@@ -45,6 +46,10 @@ export function startWorkRestSession(model: WorkRestModel): void {
     totalCycles: model.cycles || 0
   };
 
+  // Track session start for analytics
+  usageAnalytics.trackModelSelection(model.id, 'default');
+  usageAnalytics.trackSessionStart(model.id, model.workDuration);
+
   // Start the work period
   startWorkPeriod();
 
@@ -72,7 +77,7 @@ export function getCurrentSession(): WorkRestSession | null {
 export function getAvailableModels(): WorkRestModel[] {
   return [
     getDefaultWorkRestModel(),
-    ...require('../constants/workRestModels').workRestModels.filter((m: WorkRestModel) => m.id !== getDefaultWorkRestModel().id)
+    ...workRestModels.filter((m: WorkRestModel) => m.id !== getDefaultWorkRestModel().id)
   ];
 }
 
@@ -113,6 +118,9 @@ function startRestPeriod(autoStart: boolean = false): void {
   // Start screen blocking/enforcement
   startRestEnforcement();
 
+  // Track break taken
+  usageAnalytics.trackBreakTaken(currentSession.model.id, autoStart ? 'scheduled' : 'manual', restDuration);
+
   if (autoStart) {
     // Automatically started - just show confirmation message
     vscode.window.showInformationMessage('🛋️ Rest period started! Screen will be monitored for coding activity.');
@@ -130,7 +138,11 @@ function startRestPeriod(autoStart: boolean = false): void {
       } else if (selection === 'Snooze 10 min') {
         // Stop enforcement and extend work period
         stopRestEnforcement();
+
+        // Track break skipped due to snooze - currentSession is guaranteed to be non-null here
         if (currentSession) {
+          usageAnalytics.trackBreakSkipped(currentSession.model.id, 'snoozed');
+
           currentSession.isWorking = true;
           currentSession.endTime = new Date(Date.now() + 10 * 60 * 1000); // 10 minute extension
           sessionTimer = setTimeout(() => {
@@ -187,7 +199,15 @@ function onRestPeriodEnd(): void {
 
   // Check if session should continue
   if (currentSession.model.cycles && currentSession.currentCycle > currentSession.model.cycles) {
-    // Session complete
+    // Session complete - calculate completion rate
+    const totalPlannedDuration = (currentSession.model.workDuration * currentSession.totalCycles) +
+                                (currentSession.model.restDuration * Math.max(0, currentSession.totalCycles - 1));
+    const actualDuration = (Date.now() - currentSession.startTime.getTime()) / (1000 * 60); // minutes
+    const completionRate = Math.min(1.0, actualDuration / totalPlannedDuration);
+
+    // Track session completion
+    usageAnalytics.trackSessionEnd(currentSession.model.id, actualDuration, completionRate);
+
     vscode.window.showInformationMessage(
       `🎉 ${currentSession.model.name} session complete!\nYou've completed ${currentSession.model.cycles} cycles.`
     );

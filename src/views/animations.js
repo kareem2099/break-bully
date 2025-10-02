@@ -276,6 +276,12 @@
         });
     }
 
+    function showAchievementsGallery() {
+        vscode.postMessage({
+            command: 'showAchievementsGallery'
+        });
+    }
+
     // ===== ADVANCED WELLNESS FEATURES =====
     function createCustomGoal() {
         vscode.postMessage({
@@ -325,6 +331,7 @@
     window.showAnalytics = showAnalytics;
     window.exportAchievements = exportAchievements;
     window.showAchievementStats = showAchievementStats;
+    window.showAchievementsGallery = showAchievementsGallery;
     window.createCustomGoal = createCustomGoal;
     window.createChallenge = createChallenge;
     window.createCustomExercise = createCustomExercise;

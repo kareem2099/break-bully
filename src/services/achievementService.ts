@@ -475,9 +475,12 @@ export function getAchievementStats(): any {
   };
 
   all.forEach(achievement => {
-    categoryStats[achievement.category].total++;
-    if (achievement.unlockedAt) {
-      categoryStats[achievement.category].unlocked++;
+    const category = achievement.category || 'consistency'; // Default fallback
+    if (categoryStats[category]) {
+      categoryStats[category].total++;
+      if (achievement.unlockedAt) {
+        categoryStats[category].unlocked++;
+      }
     }
   });
 
@@ -490,9 +493,12 @@ export function getAchievementStats(): any {
   };
 
   all.forEach(achievement => {
-    rarityStats[achievement.rarity].total++;
-    if (achievement.unlockedAt) {
-      rarityStats[achievement.rarity].unlocked++;
+    const rarity = achievement.rarity || 'common'; // Default fallback
+    if (rarityStats[rarity]) {
+      rarityStats[rarity].total++;
+      if (achievement.unlockedAt) {
+        rarityStats[rarity].unlocked++;
+      }
     }
   });
 
@@ -560,4 +566,409 @@ export function getRecentAchievements(days: number = 7): Achievement[] {
   return getUnlockedAchievements()
     .filter(a => a.unlockedAt && new Date(a.unlockedAt) >= cutoffDate)
     .sort((a, b) => new Date(b.unlockedAt!).getTime() - new Date(a.unlockedAt!).getTime());
+}
+
+export function showAchievementsReport(): void {
+  const report = generateAchievementReport();
+
+  // Create and show achievements webview panel
+  const panel = vscode.window.createWebviewPanel(
+    'breakBullyAchievements',
+    'Break Bully Achievements',
+    vscode.ViewColumn.One,
+    {
+      enableScripts: true,
+      localResourceRoots: [vscode.Uri.file(vscode.extensions.getExtension('publisher.breakbully')?.extensionPath || '')]
+    }
+  );
+
+  // Generate detailed HTML content for achievements
+  const htmlContent = generateAchievementsHtml(report);
+  panel.webview.html = htmlContent;
+
+  // Handle messages from the achievements panel
+  panel.webview.onDidReceiveMessage(
+    message => {
+      switch (message.command) {
+        case 'exportAchievements':
+          vscode.commands.executeCommand('breakBully.exportAchievements');
+          break;
+        case 'refreshData':
+          const updatedReport = generateAchievementReport();
+          panel.webview.postMessage({
+            command: 'updateReport',
+            data: updatedReport
+          });
+          break;
+      }
+    },
+    undefined,
+    []
+  );
+}
+
+function generateAchievementsHtml(report: any): string {
+  const totalAchievements = state.achievements.length;
+  const unlockedAchievements = report.unlockedAchievementsArray.length;
+  const completionRate = totalAchievements > 0 ? Math.round((unlockedAchievements / totalAchievements) * 100) : 0;
+
+  const categoryHtml = Object.entries(report.categoryBreakdown).map(([category, stats]: [string, any]) => `
+    <div class="stat-card">
+        <div class="stat-value">${stats.unlocked}/${stats.total}</div>
+        <div class="stat-label">${category.charAt(0).toUpperCase() + category.slice(1)}</div>
+    </div>
+  `).join('');
+
+  const rarityHtml = Object.entries(report.rarityBreakdown).map(([rarity, stats]: [string, any]) => {
+    const rarityEmoji = { common: '🥉', rare: '🥈', epic: '🥇', legendary: '👑' }[rarity] || '🏅';
+    return `
+      <div class="stat-card">
+          <div class="stat-value">${rarityEmoji} ${stats.unlocked}/${stats.total}</div>
+          <div class="stat-label">${rarity.charAt(0).toUpperCase() + rarity.slice(1)}</div>
+      </div>
+    `;
+  }).join('');
+
+  const recentAchievementsHtml = report.recentAchievements.map((achievement: Achievement) => `
+    <div class="achievement-item unlocked">
+        <div class="achievement-icon">${achievement.icon}</div>
+        <div class="achievement-content">
+            <div class="achievement-text">${achievement.name}</div>
+            <div class="achievement-description">${achievement.description}</div>
+            <div class="achievement-unlocked-date">
+                Unlocked: ${achievement.unlockedAt ? new Date(achievement.unlockedAt).toLocaleDateString() : 'Recently'}
+            </div>
+        </div>
+    </div>
+  `).join('');
+
+  return `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Break Bully Achievements</title>
+        <style>
+            body {
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+                background: linear-gradient(135deg, #1e1e1e 0%, #252526 100%);
+                color: #d4d4d4;
+                margin: 0;
+                padding: 20px;
+                line-height: 1.6;
+            }
+
+            .header {
+                text-align: center;
+                margin-bottom: 30px;
+                padding-bottom: 20px;
+                border-bottom: 1px solid #3e3e42;
+            }
+
+            .header h1 {
+                font-size: 28px;
+                font-weight: 700;
+                margin: 0 0 10px 0;
+                background: linear-gradient(135deg, #4f8bd6, #89d185);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                background-clip: text;
+                text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            }
+
+            .header p {
+                font-size: 16px;
+                color: #cccccc;
+                margin: 0;
+            }
+
+            .progress-circle {
+                position: relative;
+                width: 150px;
+                height: 150px;
+                margin: 30px auto;
+            }
+
+            .progress-circle circle {
+                fill: none;
+                stroke-width: 12;
+                transform: translate(75px, 75px) rotate(-90deg);
+            }
+
+            .progress-bg {
+                stroke: #3e3e42;
+            }
+
+            .progress-fill {
+                stroke: #89d185;
+                stroke-dasharray: ${283};
+                stroke-dashoffset: ${283 - (283 * completionRate / 100)};
+                transition: stroke-dashoffset 1.5s ease-in-out;
+            }
+
+            .progress-text {
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                font-size: 28px;
+                font-weight: 700;
+                color: #4f8bd6;
+            }
+
+            .stats-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                gap: 16px;
+                margin-bottom: 30px;
+            }
+
+            .stat-card {
+                background: #252526;
+                border: 1px solid #3e3e42;
+                border-radius: 12px;
+                padding: 20px;
+                text-align: center;
+                transition: transform 0.2s ease, box-shadow 0.2s ease;
+            }
+
+            .stat-card:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+            }
+
+            .stat-value {
+                font-size: 24px;
+                font-weight: 700;
+                color: #4f8bd6;
+                margin-bottom: 8px;
+            }
+
+            .stat-label {
+                font-size: 14px;
+                color: #cccccc;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                font-weight: 500;
+            }
+
+            .section {
+                background: #252526;
+                border: 1px solid #3e3e42;
+                border-radius: 12px;
+                padding: 20px;
+                margin-bottom: 20px;
+            }
+
+            .section h2 {
+                font-size: 20px;
+                font-weight: 600;
+                margin: 0 0 15px 0;
+                color: #ffffff;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+
+            .recent-achievements {
+                display: flex;
+                flex-direction: column;
+                gap: 12px;
+                max-height: 400px;
+                overflow-y: auto;
+            }
+
+            .achievement-item {
+                display: flex;
+                align-items: flex-start;
+                gap: 16px;
+                padding: 16px;
+                background: linear-gradient(135deg, #252526 0%, rgba(37, 37, 38, 0.9) 100%);
+                border-radius: 10px;
+                border: 1px solid #3e3e42;
+                transition: transform 0.2s ease;
+            }
+
+            .achievement-item:hover {
+                transform: translateY(-2px);
+            }
+
+            .achievement-icon {
+                font-size: 32px;
+                flex-shrink: 0;
+            }
+
+            .achievement-content {
+                flex: 1;
+                min-width: 0;
+            }
+
+            .achievement-text {
+                font-size: 16px;
+                font-weight: 600;
+                color: #ffffff;
+                margin-bottom: 4px;
+            }
+
+            .achievement-description {
+                font-size: 13px;
+                color: #cccccc;
+                margin-bottom: 6px;
+                line-height: 1.4;
+            }
+
+            .achievement-unlocked-date {
+                font-size: 11px;
+                color: #89d185;
+                font-weight: 500;
+            }
+
+            .actions {
+                display: flex;
+                gap: 12px;
+                justify-content: center;
+                margin-top: 30px;
+            }
+
+            .btn {
+                padding: 10px 20px;
+                border: none;
+                border-radius: 8px;
+                font-size: 14px;
+                font-weight: 600;
+                cursor: pointer;
+                transition: all 0.2s ease;
+                text-decoration: none;
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+            }
+
+            .btn-primary {
+                background: linear-gradient(135deg, #4f8bd6, #89d185);
+                color: white;
+            }
+
+            .btn-primary:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 8px 20px rgba(79, 139, 214, 0.4);
+            }
+
+            .btn-secondary {
+                background: #5f6a79;
+                color: #ffffff;
+                border: 1px solid #4c5561;
+            }
+
+            .btn-secondary:hover {
+                background: #4c5561;
+                transform: translateY(-1px);
+            }
+
+            .empty-state {
+                text-align: center;
+                padding: 60px 20px;
+                color: #cccccc;
+            }
+
+            .empty-state .empty-icon {
+                font-size: 64px;
+                margin-bottom: 20px;
+                opacity: 0.6;
+            }
+
+            .empty-state .empty-title {
+                font-size: 24px;
+                font-weight: 600;
+                margin-bottom: 12px;
+                color: #ffffff;
+            }
+
+            .empty-state .empty-description {
+                font-size: 16px;
+                line-height: 1.5;
+                max-width: 400px;
+                margin: 0 auto;
+                opacity: 0.8;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="header">
+            <h1>🏆 Achievement Gallery</h1>
+            <p>Explore all your wellness achievements and milestones</p>
+        </div>
+
+        <div class="progress-circle">
+            <svg width="150" height="150">
+                <circle class="progress-bg" r="65"></circle>
+                <circle class="progress-fill" r="65"></circle>
+            </svg>
+            <div class="progress-text">${completionRate}%</div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value">${unlockedAchievements}/${totalAchievements}</div>
+                <div class="stat-label">Total Progress</div>
+            </div>
+            ${categoryHtml}
+        </div>
+
+        <div class="stats-grid">
+            ${rarityHtml}
+        </div>
+
+        <div class="section">
+            <h2>🏅 Recent Achievements</h2>
+            <div class="recent-achievements">
+                ${recentAchievementsHtml || '<div class="empty-state"><div class="empty-icon">🏆</div><div class="empty-title">No recent achievements</div><div class="empty-description">Keep working on your wellness goals to unlock more achievements!</div></div>'}
+            </div>
+        </div>
+
+        <div class="actions">
+            <button class="btn btn-primary" onclick="exportAchievements()">
+                📤 Export Achievements
+            </button>
+            <button class="btn btn-secondary" onclick="refreshData()">
+                🔄 Refresh Data
+            </button>
+        </div>
+
+        <script>
+            const vscode = acquireVsCodeApi();
+
+            function exportAchievements() {
+                vscode.postMessage({ command: 'exportAchievements' });
+            }
+
+            function refreshData() {
+                vscode.postMessage({ command: 'refreshData' });
+            }
+
+            // Listen for updates from the extension
+            window.addEventListener('message', event => {
+                const message = event.data;
+                if (message.command === 'updateReport') {
+                    // Could refresh the display with new data
+                    console.log('Achievements updated:', message.data);
+                }
+            });
+        </script>
+    </body>
+    </html>
+  `;
+}
+
+function generateAchievementReport(): any {
+  const unlockedAchievements = getUnlockedAchievements();
+  const stats = getAchievementStats();
+  const recentAchievements = getRecentAchievements(7);
+
+  return {
+    unlockedAchievementsArray: unlockedAchievements,
+    recentAchievements,
+    ...stats
+  };
 }

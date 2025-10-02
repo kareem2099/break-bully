@@ -363,7 +363,10 @@ export class BreakBullyActivityBarProviderImpl implements BreakBullyActivityBarP
         this.exportAchievements();
         break;
       case 'showAchievementStats':
-        this.showAchievementStats();
+        vscode.commands.executeCommand('breakBully.showAchievements');
+        break;
+      case 'showAchievementsGallery':
+        vscode.commands.executeCommand('breakBully.showAchievements');
         break;
       case 'createCustomGoal':
         this.createCustomGoal();
@@ -400,6 +403,9 @@ export class BreakBullyActivityBarProviderImpl implements BreakBullyActivityBarP
       case 'openChangeWorkoutPanel':
         vscode.commands.executeCommand('breakBully.changeWorkout');
         break;
+      case 'openTimeBlocking':
+        vscode.commands.executeCommand('breakBully.openTimeBlocking');
+        break;
       case 'getActivityIntegrationSettings':
         this.sendActivityIntegrationSettings();
         break;
@@ -411,6 +417,21 @@ export class BreakBullyActivityBarProviderImpl implements BreakBullyActivityBarP
         break;
       case 'stopWorkRestSession':
         this.stopWorkRestSession();
+        break;
+      case 'showCodeTuneSuggestion':
+        this.showCodeTuneSuggestion(message.data);
+        break;
+      case 'hideCodeTuneSuggestion':
+        this.hideCodeTuneSuggestion();
+        break;
+      case 'openCodeTune':
+        this.openCodeTune();
+        break;
+      case 'neverShowCodeTune':
+        this.neverShowCodeTune();
+        break;
+      case 'installCodeTune':
+        this.installCodeTune();
         break;
     }
   }
@@ -454,8 +475,11 @@ export class BreakBullyActivityBarProviderImpl implements BreakBullyActivityBarP
       // Send initial status
       this.updateStatus();
 
-      // Send initial achievements
-      this.updateAchievements();
+      // Send initial wellness goals
+      this.updateWellnessGoals();
+
+      // Send initial wellness challenges
+      this.updateWellnessChallenges();
     }
   }
 
@@ -468,25 +492,96 @@ export class BreakBullyActivityBarProviderImpl implements BreakBullyActivityBarP
       const timeRemaining = workRestService.getTimeRemaining();
 
       if (timeRemaining) {
-        // Show work-rest session timing
-        const nextReminder = Date.now() + (timeRemaining.minutes * 60 * 1000) + (timeRemaining.seconds * 1000);
+        // Show work-rest session timing with ML enhancements
+        let baseTime = Date.now() + (timeRemaining.minutes * 60 * 1000) + (timeRemaining.seconds * 1000);
+        let nextReminder = baseTime;
+        let mlEnhanced = false;
+
+        // Integrate ML smart scheduling if enabled and available
+        try {
+          const { activitySettings } = require('../services/activityIntegration/activitySettings');
+          if (activitySettings && activitySettings.isSmartEnabled && activitySettings.isSmartEnabled() && state.activityMonitor) {
+            try {
+              const { SmartScheduler } = require('../services/activityIntegration/smartScheduler');
+              const baseMonitor = state.activityMonitor;
+              const smartScheduler = new SmartScheduler(baseMonitor);
+              mlEnhanced = true;
+
+              if (timeRemaining.phase === 'work') {
+                // Check if we should delay break due to flow state
+                if (smartScheduler.shouldDelayBreak && smartScheduler.shouldDelayBreak()) {
+                  const delayMinutes = smartScheduler.getBreakDelayMinutes ? smartScheduler.getBreakDelayMinutes() : 0;
+                  if (delayMinutes > 0) {
+                    nextReminder = baseTime + (delayMinutes * 60 * 1000);
+                    console.log(`ML: Delaying break by ${delayMinutes} minutes due to flow state`);
+                  }
+                }
+              } else if (timeRemaining.phase === 'rest') {
+                // Suggest appropriate break duration
+                const mlBreakDuration = smartScheduler.suggestBreakDuration ? smartScheduler.suggestBreakDuration() : 10;
+                console.log(`ML suggests break duration: ${mlBreakDuration} minutes`);
+              }
+            } catch (schedulerError) {
+              console.debug('SmartScheduler integration failed, using basic timing:', schedulerError);
+              mlEnhanced = false;
+            }
+          }
+        } catch (error) {
+          console.debug('ML timing integration not available, using basic timing:', (error as Error).message);
+          mlEnhanced = false;
+        }
+
         this._view.webview.postMessage({
           command: 'updateTimer',
           data: {
             isEnabled: config.get('enabled', true),
             nextReminder: nextReminder,
             interval: config.get('interval', 30),
-            phase: timeRemaining.phase
+            phase: timeRemaining.phase,
+            mlEnhanced: mlEnhanced
           }
         });
       } else {
-        // Fall back to regular reminder timing
+        // Fall back to regular reminder timing with optional ML enhancements
+        let nextReminder = state.nextReminderTime;
+        let mlEnhanced = false;
+
+        // Check for ML-enhanced break suggestions
+        try {
+          const { activitySettings } = require('../services/activityIntegration/activitySettings');
+          if (activitySettings && activitySettings.isSmartEnabled && activitySettings.isSmartEnabled() && state.activityMonitor) {
+            try {
+              const { SmartScheduler } = require('../services/activityIntegration/smartScheduler');
+              const baseMonitor = state.activityMonitor;
+              const smartScheduler = new SmartScheduler(baseMonitor);
+              mlEnhanced = true;
+
+              // Check if ML wants to suggest a break at this time
+              if (smartScheduler.shouldSuggestBreak && smartScheduler.shouldSuggestBreak()) {
+                const suggestion = smartScheduler.getBreakSuggestion ? smartScheduler.getBreakSuggestion() : null;
+                console.log(`ML suggests break: ${suggestion}`);
+              }
+
+              // Get ML break duration suggestion for when break actually starts
+              const mlBreakDuration = smartScheduler.suggestBreakDuration ? smartScheduler.suggestBreakDuration() : 10;
+              console.log(`ML plans to suggest break duration: ${mlBreakDuration} minutes`);
+            } catch (schedulerError) {
+              console.debug('SmartScheduler suggestion failed, using basic timing:', schedulerError);
+              mlEnhanced = false;
+            }
+          }
+        } catch (error) {
+          console.debug('ML suggestion integration not available, using basic timing:', (error as Error).message);
+          mlEnhanced = false;
+        }
+
         this._view.webview.postMessage({
           command: 'updateTimer',
           data: {
             isEnabled: config.get('enabled', true),
-            nextReminder: state.nextReminderTime,
-            interval: config.get('interval', 30)
+            nextReminder: nextReminder,
+            interval: config.get('interval', 30),
+            mlEnhanced: mlEnhanced
           }
         });
       }
@@ -522,19 +617,96 @@ export class BreakBullyActivityBarProviderImpl implements BreakBullyActivityBarP
 
   updateActivityStatus(): void {
     if (this._view) {
-      const sessionDuration = state.screenTimeStats.codingSessionStart ?
-        Math.floor((Date.now() - state.screenTimeStats.codingSessionStart.getTime()) / (1000 * 60)) : 0;
+      // Try to get enhanced activity monitor if available
+      let activityText = 'Actively coding';
+      let sessionTime = '0s';
+      let isIdle = false;
+      let activityLevel = 'low';
+      let activityScore = 0;
+      let currentState = 'idle';
+      let enhancedTracking = false;
 
-      const hours = Math.floor(sessionDuration / 60);
-      const minutes = sessionDuration % 60;
-      const sessionTime = hours > 0 ? `${hours}:${minutes.toString().padStart(2, '0')}` : `${minutes}m`;
+      try {
+        // Import activity monitor dynamically
+        const activityMonitorModule = require('../services/activityIntegration/baseActivityMonitor');
+        if (activityMonitorModule && state.activityMonitor &&
+            typeof state.activityMonitor.getCurrentActivityState === 'function') {
+          const activityMonitor = state.activityMonitor;
+          const stateEnum = activityMonitorModule.ActivityState;
+
+          currentState = activityMonitor.getCurrentActivityState();
+          activityScore = activityMonitor.getActivityScore ? activityMonitor.getActivityScore() : 0;
+          activityLevel = activityMonitor.getCurrentActivityLevel ? activityMonitor.getCurrentActivityLevel() : 'low';
+          enhancedTracking = true;
+
+          // Map activity state to user-friendly display
+          switch (currentState) {
+            case stateEnum.CODING:
+              activityText = '🚀 Actively coding';
+              isIdle = false;
+              break;
+            case stateEnum.DEBUGGING:
+              activityText = '🐛 Debugging code';
+              isIdle = false;
+              break;
+            case stateEnum.SEARCHING:
+              activityText = '🔍 Searching code';
+              isIdle = false;
+              break;
+            case stateEnum.REFACTORING:
+              activityText = '🔧 Refactoring code';
+              isIdle = false;
+              break;
+            case stateEnum.READING:
+              activityText = '📖 Reviewing code';
+              isIdle = false;
+              break;
+            case stateEnum.IDLE:
+            default:
+              activityText = '⏱️ Idle';
+              isIdle = true;
+              break;
+          }
+        } else {
+          // Fall back to basic screen time tracking
+          isIdle = state.screenTimeStats.isIdle;
+          activityText = isIdle ? '⏱️ Idle' : '🚀 Actively coding';
+        }
+      } catch (error) {
+        // If activity monitor is not available, use basic tracking
+        console.debug('Enhanced activity tracking not available, using basic tracking:', error);
+        isIdle = state.screenTimeStats.isIdle;
+        activityText = isIdle ? '⏱️ Idle' : '🚀 Actively coding';
+        enhancedTracking = false;
+      }
+
+      // Calculate session time from basic tracking as fallback
+      const sessionStart = state.screenTimeStats.codingSessionStart;
+      if (sessionStart) {
+        const totalSeconds = Math.floor((Date.now() - sessionStart.getTime()) / 1000);
+        const hours = Math.floor(totalSeconds / 3600);
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+        const seconds = totalSeconds % 60;
+
+        if (hours > 0) {
+          sessionTime = `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        } else if (minutes > 0) {
+          sessionTime = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        } else {
+          sessionTime = `${seconds}s`;
+        }
+      }
 
       this._view.webview.postMessage({
         command: 'updateActivityStatus',
         data: {
-          activityText: state.screenTimeStats.isIdle ? 'Idle' : 'Actively coding',
-          sessionTime: sessionTime,
-          isIdle: state.screenTimeStats.isIdle
+          activityText,
+          sessionTime,
+          isIdle,
+          activityLevel,
+          activityScore: Math.round(activityScore * 10) / 10, // Round to 1 decimal
+          currentState,
+          enhancedTracking
         }
       });
     }
@@ -959,5 +1131,48 @@ ${stats.fastestAchievement ? `⚡ Fastest Achievement: ${stats.fastestAchievemen
       console.error('Failed to stop work-rest session:', error);
       vscode.window.showErrorMessage(`Failed to stop session: ${(error as Error).message}`);
     }
+  }
+
+  private showCodeTuneSuggestion(data: { message: string; codeTuneInstalled: boolean }): void {
+    if (this._view) {
+      this._view.webview.postMessage({
+        command: 'showCodeTuneSuggestion',
+        data: {
+          message: data.message,
+          codeTuneInstalled: data.codeTuneInstalled
+        }
+      });
+    }
+  }
+
+  private hideCodeTuneSuggestion(): void {
+    if (this._view) {
+      this._view.webview.postMessage({
+        command: 'hideCodeTuneSuggestion'
+      });
+    }
+  }
+
+  private openCodeTune(): void {
+    import('../services/codeTuneIntegration').then(codeTune => {
+      codeTune.CodeTuneIntegration.openCodeTune();
+    }).catch(error => {
+      console.debug('CodeTune integration not available:', error);
+    });
+  }
+
+  private neverShowCodeTune(): void {
+    import('../services/codeTuneIntegration').then(codeTune => {
+      codeTune.CodeTuneIntegration.setCodeTunePermanentlyIgnored(true);
+      vscode.window.showInformationMessage('CodeTune suggestions have been disabled.', 'OK');
+      this.hideCodeTuneSuggestion();
+    }).catch(error => {
+      console.debug('CodeTune integration not available:', error);
+    });
+  }
+
+  private installCodeTune(): void {
+    vscode.env.openExternal(vscode.Uri.parse('vscode:extension/FreeRave.codetune'));
+    this.hideCodeTuneSuggestion();
   }
 }

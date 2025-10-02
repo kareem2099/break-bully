@@ -9,6 +9,17 @@ export interface EnhancedNotificationOptions {
   priority?: 'normal' | 'high';
 }
 
+export interface ActivityNotificationOptions extends EnhancedNotificationOptions {
+  activityType: 'state_change' | 'milestone' | 'flow_state' | 'break_suggestion' | 'productivity_report';
+  activityData?: {
+    fromState?: string;
+    toState?: string;
+    duration?: number;
+    score?: number;
+    flowTime?: number;
+  };
+}
+
 /**
  * Shows an enhanced notification with sound and visual improvements
  */
@@ -144,4 +155,233 @@ export function showExerciseStartNotification(exerciseName: string, duration: st
   const randomMessage = messages[Math.floor(Math.random() * messages.length)];
 
   vscode.window.showInformationMessage(randomMessage);
+}
+
+/**
+ * Activity-specific notification functions
+ */
+
+/**
+ * Shows a notification when the user enters flow state
+ */
+export function showFlowStateNotification(flowDuration: number): Thenable<string | undefined> {
+  const config = getConfiguration();
+  const showActivityNotifications = (config as any).showActivityNotifications ?? true;
+
+  if (!showActivityNotifications) return Promise.resolve(undefined);
+
+  const messages = [
+    `🎯 You're in the zone! Flow state detected - keep the momentum going!`,
+    `🚀 Peak productivity achieved! You're in flow - this is your power hour!`,
+    `⚡ Deep focus activated! Flow state at ${Math.round(flowDuration)} minutes!`,
+    `💫 Creative flow engaged! You're doing amazing work!`,
+    `🎨 Flow state unlocked! Your best ideas are flowing!`
+  ];
+
+  const randomMessage = messages[Math.floor(Math.random() * messages.length)];
+
+  return showEnhancedNotification({
+    message: randomMessage,
+    type: 'info',
+    actions: ['Stay Focused', 'Celebrate Moment'],
+    playSound: true,
+    priority: 'normal'
+  });
+}
+
+/**
+ * Shows a notification when activity state changes
+ */
+export function showActivityStateChangeNotification(fromState: string, toState: string): Thenable<string | undefined> {
+  const config = getConfiguration();
+  const showActivityNotifications = (config as any).showActivityNotifications ?? true;
+
+  if (!showActivityNotifications) return Promise.resolve(undefined);
+
+  const stateMessages = {
+    'idle→coding': [
+      `🔄 Back to work! Code mode activated!`,
+      `💻 Coding session resumed! Let's build something amazing!`,
+      `🎯 Focus regained! Back to creating!`
+    ],
+    'reading→coding': [
+      `💻 From reading to writing! Code production started!`,
+      `📝 Research complete! Now executing ideas!`,
+      `🎨 Implementation phase! Turning concepts into code!`
+    ],
+    'coding→debugging': [
+      `🐛 Debug mode engaged! Let's solve this puzzle!`,
+      `🔍 Problem-solving activated! Debugging in progress!`,
+      `🛠️ Troubleshooting mode! Finding that sneaky bug!`
+    ],
+    'debugging→coding': [
+      `✅ Bug squashed! Back to smooth coding!`,
+      `🎉 Problem solved! Productive coding resumed!`,
+      `🚀 Debugging complete! Full speed ahead!`
+    ],
+    'coding→idle': [
+      `⏯️ Coding paused. Take a moment to recharge!`,
+      `🧘‍♂️ Step away from the code! Mind needs a break!`,
+      `💤 Coding session paused. Fresh perspective will help!`
+    ]
+  };
+
+  const key = `${fromState}→${toState}` as keyof typeof stateMessages;
+  const messages = stateMessages[key]?.length > 0 ? stateMessages[key] : [
+    `🔄 Activity shifted from ${fromState} to ${toState}!`,
+    `⚡ New focus area: ${toState}!`,
+    `🎭 Mode change: Now in ${toState}!`
+  ];
+
+  const randomMessage = messages[Math.floor(Math.random() * messages.length)];
+
+  return showEnhancedNotification({
+    message: randomMessage,
+    type: 'info',
+    actions: ['Acknowledged'],
+    playSound: false,
+    priority: 'normal'
+  });
+}
+
+/**
+ * Shows productivity milestone celebration
+ */
+export function showProductivityMilestoneNotification(milestone: string, score: number): Thenable<string | undefined> {
+  const config = getConfiguration();
+  const showActivityNotifications = (config as any).showActivityNotifications ?? true;
+
+  if (!showActivityNotifications) return Promise.resolve(undefined);
+
+  const milestoneMessages = {
+    'high_productivity': [
+      `🚀 Productivity rocket launched! Score: ${score.toFixed(1)}/10!`,
+      `💫 Exceptional performance! Activity score: ${score.toFixed(1)}!`,
+      `🎯 Peak productivity achieved! You're crushing it!`,
+      `⚡ Super productive session! Score: ${score.toFixed(1)}!`
+    ],
+    'extended_focus': [
+      `⏱️ Long focus session completed! Great concentration!`,
+      `🌟 Extended productivity streak! Mind and body in sync!`,
+      `🏆 Sustained focus achieved! This is what excellence looks like!`
+    ],
+    'flow_maintained': [
+      `🎨 Flow state sustained! Creative productivity at peak!`,
+      `👑 Flow master! Keeping that momentum going!`,
+      `🌊 Deep in flow! This is your superpower activated!`
+    ]
+  };
+
+  const messages = milestoneMessages[milestone as keyof typeof milestoneMessages] || [
+    `🎉 Productivity milestone reached!`,
+    `🏆 Great work! Milestone achieved!`,
+    `⭐ Productivity achievement unlocked!`
+  ];
+
+  const randomMessage = messages[Math.floor(Math.random() * messages.length)];
+
+  return showEnhancedNotification({
+    message: randomMessage,
+    type: 'info',
+    actions: ['Keep Going', 'Celebrate'],
+    playSound: true,
+    priority: 'high'
+  });
+}
+
+/**
+ * Shows break timing suggestion based on activity level
+ */
+export function showBreakTimingSuggestion(reason: string, recommendedBreak: number): Thenable<string | undefined> {
+  const config = getConfiguration();
+  const showActivityNotifications = (config as any).showActivityNotifications ?? true;
+
+  if (!showActivityNotifications) return Promise.resolve(undefined);
+
+  const reasonMessages = {
+    'high_activity': [
+      `🔥 High activity detected! ${recommendedBreak}min break recommended to sustain productivity!`,
+      `⚡ Intense coding session! Take a ${recommendedBreak}min break to keep the flow going!`,
+      `💻 Deep focus maintained! ${recommendedBreak}min recharge break will amplify your efficiency!`
+    ],
+    'extended_session': [
+      `⏰ Long session detected! ${recommendedBreak}min break before continuing!`,
+      `🌅 Time for renewal! ${recommendedBreak}min break to maintain peak performance!`,
+      `🔄 Reset time! ${recommendedBreak}min break to keep productivity high!`
+    ],
+    'burnout_risk': [
+      `⚠️ Burnout risk detected! ${recommendedBreak}min rest break essential!`,
+      `🛑 Health priority! ${recommendedBreak}min break to prevent fatigue!`,
+      `❤️ Self-care alert! ${recommendedBreak}min break for long-term productivity!`
+    ]
+  };
+
+  const messages = reasonMessages[reason as keyof typeof reasonMessages] || [
+    `🔔 Break time! ${recommendedBreak}min suggested for optimal performance!`,
+    `🎯 Perfect timing! ${recommendedBreak}min break will boost your productivity!`
+  ];
+
+  const randomMessage = messages[Math.floor(Math.random() * messages.length)];
+
+  return showEnhancedNotification({
+    message: randomMessage,
+    type: 'warning',
+    actions: ['Take Break Now', '5 Min More', 'Ignore'],
+    playSound: true,
+    priority: 'high'
+  });
+}
+
+/**
+ * Shows hourly productivity summary
+ */
+export function showHourlyProductivityReport(hour: number, productivity: number, trend: 'up' | 'down' | 'stable'): Thenable<string | undefined> {
+  const config = getConfiguration();
+  const showActivityNotifications = (config as any).showActivityNotifications ?? false; // Default off for hourly reports
+
+  if (!showActivityNotifications) return Promise.resolve(undefined);
+
+  const trendEmoji = trend === 'up' ? '📈' : trend === 'down' ? '📉' : '📊';
+  const productEmoji = productivity > 7 ? '🚀' : productivity > 4 ? '💪' : '🔄';
+
+  const messages = [
+    `${trendEmoji}${productEmoji} Hour ${hour}:00-${hour+1}:00 summary - Productivity ${productivity.toFixed(1)}/10`,
+    `${trendEmoji} Productivity at ${productivity.toFixed(1)}/10 this hour ${productEmoji}`,
+    `${productEmoji} ${hour}:00-${hour+1}:00 productivity rating: ${productivity.toFixed(1)}/10 ${trendEmoji}`
+  ];
+
+  const randomMessage = messages[Math.floor(Math.random() * messages.length)];
+
+  return showEnhancedNotification({
+    message: randomMessage,
+    type: 'info',
+    actions: ['View Details'],
+    playSound: false,
+    priority: 'normal'
+  });
+}
+
+/**
+ * Main function to show activity notifications based on type
+ */
+export function showActivityNotification(options: ActivityNotificationOptions): Thenable<string | undefined> {
+  const { activityType, activityData = {} } = options;
+
+  switch (activityType) {
+    case 'state_change':
+      return showActivityStateChangeNotification(activityData.fromState || '', activityData.toState || '');
+
+    case 'flow_state':
+      return showFlowStateNotification(activityData.flowTime || 0);
+
+    case 'break_suggestion':
+      return showBreakTimingSuggestion('high_activity', activityData.duration || 5);
+
+    case 'productivity_report':
+      // This would be called with specific hour/productivity data
+      return showHourlyProductivityReport(new Date().getHours(), activityData.score || 5, 'stable');
+
+    default:
+      return showEnhancedNotification(options);
+  }
 }

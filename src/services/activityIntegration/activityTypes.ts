@@ -40,15 +40,24 @@ export interface ActivityContext {
   fileType?: string;
   linesChanged?: number;
   commitSize?: number;
+  commitHash?: string;
+  commitMessage?: string;
   debugDuration?: number;
+  debugType?: string;
+  debugConfiguration?: string;
+  debugResult?: string;
   testResults?: {
     passed: number;
     failed: number;
     total: number;
   };
+  testType?: string;
+  testSuccess?: boolean;
   searchQuery?: string;
   refactorScope?: string;
+  refactorType?: string;
   breakType?: string;
+  activityState?: string;
 }
 
 export interface ActivityMetrics {
@@ -58,6 +67,7 @@ export interface ActivityMetrics {
   activityLevel: ActivityLevel;
   timeInFlow: number; // minutes
   totalEvents: number;
+  totalActiveSeconds: number; // total active seconds in session
   eventsByType: Record<ActivityType, number>;
 }
 
