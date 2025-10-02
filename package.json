@@ -2,7 +2,7 @@
   "name": "break-bully",
   "displayName": "Break Bully",
   "description": "A gentle reminder extension to help developers take breaks and relax",
-  "version": "1.0.4",
+  "version": "1.1.0",
   "engines": {
     "vscode": "^1.60.0"
   },
@@ -15,11 +15,19 @@
     "breaks",
     "health",
     "productivity",
+    "AI",
+    "machine-learning",
+    "personalization",
+    "analytics",
+    "smart-productivity",
     "reminder",
     "annoying",
     "bully",
     "persistent",
-    "nagging"
+    "nagging",
+    "intelligent",
+    "adaptive",
+    "productivity-coach"
   ],
   "activationEvents": [
     "onStartupFinished"
