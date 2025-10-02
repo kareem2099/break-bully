@@ -3,6 +3,51 @@
 (function() {
     'use strict';
 
+    // ===== VARIABLE DECLARATIONS =====
+    let lastUpdateTime = Date.now();
+
+    // ===== UTILITY FUNCTIONS =====
+    function getTimeAgo(date) {
+        const now = new Date();
+        const diffInMs = now - date;
+        const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
+        const diffInHours = Math.floor(diffInMinutes / 60);
+        const diffInDays = Math.floor(diffInHours / 24);
+
+        if (diffInMinutes < 60) {
+            return `${diffInMinutes} minute${diffInMinutes === 1 ? '' : 's'} ago`;
+        } else if (diffInHours < 24) {
+            return `${diffInHours} hour${diffInHours === 1 ? '' : 's'} ago`;
+        } else {
+            return `${diffInDays} day${diffInDays === 1 ? '' : 's'} ago`;
+        }
+    }
+
+    function showSuccessCheckmark(element) {
+        const checkmark = document.createElement('span');
+        checkmark.className = 'checkmark';
+        checkmark.textContent = '✓';
+        element.appendChild(checkmark);
+
+        // Remove checkmark after animation
+        setTimeout(() => {
+            if (checkmark.parentNode) {
+                checkmark.parentNode.removeChild(checkmark);
+            }
+        }, 2000);
+    }
+
+    function fadeInElement(element) {
+        element.style.opacity = '0';
+        element.style.transform = 'translateY(-10px)';
+
+        requestAnimationFrame(() => {
+            element.style.transition = 'all 0.3s ease-in-out';
+            element.style.opacity = '1';
+            element.style.transform = 'translateY(0)';
+        });
+    }
+
     // ===== STATS & STATUS UPDATES =====
     function updateStats(stats) {
         console.log('Updating stats:', stats);
@@ -243,141 +288,15 @@
     }
 
     // ===== ACHIEVEMENTS =====
-    function updateAchievements(achievements) {
-        const achievementsSection = document.getElementById('achievementsSection');
-        const achievementsList = document.getElementById('achievementsList');
-
-        if (!achievementsSection || !achievementsList) return;
-
-        // Create tabs if they don't exist
-        let tabsContainer = achievementsSection.querySelector('.achievements-tabs');
-        if (!tabsContainer) {
-            tabsContainer = document.createElement('div');
-            tabsContainer.className = 'achievements-tabs';
-
-            const categories = ['all', 'streaks', 'exercises', 'goals', 'consistency'];
-            categories.forEach(category => {
-                const tab = document.createElement('div');
-                tab.className = 'achievement-tab';
-                tab.textContent = category.charAt(0).toUpperCase() + category.slice(1);
-                tab.dataset.category = category;
-                tab.addEventListener('click', () => switchAchievementTab(category));
-                tabsContainer.appendChild(tab);
-            });
-
-            achievementsSection.insertBefore(tabsContainer, achievementsList);
-        }
-
-        // Show achievements section if there are achievements
-        if (achievements && achievements.length > 0) {
-            achievementsSection.style.display = 'block';
-            achievementsList.innerHTML = '';
-
-            // Set default active tab
-            if (!achievementsSection.dataset.activeTab) {
-                achievementsSection.dataset.activeTab = 'all';
-                tabsContainer.querySelector('[data-category="all"]').classList.add('active');
-            }
-
-            const activeTab = achievementsSection.dataset.activeTab;
-            let filteredAchievements = achievements;
-
-            if (activeTab !== 'all') {
-                filteredAchievements = achievements.filter(a => a.category === activeTab);
-            }
-
-            if (filteredAchievements.length > 0) {
-                filteredAchievements.forEach(achievement => {
-                    const achievementItem = document.createElement('div');
-                    achievementItem.className = `achievement-item ${achievement.unlockedAt ? '' : 'locked'}`;
-
-                    // Icon with rarity indicator
-                    const achievementIcon = document.createElement('div');
-                    achievementIcon.className = 'achievement-icon';
-                    achievementIcon.textContent = achievement.icon;
-
-                    if (achievement.rarity && achievement.rarity !== 'common') {
-                        const rarityIndicator = document.createElement('div');
-                        rarityIndicator.className = `achievement-rarity ${achievement.rarity}`;
-                        achievementIcon.appendChild(rarityIndicator);
-                    }
-
-                    // Content
-                    const achievementContent = document.createElement('div');
-                    achievementContent.className = 'achievement-content';
-
-                    const achievementText = document.createElement('div');
-                    achievementText.className = 'achievement-text';
-                    achievementText.textContent = achievement.name;
-
-                    achievementContent.appendChild(achievementText);
-
-                    // Progress for locked achievements
-                    if (!achievement.unlockedAt && achievement.progress !== undefined) {
-                        const progressText = document.createElement('div');
-                        progressText.className = 'achievement-progress';
-                        progressText.textContent = `${achievement.progress || 0}/${achievement.requirement}`;
-
-                        const progressBar = document.createElement('div');
-                        progressBar.className = 'achievement-progress-bar';
-
-                        const progressFill = document.createElement('div');
-                        progressFill.className = 'achievement-progress-fill';
-                        const progressPercent = Math.min(((achievement.progress || 0) / achievement.requirement) * 100, 100);
-                        progressFill.style.width = `${progressPercent}%`;
-
-                        progressBar.appendChild(progressFill);
-                        achievementContent.appendChild(progressText);
-                        achievementContent.appendChild(progressBar);
-                    }
-
-                    // Tooltip
-                    if (achievement.detailedDescription) {
-                        const tooltip = document.createElement('div');
-                        tooltip.className = 'achievement-tooltip';
-                        tooltip.textContent = achievement.detailedDescription;
-                        achievementItem.appendChild(tooltip);
-                    }
-
-                    achievementItem.appendChild(achievementIcon);
-                    achievementItem.appendChild(achievementContent);
-                    achievementsList.appendChild(achievementItem);
-
-                    // Add fade-in animation
-                    fadeInElement(achievementItem);
-                });
-            } else {
-                // Show empty state if no achievements in this category
-                const emptyState = document.createElement('div');
-                emptyState.className = 'achievement-empty-state';
-                emptyState.innerHTML = `
-                    <div class="empty-icon">🏆</div>
-                    <div class="empty-title">No achievements yet</div>
-                    <div class="empty-description">Keep taking breaks and completing goals to unlock achievements!</div>
-                `;
-                achievementsList.appendChild(emptyState);
-            }
-        } else {
-            achievementsSection.style.display = 'none';
-        }
+    // Stub functions for achievements (now opened in a full webview)
+    function updateAchievements(data) {
+        // Achievements are now handled in a separate webview
+        console.log('Achievements update received:', data);
     }
 
-    function switchAchievementTab(category) {
-        const achievementsSection = document.getElementById('achievementsSection');
-        const tabs = achievementsSection.querySelectorAll('.achievement-tab');
-
-        // Update active tab styling
-        tabs.forEach(tab => tab.classList.remove('active'));
-        const activeTab = achievementsSection.querySelector(`[data-category="${category}"]`);
-        if (activeTab) {
-            activeTab.classList.add('active');
-        }
-
-        // Update active tab data
-        achievementsSection.dataset.activeTab = category;
-
-        // Re-render achievements (this will be called automatically by the update cycle)
-        // For now, we'll rely on the periodic updates
+    function switchAchievementTab(tabId) {
+        // Achievement tabs are now handled in a separate webview
+        console.log('Switch achievement tab:', tabId);
     }
 
     function updateAchievementStats(stats) {
@@ -612,6 +531,29 @@
         vscode.postMessage({ command: 'openChangeWorkoutPanel' });
     }
 
+    function openTimeBlocking() {
+        vscode.postMessage({ command: 'openTimeBlocking' });
+    }
+
+    // ===== INITIALIZE EVENT LISTENERS =====
+    // Ensure buttons work even if defined later
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add click listeners to ensure functions are available using data-action attributes
+        const buttons = document.querySelectorAll('button[data-action]');
+        buttons.forEach(button => {
+            const action = button.getAttribute('data-action');
+            if (action && window[action]) {
+                button.addEventListener('click', window[action]);
+            }
+        });
+
+        // Also handle any remaining onclick attributes as fallback
+        const timeBlockingBtn = document.querySelector('button[onclick*="openTimeBlocking"]');
+        if (timeBlockingBtn) {
+            timeBlockingBtn.addEventListener('click', openTimeBlocking);
+        }
+    });
+
     // ===== EXPOSE FUNCTIONS =====
     window.updateStats = updateStats;
     window.updateStatValue = updateStatValue;
@@ -639,5 +581,6 @@
     window.takeBreak = takeBreak;
     window.changeWorkRestModel = changeWorkRestModel;
     window.openChangeWorkoutPanel = openChangeWorkoutPanel;
+    window.openTimeBlocking = openTimeBlocking;
 
 })();

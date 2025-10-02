@@ -1,0 +1,634 @@
+/**
+ * Time Blocking Interface Styles
+ * Professional, modern design with gradients and smooth animations
+ */
+
+/* ===== GLOBAL STYLES ===== */
+.time-blocking-container {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+  font-family: var(--vscode-font-family, sans-serif);
+  color: var(--vscode-foreground, #cccccc);
+  background: var(--vscode-editor-background, #1e1e1e);
+}
+
+/* ===== HEADER STYLES ===== */
+.header {
+  text-align: center;
+  margin-bottom: 30px;
+  padding: 20px;
+  background: linear-gradient(135deg,
+    var(--vscode-panel-background, #252526) 0%,
+    var(--vscode-input-background, #3c3c3c) 100%);
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.header h1 {
+  margin: 0 0 10px 0;
+  font-size: 28px;
+  font-weight: 600;
+  background: linear-gradient(45deg, #4ecdc4, #44a08d);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.header p {
+  margin: 0 0 15px 0;
+  color: var(--vscode-descriptionForeground, #cccccc99);
+  font-size: 16px;
+}
+
+.day-selector {
+  display: inline-block;
+}
+
+.day-selector select {
+  padding: 8px 16px;
+  border: 1px solid var(--vscode-input-border, #3e3e42);
+  border-radius: 6px;
+  background: var(--vscode-input-background, #3c3c3c);
+  color: var(--vscode-input-foreground, #cccccc);
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.day-selector select:focus {
+  outline: none;
+  border-color: #4ecdc4;
+  box-shadow: 0 0 0 2px rgba(78, 205, 196, 0.2);
+}
+
+/* ===== CONTROLS STYLES ===== */
+.controls {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 30px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.btn:active {
+  transform: translateY(0);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #4ecdc4, #44a08d);
+  color: white;
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, #39b8aa, #3a8576);
+}
+
+.btn-secondary {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+}
+
+.btn-secondary:hover {
+  background: linear-gradient(135deg, #5a6fd8, #674291);
+}
+
+.btn-tertiary {
+  background: linear-gradient(135deg, #f093fb, #f5576c);
+  color: white;
+}
+
+.btn-tertiary:hover {
+  background: linear-gradient(135deg, #d682ea, #e44c63);
+}
+
+.btn-danger {
+  background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+  color: white;
+}
+
+.btn-danger:hover {
+  background: linear-gradient(135deg, #ff5555, #e44840);
+}
+
+/* ===== TIMELINE STYLES ===== */
+.timeline {
+  margin-bottom: 30px;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  background: var(--vscode-editor-background, #1e1e1e);
+  border: 1px solid var(--vscode-panel-border, #3e3e42);
+}
+
+.timeline-header {
+  background: var(--vscode-titleBar-activeBackground, #323233);
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--vscode-panel-border, #3e3e42);
+}
+
+.time-labels {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 20px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--vscode-descriptionForeground, #cccccc99);
+  font-weight: 500;
+}
+
+.timeline-body {
+  position: relative;
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+.timeline-hour {
+  position: relative;
+  height: 60px; /* 60px = 1 hour visual space */
+  border-bottom: 1px solid var(--vscode-panel-border, #3e3e4233);
+  transition: background-color 0.2s ease;
+}
+
+.timeline-hour:hover {
+  background: var(--vscode-list-hoverBackground, #2d2d30);
+}
+
+.timeline-hour:nth-child(odd) {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+/* ===== TIME BLOCK STYLES ===== */
+.timeline-block {
+  position: absolute;
+  left: 20px;
+  right: 20px;
+  background: linear-gradient(135deg,
+    var(--vscode-input-background, #3c3c3c) 0%,
+    var(--vscode-panel-background, #252526) 100%);
+  border-radius: 6px;
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  border-left: 4px solid #4ecdc4;
+  z-index: 10;
+}
+
+.timeline-block:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  z-index: 20;
+}
+
+.timeline-block.dragging {
+  opacity: 0.7;
+  transform: rotate(2deg);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  z-index: 30;
+}
+
+.drag-over {
+  border: 2px dashed rgba(78, 205, 196, 0.5);
+}
+
+/* Block type variants */
+.block-deep-work {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.block-meetings {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.block-admin {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+.block-breaks {
+  background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+  color: var(--vscode-editor-foreground, #000);
+}
+
+.block-flexible {
+  background: linear-gradient(135deg,
+    var(--vscode-input-background, #3c3c3c) 0%,
+    var(--vscode-panel-background, #252526) 100%);
+  border-style: dashed;
+}
+
+.block-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+  gap: 8px;
+}
+
+.block-title {
+  font-weight: 600;
+  font-size: 14px;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: inherit;
+}
+
+.block-time {
+  font-size: 12px;
+  color: inherit;
+  opacity: 0.8;
+  flex-shrink: 0;
+}
+
+.block-controls {
+  display: flex;
+  gap: 6px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.timeline-block:hover .block-controls,
+.timeline-block.dragging .block-controls {
+  opacity: 1;
+}
+
+.block-edit,
+.block-delete {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px;
+  border-radius: 3px;
+  font-size: 12px;
+  transition: all 0.2s ease;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.block-edit:hover {
+  background: rgba(78, 205, 196, 0.3);
+}
+
+.block-delete:hover {
+  background: rgba(255, 107, 107, 0.3);
+}
+
+/* ===== BLOCK EDITOR STYLES ===== */
+.block-editor {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 1000;
+  animation: fadeIn 0.3s ease;
+}
+
+.editor-content {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--vscode-quickInput-background, #2d2d30);
+  border: 1px solid var(--vscode-panel-border, #3e3e42);
+  border-radius: 12px;
+  padding: 30px;
+  width: 90%;
+  max-width: 500px;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  animation: slideIn 0.3s ease;
+}
+
+.editor-content h3 {
+  margin: 0 0 20px 0;
+  text-align: center;
+  color: var(--vscode-foreground, #cccccc);
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-row {
+  display: flex;
+  gap: 15px;
+}
+
+.form-row .form-group {
+  flex: 1;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 500;
+  color: var(--vscode-foreground, #cccccc);
+  font-size: 14px;
+}
+
+.form-group input,
+.form-group select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--vscode-input-border, #3e3e42);
+  border-radius: 6px;
+  background: var(--vscode-input-background, #3c3c3c);
+  color: var(--vscode-input-foreground, #cccccc);
+  font-size: 14px;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: #4ecdc4;
+  box-shadow: 0 0 0 2px rgba(78, 205, 196, 0.2);
+}
+
+.form-group input[type="range"] {
+  -webkit-appearance: none;
+  height: 6px;
+  background: var(--vscode-panel-border, #3e3e42);
+  border-radius: 3px;
+  outline: none;
+  cursor: pointer;
+}
+
+.form-group input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: linear-gradient(45deg, #4ecdc4, #44a08d);
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.form-group input[type="range"]::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: linear-gradient(45deg, #4ecdc4, #44a08d);
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.form-group input[type="checkbox"] {
+  width: auto;
+  margin-right: 8px;
+}
+
+#priorityValue {
+  margin-left: 8px;
+  font-weight: 600;
+  color: #4ecdc4;
+}
+
+.editor-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 25px;
+  padding-top: 20px;
+  border-top: 1px solid var(--vscode-panel-border, #3e3e42);
+}
+
+/* ===== STATISTICS STYLES ===== */
+.stats {
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  margin-top: 20px;
+  padding: 20px;
+  background: var(--vscode-panel-background, #252526);
+  border-radius: 10px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+}
+
+.stat-item {
+  text-align: center;
+}
+
+.stat-label {
+  display: block;
+  font-size: 12px;
+  color: var(--vscode-descriptionForeground, #cccccc99);
+  margin-bottom: 5px;
+  font-weight: 500;
+}
+
+.stat-value {
+  display: block;
+  font-size: 24px;
+  font-weight: 700;
+  background: linear-gradient(45deg, #4ecdc4, #44a08d);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ===== ANIMATIONS ===== */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -60%);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+  }
+}
+
+/* Hover animations for timeline */
+.timeline-hour {
+  position: relative;
+}
+
+.timeline-hour::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    rgba(78, 205, 196, 0.03) 50%,
+    transparent 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.timeline-hour:hover::before {
+  opacity: 1;
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
+@media (max-width: 768px) {
+  .time-blocking-container {
+    padding: 15px;
+  }
+
+  .header h1 {
+    font-size: 24px;
+  }
+
+  .controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .time-labels {
+    grid-template-columns: repeat(3, 1fr);
+    font-size: 11px;
+    gap: 10px;
+  }
+
+  .timeline-block {
+    left: 10px;
+    right: 10px;
+    padding: 6px 10px;
+  }
+
+  .block-header {
+    flex-direction: column;
+    gap: 2px;
+    align-items: flex-start;
+  }
+
+  .block-title {
+    font-size: 12px;
+  }
+
+  .block-time {
+    font-size: 10px;
+  }
+
+  .stats {
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .form-row {
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .editor-content {
+    width: 95%;
+    padding: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .time-blocking-container {
+    padding: 10px;
+  }
+
+  .timeline-block {
+    left: 5px;
+    right: 5px;
+  }
+
+  .editor-content {
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    right: 10px;
+    bottom: 10px;
+    transform: none;
+    max-width: none;
+    max-height: none;
+    width: auto;
+    height: auto;
+    border-radius: 8px;
+  }
+}
+
+/* ===== DARK MODE ENHANCEMENTS ===== */
+/* VSCode already provides dark mode variables, but we can enhance them */
+@media (prefers-color-scheme: dark) {
+  .timeline-block {
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
+  }
+
+  .block-editor {
+    backdrop-filter: blur(8px);
+  }
+}
+
+/* ===== FOCUS INDICATORS ===== */
+.btn:focus,
+.form-group input:focus,
+.form-group select:focus {
+  outline: 2px solid #4ecdc4;
+  outline-offset: 2px;
+}
+
+/* ===== LOADING STATE ===== */
+.timeline-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+  color: var(--vscode-descriptionForeground, #cccccc99);
+}
+
+.timeline-loading::after {
+  content: '';
+  width: 24px;
+  height: 24px;
+  border: 2px solid var(--vscode-panel-border, #3e3e42);
+  border-top-color: #4ecdc4;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-left: 12px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

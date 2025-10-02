@@ -124,6 +124,12 @@
             case 'settingsApplied':
                 handleSettingsApplied(message.data);
                 break;
+            case 'showCodeTuneSuggestion':
+                showCodeTuneSuggestion(message.data);
+                break;
+            case 'hideCodeTuneSuggestion':
+                hideCodeTuneSuggestion();
+                break;
         }
     }
 
@@ -134,11 +140,11 @@
         }
 
         timerInterval = setInterval(() => {
-            // Request current timer status from extension
+            // Request current timer status from extension (reduced frequency to prevent overload)
             vscode.postMessage({
                 command: 'requestTimerStatus'
             });
-        }, 1000);
+        }, 5000); // Request every 5 seconds instead of every 1 second
     }
 
     // ===== TIME DISPLAY MANAGEMENT =====
@@ -520,10 +526,101 @@
         });
     }
 
+    // ===== CODETUNE SUGGESTION FUNCTIONS =====
+    function showCodeTuneSuggestion(data) {
+        const section = document.getElementById('codeTuneSection');
+        const suggestionDiv = document.getElementById('codeTuneSuggestion');
+        const actionsDiv = document.getElementById('codeTuneActions');
+
+        if (!section || !suggestionDiv || !actionsDiv) return;
+
+        // Update the suggestion text
+        suggestionDiv.innerHTML = `<blockquote>${data.message}</blockquote>`;
+
+        // Create action buttons based on CodeTune installation status
+        let primaryButtonText, primaryButtonClass, primaryAction;
+        let secondaryButtonText, secondaryAction;
+
+        if (data.codeTuneInstalled) {
+            // CodeTune is installed - show "Open CodeTune" and "Not Now"
+            actionsDiv.innerHTML = `
+                <button class="code-tune-btn primary" onclick="openCodeTuneFromSuggestion()">
+                    <span class="btn-icon">🎵</span>
+                    Open CodeTune
+                </button>
+                <button class="code-tune-btn secondary" onclick="hideCodeTuneSuggestion()">
+                    <span class="btn-icon">⏰</span>
+                    Not Now
+                </button>
+            `;
+        } else {
+            // CodeTune is not installed - show "Install CodeTune" and "Never Show Again"
+            actionsDiv.innerHTML = `
+                <button class="code-tune-btn install" onclick="installCodeTune()">
+                    <span class="btn-icon">⬇️</span>
+                    Install CodeTune
+                </button>
+                <button class="code-tune-btn danger" onclick="neverShowCodeTune()">
+                    <span class="btn-icon">🚫</span>
+                    Never Show Again
+                </button>
+            `;
+        }
+
+        // Show the section with animation
+        section.classList.remove('hidden');
+        section.style.animation = 'slideInFromBottom 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
+
+        // Auto-hide after 30 seconds if user doesn't interact
+        setTimeout(() => {
+            if (!section.classList.contains('hidden')) {
+                hideCodeTuneSuggestion();
+            }
+        }, 30000);
+    }
+
+    function hideCodeTuneSuggestion() {
+        const section = document.getElementById('codeTuneSection');
+        if (section) {
+            section.classList.add('hidden');
+        }
+
+        // Send message to hide suggestion globally
+        vscode.postMessage({
+            command: 'hideCodeTuneSuggestion'
+        });
+    }
+
+    function openCodeTuneFromSuggestion() {
+        vscode.postMessage({
+            command: 'openCodeTune'
+        });
+        hideCodeTuneSuggestion();
+    }
+
+    function installCodeTune() {
+        // Open CodeTune extension marketplace page
+        vscode.postMessage({
+            command: 'installCodeTune'
+        });
+        hideCodeTuneSuggestion();
+    }
+
+    function neverShowCodeTune() {
+        vscode.postMessage({
+            command: 'neverShowCodeTune'
+        });
+        hideCodeTuneSuggestion();
+    }
+
     // Make functions globally available
     window.createCustomExercise = createCustomExercise;
     window.showCustomExerciseLibrary = showCustomExerciseLibrary;
     window.checkGitProductivity = checkGitProductivity;
+    window.openCodeTuneFromSuggestion = openCodeTuneFromSuggestion;
+    window.hideCodeTuneSuggestion = hideCodeTuneSuggestion;
+    window.installCodeTune = installCodeTune;
+    window.neverShowCodeTune = neverShowCodeTune;
 
     // ===== UTILITY FUNCTIONS =====
     function getTimeAgo(date) {

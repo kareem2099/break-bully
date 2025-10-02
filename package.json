@@ -83,6 +83,16 @@
         "command": "breakBully.showUpdatePanel",
         "title": "What's New in Break Bully",
         "icon": "$(info)"
+      },
+      {
+        "command": "breakBully.openTimeBlocking",
+        "title": "Open Time Blocking - Advanced Work Scheduling",
+        "icon": "$(calendar)"
+      },
+      {
+        "command": "breakBully.exportAllStoredData",
+        "title": "Export All Stored Data (Temp Debug)",
+        "icon": "$(export)"
       }
     ],
     "configuration": {
@@ -224,6 +234,9 @@
         },
         {
           "command": "breakBully.openSettings"
+        },
+        {
+          "command": "breakBully.openTimeBlocking"
         }
       ]
     },
@@ -261,7 +274,10 @@
     "@types/mocha": "^10.0.10",
     "@types/node": "16.x",
     "@types/vscode": "^1.60.0",
+    "@typescript-eslint/eslint-plugin": "^8.45.0",
+    "@typescript-eslint/parser": "^8.45.0",
     "@vscode/test-electron": "^2.5.2",
+    "eslint": "^9.36.0",
     "mocha": "^10.0.0",
     "typescript": "^4.9.4"
   },

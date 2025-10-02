@@ -2,6 +2,8 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import { workRestModels } from '../constants/workRestModels';
 import { switchWorkRestModel } from '../services/workRestService';
+import { state } from '../models/state';
+import { usageAnalytics } from '../services/usageAnalyticsService';
 
 export class ChangeWorkoutPanel {
   public static currentPanel: ChangeWorkoutPanel | undefined;
@@ -67,6 +69,9 @@ export class ChangeWorkoutPanel {
                 throw new Error(`Model with ID '${message.data.modelId}' not found`);
               }
 
+              // Track model selection for analytics
+              usageAnalytics.trackModelSelection(message.data.modelId, 'user_selection');
+
               switchWorkRestModel(message.data.modelId);
               this._panel.webview.postMessage({
                 command: 'workRestModelChanged',
@@ -85,8 +90,79 @@ export class ChangeWorkoutPanel {
               vscode.window.showErrorMessage(`Failed to change work-rest model: ${(error as Error).message}`);
             }
             break;
+          case 'startMLAssessment':
+            // Send command to extension to open ML assessment panel
+            vscode.commands.executeCommand('breakBully.startMLAssessment');
+            break;
           case 'closePanel':
             this._panel.dispose();
+            break;
+          case 'getPersonalModels':
+            try {
+              // Load personal models from storage
+              const personalModels = state.storage?.loadCustomSetting('userAssessmentPersonalModels');
+              if (personalModels) {
+                this._panel.webview.postMessage({
+                  command: 'personalModelsData',
+                  data: personalModels
+                });
+              } else {
+                // No personal models available - nothing will be displayed
+                this._panel.webview.postMessage({
+                  command: 'personalModelsData',
+                  data: null
+                });
+              }
+            } catch (error) {
+              console.error('Failed to load personal models:', error);
+              this._panel.webview.postMessage({
+                command: 'personalModelsData',
+                data: null
+              });
+            }
+            break;
+          case 'usePersonalModel':
+            try {
+              const { model } = message.data;
+              console.log('Using personal model:', model);
+
+              // Convert personal model to work-rest model format
+              const workRestModel = {
+                id: model.id || `personal_${Date.now()}`,
+                name: model.name || 'AI Personal Model',
+                workDuration: model.workDuration || 25,
+                restDuration: model.restDuration || 5,
+                basedOn: 'AI_ASSESSMENT'
+              };
+
+              // Track AI personal model selection for analytics
+              usageAnalytics.trackModelSelection(workRestModel.id, 'ai_recommendation');
+
+              // Store the current personal model as active
+              state.storage?.saveCustomSetting('activePersonalModel', model);
+
+              // Use the existing work-rest service to activate this model
+              switchWorkRestModel(workRestModel.id);
+
+              this._panel.webview.postMessage({
+                command: 'personalModelChanged',
+                data: { success: true }
+              });
+
+              vscode.window.showInformationMessage(
+                `🎯 AI Personal Model Activated: ${model.workDuration}min work, ${model.restDuration}min rest`
+              );
+
+              // Notify the main webview to update its timer display
+              vscode.commands.executeCommand('breakBully.refreshTimer');
+            } catch (error) {
+              console.error('Failed to activate personal model:', error);
+              this._panel.webview.postMessage({
+                command: 'personalModelChanged',
+                data: { success: false, error: (error as Error).message }
+              });
+              vscode.window.showErrorMessage(`Failed to activate personal model: ${(error as Error).message}`);
+            }
             break;
         }
       },

@@ -1,0 +1,335 @@
+{
+  "breakStats": {
+    "breaksTaken": 26,
+    "timeSaved": 130,
+    "streakDays": 0,
+    "lastBreakDate": "2025-10-01T17:51:16.103Z"
+  },
+  "wellnessGoals": [
+    {
+      "id": "daily-breaks",
+      "type": "daily",
+      "category": "breaks",
+      "target": 6,
+      "current": 2,
+      "description": "Take 6 breaks throughout the day",
+      "deadline": "2025-10-02T17:44:39.306Z",
+      "completed": false,
+      "createdAt": "2025-10-01T17:44:39.306Z",
+      "reward": "🏆 Healthy Day Badge"
+    },
+    {
+      "id": "daily-exercises",
+      "type": "daily",
+      "category": "exercises",
+      "target": 3,
+      "current": 1,
+      "description": "Complete 3 wellness exercises",
+      "deadline": "2025-10-02T17:44:39.306Z",
+      "completed": false,
+      "createdAt": "2025-10-01T17:44:39.306Z",
+      "reward": "💪 Fitness Warrior"
+    },
+    {
+      "id": "screen-breaks",
+      "type": "daily",
+      "category": "screen-breaks",
+      "target": 4,
+      "current": 0,
+      "description": "Take 4 eye breaks during screen time",
+      "deadline": "2025-10-02T17:44:39.306Z",
+      "completed": false,
+      "createdAt": "2025-10-01T17:44:39.306Z",
+      "reward": "👁️ Vision Protector"
+    }
+  ],
+  "wellnessChallenges": [],
+  "customExercises": [],
+  "smartNotifications": {
+    "lastBreakResponseTime": 0,
+    "breakAcceptanceRate": 0.5,
+    "preferredBreakTimes": [],
+    "notificationHistory": [],
+    "userPatterns": {
+      "productiveHours": [],
+      "breakFrequency": 30,
+      "responseTimeAverage": 30000
+    }
+  },
+  "screenTimeStats": {
+    "sessionStartTime": "2025-10-01T17:55:42.181Z",
+    "totalScreenTimeToday": 296,
+    "continuousScreenTime": 296,
+    "lastBreakTime": "2025-10-01T17:55:42.181Z",
+    "lastActivityTime": "2025-10-02T12:10:24.942Z",
+    "isIdle": false,
+    "codingSessionStart": null,
+    "longCodingSessionDetected": false
+  },
+  "achievements": [
+    {
+      "id": "first-break",
+      "name": "First Steps",
+      "description": "Take your first break",
+      "icon": "🎯",
+      "category": "streaks",
+      "requirement": 1,
+      "progress": 3,
+      "unlockedAt": "2025-09-25T23:27:56.110Z"
+    },
+    {
+      "id": "break-streak-3",
+      "name": "Getting Started",
+      "description": "Take breaks for 3 consecutive days",
+      "icon": "🔥",
+      "category": "streaks",
+      "requirement": 3,
+      "progress": 0
+    },
+    {
+      "id": "break-streak-7",
+      "name": "Week Warrior",
+      "description": "Take breaks for 7 consecutive days",
+      "icon": "⚡",
+      "category": "streaks",
+      "requirement": 7,
+      "progress": 0
+    },
+    {
+      "id": "break-streak-30",
+      "name": "Monthly Master",
+      "description": "Take breaks for 30 consecutive days",
+      "icon": "👑",
+      "category": "streaks",
+      "requirement": 30,
+      "progress": 0
+    },
+    {
+      "id": "first-exercise",
+      "name": "Exercise Explorer",
+      "description": "Complete your first exercise",
+      "icon": "💪",
+      "category": "exercises",
+      "requirement": 1,
+      "progress": 1,
+      "unlockedAt": "2025-09-25T23:27:56.110Z"
+    },
+    {
+      "id": "exercise-10",
+      "name": "Fitness Fan",
+      "description": "Complete 10 exercises",
+      "icon": "🏃‍♂️",
+      "category": "exercises",
+      "requirement": 10,
+      "progress": 0
+    },
+    {
+      "id": "exercise-50",
+      "name": "Wellness Warrior",
+      "description": "Complete 50 exercises",
+      "icon": "🛡️",
+      "category": "exercises",
+      "requirement": 50,
+      "progress": 0
+    },
+    {
+      "id": "first-goal",
+      "name": "Goal Getter",
+      "description": "Complete your first wellness goal",
+      "icon": "🎯",
+      "category": "goals",
+      "requirement": 1,
+      "progress": 1,
+      "unlockedAt": "2025-09-26T13:43:42.479Z"
+    },
+    {
+      "id": "goals-10",
+      "name": "Goal Crusher",
+      "description": "Complete 10 wellness goals",
+      "icon": "💎",
+      "category": "goals",
+      "requirement": 10,
+      "progress": 0
+    },
+    {
+      "id": "first-challenge",
+      "name": "Challenge Champion",
+      "description": "Complete your first wellness challenge",
+      "icon": "🏆",
+      "category": "goals",
+      "requirement": 1,
+      "progress": 1,
+      "unlockedAt": "2025-09-26T13:45:57.896Z"
+    },
+    {
+      "id": "breaks-50",
+      "name": "Break Master",
+      "description": "Take 50 breaks total",
+      "icon": "🎖️",
+      "category": "consistency",
+      "requirement": 50,
+      "progress": 26
+    },
+    {
+      "id": "breaks-100",
+      "name": "Century Club",
+      "description": "Take 100 breaks total",
+      "icon": "💯",
+      "category": "consistency",
+      "requirement": 100,
+      "progress": 26
+    },
+    {
+      "id": "screen-time-savior",
+      "name": "Screen Time Savior",
+      "description": "Take 25 eye breaks",
+      "icon": "👁️",
+      "category": "consistency",
+      "requirement": 25,
+      "progress": 0
+    },
+    {
+      "id": "perfect-week",
+      "name": "Perfect Week",
+      "description": "Complete all daily goals for 7 consecutive days",
+      "detailedDescription": "A flawless week of wellness! You've maintained perfect consistency across all your health goals for an entire week.",
+      "icon": "🌟",
+      "category": "consistency",
+      "rarity": "epic",
+      "requirement": 7,
+      "progress": 0
+    },
+    {
+      "id": "no-missed-breaks",
+      "name": "Unbreakable",
+      "description": "Go 7 days without missing a single break reminder",
+      "detailedDescription": "Seven days of perfect adherence! You've shown incredible discipline by never missing a break reminder.",
+      "icon": "🛡️",
+      "category": "consistency",
+      "rarity": "legendary",
+      "requirement": 7,
+      "progress": 0
+    },
+    {
+      "id": "eight-hour-session",
+      "name": "Marathon Coder",
+      "description": "Code for 8 hours in a single session",
+      "detailedDescription": "Eight hours of focused coding! You've demonstrated remarkable concentration and endurance in a single coding session.",
+      "icon": "🏃‍♂️",
+      "category": "consistency",
+      "rarity": "rare",
+      "requirement": 480,
+      "progress": 0
+    },
+    {
+      "id": "work-hours-breaks",
+      "name": "Professional Balance",
+      "description": "Take breaks during standard work hours (9 AM - 6 PM)",
+      "detailedDescription": "You've learned to maintain work-life balance even during peak productivity hours. Smart breaks during work time!",
+      "icon": "💼",
+      "category": "consistency",
+      "rarity": "rare",
+      "requirement": 10,
+      "progress": 10,
+      "unlockedAt": "2025-09-26T15:40:40.733Z"
+    },
+    {
+      "id": "stretch-master",
+      "name": "Stretch Champion",
+      "description": "Complete 25 stretch exercises",
+      "detailedDescription": "Twenty-five stretches completed! Your body thanks you for maintaining flexibility and preventing muscle tension.",
+      "icon": "🤸",
+      "category": "exercises",
+      "rarity": "rare",
+      "requirement": 25,
+      "progress": 0
+    },
+    {
+      "id": "breathing-guru",
+      "name": "Breathing Guru",
+      "description": "Complete 20 breathing exercises",
+      "detailedDescription": "Twenty breathing exercises mastered! You've developed excellent breath control and stress management techniques.",
+      "icon": "🧘",
+      "category": "exercises",
+      "rarity": "rare",
+      "requirement": 20,
+      "progress": 0
+    },
+    {
+      "id": "eye-care-expert",
+      "name": "Vision Guardian",
+      "description": "Complete 30 eye exercises",
+      "detailedDescription": "Thirty eye exercises completed! You're a true guardian of your vision, preventing eye strain and maintaining healthy eyesight.",
+      "icon": "👁️",
+      "category": "exercises",
+      "rarity": "rare",
+      "requirement": 30,
+      "progress": 0
+    },
+    {
+      "id": "screen-time-reducer",
+      "name": "Digital Detox",
+      "description": "Reduce average daily screen time by 20%",
+      "detailedDescription": "You've successfully reduced your screen time by 20%! This conscious effort protects your eyes and mental health.",
+      "icon": "📱",
+      "category": "consistency",
+      "rarity": "rare",
+      "requirement": 20,
+      "progress": 0
+    },
+    {
+      "id": "perfect-eye-timing",
+      "name": "Timing Master",
+      "description": "Take eye breaks within 5 minutes of screen time warnings",
+      "detailedDescription": "Perfect timing! You consistently take eye breaks right when needed, showing proactive care for your vision health.",
+      "icon": "⏰",
+      "category": "consistency",
+      "rarity": "epic",
+      "requirement": 15,
+      "progress": 0
+    },
+    {
+      "id": "low-screen-day",
+      "name": "Light User",
+      "description": "Keep daily screen time under 6 hours",
+      "detailedDescription": "A balanced digital lifestyle! You've maintained healthy screen time limits, protecting both your eyes and mental well-being.",
+      "icon": "🌅",
+      "category": "consistency",
+      "rarity": "rare",
+      "requirement": 360,
+      "progress": 360,
+      "unlockedAt": "2025-09-25T23:27:56.110Z"
+    }
+  ],
+  "dailyWellnessData": [
+    {
+      "date": "2025-09-26",
+      "breaksTaken": 19,
+      "screenTimeMinutes": 0,
+      "goalsCompleted": 0,
+      "exercisesCompleted": 0,
+      "achievementsUnlocked": 3,
+      "streakDays": 0
+    },
+    {
+      "date": "2025-10-01",
+      "breaksTaken": 26,
+      "screenTimeMinutes": 188,
+      "goalsCompleted": 0,
+      "exercisesCompleted": 0,
+      "achievementsUnlocked": 0,
+      "streakDays": 0
+    },
+    {
+      "date": "2025-10-02",
+      "breaksTaken": 26,
+      "screenTimeMinutes": 296,
+      "goalsCompleted": 0,
+      "exercisesCompleted": 1,
+      "achievementsUnlocked": 0,
+      "streakDays": 0
+    }
+  ],
+  "exportDate": "2025-10-02T13:33:14.593Z",
+  "version": "1.0.0"
+}

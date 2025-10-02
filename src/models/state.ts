@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { ExtensionStorage } from '../utils/storage';
 import { BreakStats, ScreenTimeStats, WellnessGoal, WellnessChallenge, CustomExercise, SmartNotificationsData, Achievement, DailyWellnessData } from '../types';
+import { BaseActivityMonitor } from '../services/activityIntegration/baseActivityMonitor';
 
 export const state = {
   reminderTimer: undefined as NodeJS.Timeout | undefined,
@@ -11,6 +12,7 @@ export const state = {
   nextReminderTime: null as number | null,
   storage: undefined as ExtensionStorage | undefined,
   activityBarProvider: null as any, // Will be typed properly later
+  activityMonitor: undefined as BaseActivityMonitor | undefined,
 
   // Data loaded from storage
   breakStats: {
@@ -24,7 +26,7 @@ export const state = {
     totalScreenTimeToday: 0,
     continuousScreenTime: 0,
     lastBreakTime: null,
-    lastActivityTime: new Date(),
+    lastActivityTime: null,
     isIdle: false,
     codingSessionStart: null,
     longCodingSessionDetected: false

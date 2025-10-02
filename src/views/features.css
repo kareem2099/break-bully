@@ -1257,3 +1257,206 @@
     left: -2px;
     animation: fire-flicker 0.5s ease-in-out infinite alternate;
 }
+
+/* CodeTune Suggestion Section */
+.code-tune-section {
+    padding: 16px;
+    background: linear-gradient(135deg,
+        var(--vscode-editorWidget-background, #252526) 0%,
+        rgba(37, 37, 38, 0.9) 100%);
+    border-radius: 12px;
+    border: 1px solid var(--vscode-panel-border, #3e3e42);
+    position: relative;
+    overflow: hidden;
+    animation: slideInFromBottom 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.code-tune-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg,
+        var(--vscode-charts-green, #89d185) 0%,
+        var(--vscode-charts-blue, #4f8bd6) 50%,
+        var(--vscode-charts-purple, #c586c0) 100%);
+    opacity: 0.8;
+}
+
+.code-tune-section h4 {
+    font-size: 14px;
+    font-weight: 600;
+    margin: 0 0 16px 0;
+    color: var(--vscode-foreground, #d4d4d4);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.code-tune-section h4::before {
+    content: '🎵';
+    font-size: 16px;
+    opacity: 0.8;
+    animation: music-pulse 2s ease-in-out infinite;
+}
+
+@keyframes music-pulse {
+    0%, 100% { opacity: 0.8; }
+    50% { opacity: 1; transform: scale(1.1); }
+}
+
+.code-tune-suggestion {
+    margin-bottom: 16px;
+    padding: 14px 16px;
+    background: linear-gradient(135deg,
+        var(--vscode-notificationsInfoIcon-foreground, #3794ff)10 0%,
+        rgba(55, 148, 255, 0.05) 100%);
+    border: 1px solid var(--vscode-notificationsInfoIcon-foreground, #3794ff)30;
+    border-radius: 10px;
+    position: relative;
+    overflow: hidden;
+}
+
+.code-tune-suggestion::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(circle at 20% 20%, rgba(55, 148, 255, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(78, 205, 196, 0.1) 0%, transparent 50%);
+    pointer-events: none;
+}
+
+.code-tune-suggestion blockquote {
+    margin: 0;
+    padding: 0;
+    font-size: 13px;
+    font-style: italic;
+    color: var(--vscode-foreground, #d4d4d4);
+    line-height: 1.5;
+    position: relative;
+    z-index: 1;
+}
+
+.code-tune-suggestion blockquote::before,
+.code-tune-suggestion blockquote::after {
+    content: '"';
+    font-size: 24px;
+    color: var(--vscode-descriptionForeground, #cccccc99);
+    font-family: serif;
+    position: relative;
+    top: 2px;
+}
+
+.code-tune-suggestion blockquote::after {
+    content: '"';
+    margin-left: -4px;
+}
+
+.code-tune-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    position: relative;
+    z-index: 1;
+}
+
+.code-tune-btn {
+    padding: 10px 14px;
+    border: none;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    text-decoration: none;
+    position: relative;
+    overflow: hidden;
+}
+
+.code-tune-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s ease;
+}
+
+.code-tune-btn:hover::before {
+    left: 100%;
+}
+
+.code-tune-btn.primary {
+    background: linear-gradient(135deg, #ff6b6b 0%, #4ecdc4 100%);
+    color: white;
+    box-shadow: 0 2px 8px rgba(255, 107, 107, 0.3);
+}
+
+.code-tune-btn.primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(255, 107, 107, 0.4);
+}
+
+.code-tune-btn.secondary {
+    background: var(--vscode-button-secondaryBackground, #5f5f5f);
+    color: var(--vscode-button-secondaryForeground, #ffffff);
+    border: 1px solid var(--vscode-button-border, #3e3e42);
+}
+
+.code-tune-btn.secondary:hover {
+    background: var(--vscode-button-secondaryHoverBackground, #6f6f6f);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.code-tune-btn.danger {
+    background: var(--vscode-notificationsErrorIcon-foreground, #f44747);
+    color: white;
+    box-shadow: 0 2px 8px rgba(244, 71, 71, 0.3);
+}
+
+.code-tune-btn.danger:hover {
+    background: var(--vscode-notificationsErrorIcon-foreground, #d12626);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(244, 71, 71, 0.4);
+}
+
+.code-tune-btn.disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+.code-tune-btn.install {
+    background: linear-gradient(135deg, var(--vscode-charts-green, #89d185), var(--vscode-charts-blue, #4f8bd6));
+    color: white;
+}
+
+.code-tune-btn.install:hover {
+    background: linear-gradient(135deg, var(--vscode-charts-green, #6dc16d), var(--vscode-charts-blue, #3c7dd1));
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(137, 209, 133, 0.4);
+}
+
+@keyframes slideInFromBottom {
+    0% {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

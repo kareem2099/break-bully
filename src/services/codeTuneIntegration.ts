@@ -73,11 +73,8 @@ export class CodeTuneIntegration {
       return false;
     }
 
-    // Don't show if CodeTune is not installed
-    if (!this.isCodeTuneInstalled()) {
-      return false;
-    }
-
+    // Always show the suggestion - whether CodeTune is installed or not
+    // This helps introduce new users to CodeTune and encourages installation
     const message = this.getRandomCodeTuneMessage();
     const result = await vscode.window.showInformationMessage(
       message,

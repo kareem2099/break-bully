@@ -58,6 +58,119 @@ body {
     position: relative;
 }
 
+.ml-assessment-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    color: white !important;
+    grid-column: 1 / -1; /* Span full width */
+    max-width: 600px; /* Max reasonable width */
+    margin: 0 auto; /* Center it */
+}
+
+.ml-assessment-card .model-header h3,
+.ml-assessment-card .model-timing,
+.ml-assessment-card .model-description,
+.ml-assessment-card .model-meta {
+    color: rgba(255, 255, 255, 0.95) !important;
+}
+
+.ml-assessment-card .model-timing,
+.ml-assessment-card .model-meta {
+    color: rgba(255, 255, 255, 0.8) !important;
+}
+
+.ml-assessment-card:hover {
+    background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%) !important;
+    border-color: rgba(255, 255, 255, 0.3) !important;
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4) !important;
+}
+
+/* Personal Models Section */
+.personal-models-section {
+    margin: 30px 0;
+    padding: 20px 15px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e3f2fd 100%);
+    border-radius: 12px;
+    border: 1px solid #e3f2fd;
+}
+
+.personal-models-header {
+    text-align: center;
+    margin-bottom: 15px;
+}
+
+.personal-models-header h3 {
+    font-size: 18px;
+    font-weight: 700;
+    color: #1976d2;
+    margin: 0 0 4px 0;
+}
+
+.personal-models-meta {
+    font-size: 12px;
+    color: #666;
+    font-style: italic;
+}
+
+.personal-model-card {
+    background: linear-gradient(135deg, #fff 0%, #f8f9fa 100%);
+    border: 2px solid #e3f2fd !important;
+}
+
+.personal-model-card:hover {
+    border-color: #1976d2 !important;
+    box-shadow: 0 4px 12px rgba(25, 118, 210, 0.3);
+}
+
+.scenario-badge {
+    display: inline-block;
+    background: #e3f2fd;
+    color: #1976d2;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.confidence-badge {
+    display: inline-block;
+    margin-left: 8px;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.confidence-badge:first-child {
+    margin-left: 0;
+}
+
+/* Insights Section */
+.insights-section {
+    margin: 25px 0;
+    padding: 15px;
+    background: linear-gradient(135deg, #fff3cd 0%, #fce7a6 100%);
+    border-radius: 8px;
+    border-left: 4px solid #ffc107;
+}
+
+.insights-header h4 {
+    font-size: 14px;
+    font-weight: 600;
+    color: #856404;
+    margin: 0 0 8px 0;
+}
+
+.insight-item {
+    margin-bottom: 6px;
+    font-size: 13px;
+    color: #856404;
+    line-height: 1.4;
+}
+
+.insight-item:last-child {
+    margin-bottom: 0;
+}
+
 .model-card:hover {
     background: var(--vscode-toolbar-hoverBackground, #37373d);
     border-color: var(--vscode-focusBorder, #0078d4);

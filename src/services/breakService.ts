@@ -21,12 +21,8 @@ export function takeBreak(): void {
             updateBreakStatistics();
             vscode.window.showInformationMessage('🛋️ Rest period started! Screen will be monitored for coding activity.');
 
-            // Show CodeTune suggestion for work-rest session break
-            import('./codeTuneIntegration').then(codeTune => {
-              codeTune.CodeTuneIntegration.showCodeTuneBreakSuggestion();
-            }).catch(error => {
-              console.debug('CodeTune integration not available:', error);
-            });
+            // Show CodeTune suggestion in webview
+            showCodeTuneSuggestionInWebview();
             return;
           }
         }
@@ -60,12 +56,8 @@ export function takeBreak(): void {
   updateBreakStatistics();
   vscode.window.showInformationMessage('🎉 Great job! Break taken! Keep up the healthy habits!');
 
-  // Show CodeTune suggestion after break
-  import('./codeTuneIntegration').then(codeTune => {
-    codeTune.CodeTuneIntegration.showCodeTuneBreakSuggestion();
-  }).catch(error => {
-    console.debug('CodeTune integration not available:', error);
-  });
+  // Show CodeTune suggestion in webview
+  showCodeTuneSuggestionInWebview();
 }
 
 function updateBreakStatistics(): void {
@@ -119,9 +111,12 @@ function updateBreakStatistics(): void {
   // Reset screen time on break
   resetScreenTimeOnBreak();
 
-  // Update wellness goals
-  updateWellnessGoals();
-  checkGoalAchievements();
+  // Update break progress
+  import('./goalService').then(goalService => {
+    goalService.incrementBreakProgress();
+    goalService.updateGoalsProgress();
+    goalService.checkGoalAchievements();
+  });
 
   // Check for new achievements
   checkAchievements();
@@ -142,80 +137,43 @@ function resetScreenTimeOnBreak(): void {
   state.screenTimeStats.lastBreakTime = new Date();
 }
 
-function updateWellnessGoals(): void {
-  const today = new Date();
 
-  // Update daily goals progress
-  state.wellnessGoals.forEach(goal => {
-    if (goal.type === 'daily') {
-      switch (goal.category) {
-        case 'breaks':
-          goal.current = state.breakStats.breaksTaken;
-          break;
-        case 'exercises':
-          // This would need to track exercise completions
-          goal.current = Math.min(goal.current + 1, goal.target);
-          break;
-        case 'screen-breaks':
-          // This would need to track eye break completions
-          goal.current = Math.min(goal.current + 1, goal.target);
-          break;
-      }
 
-      goal.completed = goal.current >= goal.target;
+/**
+ * Shows CodeTune suggestion in the webview instead of popup
+ */
+function showCodeTuneSuggestionInWebview(): void {
+  import('./codeTuneIntegration').then(codeTune => {
+    const config = require('../core/configuration').getConfiguration();
 
-      // Check if goal deadline has passed (reset for new day)
-      if (today > goal.deadline) {
-        goal.deadline = new Date(today);
-        goal.deadline.setDate(today.getDate() + 1);
-        goal.current = 0;
-        goal.completed = false;
-      }
+    // Check if CodeTune suggestions are enabled and not permanently ignored
+    if (!config.suggestCodeTuneDuringBreaks || config.codeTunePermanentlyIgnored) {
+      return;
     }
-  });
 
-  // Update challenge progress
-  state.wellnessChallenges.forEach(challenge => {
-    const completedGoals = challenge.goals.filter(g => g.completed).length;
-    challenge.progress = Math.round((completedGoals / challenge.goals.length) * 100);
-    challenge.completed = challenge.progress >= 100;
-  });
-}
+    // Send CodeTune suggestion to webview
+    if (state.activityBarProvider) {
+      const messages = [
+        "🎵 How about some peaceful Quran recitation during your break?",
+        "📖 Consider listening to the Quran to enrich your wellness break 😌",
+        "🕌 Your break could be enhanced with beautiful Quranic verses",
+        "🎯 Would you like to listen to Quran while you rest?",
+        "🌸 Some Quranic recitation might bring peace to your break time",
+        "📿 Open CodeTune for spiritually refreshing break music",
+        "🙏 Quran listening can add meaning to your well-deserved break"
+      ];
 
-function checkGoalAchievements(): void {
-  // Check for newly completed goals
-  state.wellnessGoals.forEach(goal => {
-    if (goal.completed) {
-      vscode.window.showInformationMessage(
-        `🎉 Goal Completed: ${goal.description}`,
-        `Reward: ${goal.reward || 'Great job!'}`
-      ).then(() => {
-        // Send celebration to webview
-        if (state.activityBarProvider) {
-          state.activityBarProvider.postMessage({
-            command: 'celebrateGoal',
-            data: { message: `Goal Completed!\n${goal.description}` }
-          });
+      const message = messages[Math.floor(Math.random() * messages.length)];
+
+      state.activityBarProvider.postMessage({
+        command: 'showCodeTuneSuggestion',
+        data: {
+          message: message,
+          codeTuneInstalled: codeTune.CodeTuneIntegration.isCodeTuneInstalled()
         }
       });
     }
-  });
-
-  // Check for newly completed challenges
-  state.wellnessChallenges.forEach(challenge => {
-    if (challenge.completed) {
-      vscode.window.showInformationMessage(
-        `🏆 Challenge Completed: ${challenge.name}`,
-        `Reward: ${challenge.reward}`
-      );
-
-      // Send celebration to webview
-      if (state.activityBarProvider) {
-        state.activityBarProvider.postMessage({
-          command: 'celebrateAchievement',
-          data: { achievement: challenge.name }
-        });
-      }
-    }
+  }).catch(error => {
+    console.debug('CodeTune integration not available:', error);
   });
 }

@@ -1077,6 +1077,18 @@ function showExerciseModal(title: string, exercise: Exercise): void {
             exerciseType = 'eye';
           }
 
+          // Increment exercise progress when any exercise is completed
+          import('./wellnessService').then(wellnessService => {
+            wellnessService.incrementExerciseProgress();
+          });
+
+          // For eye exercises, also increment eye break progress
+          if (exerciseType === 'eye') {
+            import('./wellnessService').then(wellnessService => {
+              wellnessService.incrementEyeBreakProgress();
+            });
+          }
+
           showExerciseCompletionNotification(exercise.name, exerciseType).then(selection => {
             if (selection === 'Take Another Break') {
               import('./breakService').then(breakService => {
@@ -2484,6 +2496,11 @@ function showWaterModal(waterTip: any): void {
           showExerciseStartNotification(waterTip.title, waterTip.duration);
           break;
         case 'hydrationComplete':
+          // Hydration completion also counts as exercise progress
+          import('./wellnessService').then(wellnessService => {
+            wellnessService.incrementExerciseProgress();
+          });
+
           showExerciseCompletionNotification(waterTip.title, 'water').then(selection => {
             if (selection === 'Take Another Break') {
               import('./breakService').then(breakService => {

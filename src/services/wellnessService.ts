@@ -4,51 +4,10 @@ import { state } from '../models/state';
 import { WellnessGoal, WellnessChallenge, ExerciseCategory, DifficultyLevel, CustomExercise, DailyWellnessData } from '../types';
 
 export function initializeWellnessGoals(): void {
-  if (state.wellnessGoals.length === 0) {
-    // Create default daily goals
-    const today = new Date();
-    const tomorrow = new Date(today);
-    tomorrow.setDate(today.getDate() + 1);
-
-    state.wellnessGoals = [
-      {
-        id: 'daily-breaks',
-        type: 'daily',
-        category: 'breaks',
-        target: 6,
-        current: state.breakStats.breaksTaken,
-        description: 'Take 6 breaks throughout the day',
-        deadline: tomorrow,
-        completed: false,
-        createdAt: today,
-        reward: '🏆 Healthy Day Badge'
-      },
-      {
-        id: 'daily-exercises',
-        type: 'daily',
-        category: 'exercises',
-        target: 3,
-        current: 0, // Would need to track exercise completions
-        description: 'Complete 3 wellness exercises',
-        deadline: tomorrow,
-        completed: false,
-        createdAt: today,
-        reward: '💪 Fitness Warrior'
-      },
-      {
-        id: 'screen-breaks',
-        type: 'daily',
-        category: 'screen-breaks',
-        target: 4,
-        current: 0,
-        description: 'Take 4 eye breaks during screen time',
-        deadline: tomorrow,
-        completed: false,
-        createdAt: today,
-        reward: '👁️ Vision Protector'
-      }
-    ];
-  }
+  // Import and call the goal service initialization
+  import('./goalService').then(goalService => {
+    goalService.initializeGoals();
+  });
 }
 
 export function initializeWellnessChallenges(): void {
@@ -75,62 +34,17 @@ export function initializeWellnessChallenges(): void {
 }
 
 export function updateWellnessGoals(): void {
-  const today = new Date();
-
-  // Update daily goals progress
-  state.wellnessGoals.forEach(goal => {
-    if (goal.type === 'daily') {
-      switch (goal.category) {
-        case 'breaks':
-          goal.current = state.breakStats.breaksTaken;
-          break;
-        case 'exercises':
-          // This would need to track exercise completions
-          goal.current = Math.min(goal.current + 1, goal.target);
-          break;
-        case 'screen-breaks':
-          // This would need to track eye break completions
-          goal.current = Math.min(goal.current + 1, goal.target);
-          break;
-      }
-
-      goal.completed = goal.current >= goal.target;
-
-      // Check if goal deadline has passed (reset for new day)
-      if (today > goal.deadline) {
-        goal.deadline = new Date(today);
-        goal.deadline.setDate(today.getDate() + 1);
-        goal.current = 0;
-        goal.completed = false;
-      }
-    }
-  });
-
-  // Update challenge progress
-  state.wellnessChallenges.forEach(challenge => {
-    const completedGoals = challenge.goals.filter(g => g.completed).length;
-    challenge.progress = Math.round((completedGoals / challenge.goals.length) * 100);
-    challenge.completed = challenge.progress >= 100;
+  // Update goal progress using the goal service
+  import('./goalService').then(goalService => {
+    goalService.updateGoalsProgress();
+    goalService.updateChallengeProgress();
   });
 }
 
 export function checkGoalAchievements(): void {
-  // Check for newly completed goals
-  state.wellnessGoals.forEach(goal => {
-    if (goal.completed) {
-      vscode.window.showInformationMessage(
-        `🎉 Goal Completed: ${goal.description}`,
-        `Reward: ${goal.reward || 'Great job!'}`
-      ).then(() => {
-        // Send celebration to webview
-        if (state.activityBarProvider) {
-          state.activityBarProvider.postMessage({
-            command: 'celebrateGoal',
-            data: { message: `Goal Completed!\n${goal.description}` }
-          });
-        }
-      });
-    }
+  // Use the goal service for checking achievements
+  import('./goalService').then(goalService => {
+    goalService.checkGoalAchievements();
   });
 
   // Check for newly completed challenges
@@ -172,6 +86,11 @@ export function startScreenTimeTracking(): void {
     state.screenTimeStats.totalScreenTimeToday += 1; // Add 1 minute
     state.screenTimeStats.continuousScreenTime += 1; // Add 1 minute
 
+    // Save screen time stats periodically (every minute to ensure persistence)
+    if (state.storage) {
+      state.storage.saveScreenTimeStats(state.screenTimeStats);
+    }
+
     // Check if we should suggest an eye break (only if eye exercises are enabled)
     if (config.enableEyeExercises && state.screenTimeStats.continuousScreenTime >= config.screenBreakInterval) {
       suggestEyeBreak();
@@ -183,6 +102,10 @@ export function startScreenTimeTracking(): void {
     if (sessionDay && today !== sessionDay) {
       state.screenTimeStats.totalScreenTimeToday = 0;
       state.screenTimeStats.sessionStartTime = now;
+      // Save the reset stats immediately
+      if (state.storage) {
+        state.storage.saveScreenTimeStats(state.screenTimeStats);
+      }
     }
   }, 60000); // Every minute
 }
@@ -199,7 +122,7 @@ function suggestEyeBreak(): void {
   if (!config.enableEyeExercises || !config.showNotification) return;
 
   // Only suggest once per break interval
-  const timeSinceLastBreak = state.screenTimeStats.lastBreakTime ?
+  const timeSinceLastBreak = state.screenTimeStats.lastBreakTime instanceof Date ?
     (Date.now() - state.screenTimeStats.lastBreakTime.getTime()) / (1000 * 60) : 0;
 
   if (timeSinceLastBreak < config.screenBreakInterval) return;
@@ -240,13 +163,19 @@ export function setupActivityMonitoring(context: vscode.ExtensionContext): void 
     if (windowState.focused) {
       // Only update activity time if window just became focused and we were previously idle
       // This prevents constant activity updates just from having VSCode open
-      const timeSinceLastActivity = state.screenTimeStats.lastActivityTime ?
-        (Date.now() - state.screenTimeStats.lastActivityTime.getTime()) / (1000 * 60) : 0;
+      try {
+        const lastActivityTime = state.screenTimeStats.lastActivityTime;
+        const timeSinceLastActivity = lastActivityTime instanceof Date ?
+          (Date.now() - lastActivityTime.getTime()) / (1000 * 60) : 0;
 
-      // Only count as activity if it's been more than 10 minutes since last activity
-      // This prevents window focus from constantly resetting idle state
-      if (timeSinceLastActivity > 10) {
-        updateActivityTime();
+        // Only count as activity if it's been more than 10 minutes since last activity
+        // This prevents window focus from constantly resetting idle state
+        if (timeSinceLastActivity > 10) {
+          updateActivityTime();
+        }
+      } catch (error) {
+        console.debug('Error handling window focus change:', error);
+        // Continue without updating activity time if there's an error
       }
     }
   }, null, context.subscriptions);
@@ -277,15 +206,23 @@ function updateActivityTime(): void {
 
 function checkIdleState(): void {
   const now = new Date();
-  const timeSinceLastActivity = state.screenTimeStats.lastActivityTime ?
-    (now.getTime() - state.screenTimeStats.lastActivityTime.getTime()) / (1000 * 60) : 0; // minutes
+  const lastActivityTime = state.screenTimeStats.lastActivityTime;
+  const timeSinceLastActivity = lastActivityTime instanceof Date ?
+    (now.getTime() - lastActivityTime.getTime()) / (1000 * 60) : 0; // minutes
 
-  // Consider idle if no activity for 5 minutes
-  if (timeSinceLastActivity >= 5) {
-    state.screenTimeStats.isIdle = true;
-    // Reset coding session when idle
+  // Consider idle if no activity for 5 seconds for coding session (pause timer)
+  const timeSinceLastActivitySeconds = lastActivityTime instanceof Date ?
+    (now.getTime() - lastActivityTime.getTime()) / 1000 : 0; // seconds
+
+  if (timeSinceLastActivitySeconds >= 5) {
+    // Reset coding session after 5 seconds of no activity
     state.screenTimeStats.codingSessionStart = null;
     state.screenTimeStats.longCodingSessionDetected = false;
+  }
+
+  // Consider idle if no activity for 5 minutes (status change)
+  if (timeSinceLastActivity >= 5) {
+    state.screenTimeStats.isIdle = true;
   } else {
     state.screenTimeStats.isIdle = false;
   }
@@ -315,10 +252,24 @@ function suggestLongSessionBreak(): void {
   });
 }
 
+export function incrementExerciseProgress(): void {
+  // Use the goal service for incrementing exercise progress
+  import('./goalService').then(goalService => {
+    goalService.incrementExerciseProgress();
+  });
+}
+
+export function incrementEyeBreakProgress(): void {
+  // Use the goal service for incrementing eye break progress
+  import('./goalService').then(goalService => {
+    goalService.incrementEyeBreakProgress();
+  });
+}
+
 export function startUIUpdates(): void {
   const config = getConfiguration();
 
-  // Update UI every 30 seconds with screen time and activity status
+  // Update UI every 5 seconds with screen time and activity status for better responsiveness
   setInterval(() => {
     if (state.activityBarProvider) {
       if (config.enableEyeExercises) {
@@ -326,11 +277,12 @@ export function startUIUpdates(): void {
         state.activityBarProvider.updateActivityStatus();
       }
       if (config.enableGoals) {
+        updateWellnessGoals(); // Update goals and challenges progress
         state.activityBarProvider.updateWellnessGoals();
         state.activityBarProvider.updateWellnessChallenges();
       }
     }
-  }, 30000); // Every 30 seconds
+  }, 5000); // Every 5 seconds
 }
 
 // Daily Data Recording

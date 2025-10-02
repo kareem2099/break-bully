@@ -6,13 +6,22 @@ import { showStretchExercise, showBreathingExercise, showEyeExercise } from './s
 import { showAnalyticsReport } from './services/analyticsService';
 import { BreakBullyActivityBarProviderImpl } from './ui/activityBarProvider';
 import { ChangeWorkoutPanel } from './ui/changeWorkoutPanel';
+import { WorkRestAssessmentPanel } from './ui/workRestAssessmentPanel';
 import { UpdatePanel } from './ui/updatePanel';
-import { initializeWellnessGoals, initializeWellnessChallenges, startScreenTimeTracking, startUIUpdates, setupActivityMonitoring, recordDailyWellnessData, setupDailyDataRecording } from './services/wellnessService';
-import { initializeAchievements } from './services/achievementService';
-import { initializeScreenBlocking } from './services/screenBlockingService';
+import { TimeBlockingPanel } from './ui/timeBlockingPanel';
+import { initializeGoals } from './services/goalService';
+import { initializeWellnessChallenges, startScreenTimeTracking, startUIUpdates, setupActivityMonitoring, recordDailyWellnessData, setupDailyDataRecording } from './services/wellnessService';
+import { initializeAchievements, showAchievementsReport } from './services/achievementService';
+import { initializeScreenBlocking, forceUnblock } from './services/screenBlockingService';
+import { getTimeRemaining } from './services/workRestService';
 import { initializeWorkRestModel } from './services/workRestService';
 import { initializeExerciseStorage, showCustomExerciseCreator, showCustomExerciseLibrary, initializeGitIntegration, triggerGitBasedBreakSuggestion } from './services/exerciseService';
 import { getConfiguration } from './core/configuration';
+import { smartWellnessManager } from './services/activityIntegration/smartWellnessManager';
+import { BaseActivityMonitor } from './services/activityIntegration/baseActivityMonitor';
+import { initializeAdvancedScheduler } from './services/activityIntegration/advancedSchedulerService';
+import { registerTempExportCommand } from './tempExportCommand';
+import { usageAnalytics } from './services/usageAnalyticsService';
 
 export function activate(context: vscode.ExtensionContext): void {
   console.log('Break Bully extension is now active - prepare to be bullied into wellness!');
@@ -20,6 +29,18 @@ export function activate(context: vscode.ExtensionContext): void {
   try {
     // Initialize state and storage
     initializeState(context);
+
+    // Initialize activity monitor (needed for ML features)
+    try {
+      state.activityMonitor = new BaseActivityMonitor(context);
+      console.log('Activity monitor initialized successfully');
+
+      // Initialize advanced scheduler with activity monitor
+      initializeAdvancedScheduler(state.activityMonitor);
+    } catch (error) {
+      console.warn('Failed to initialize activity monitor and advanced scheduler, ML features will be disabled:', error);
+      state.activityMonitor = undefined;
+    }
 
     // Create status bar item
     state.statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
@@ -61,11 +82,28 @@ export function activate(context: vscode.ExtensionContext): void {
       ChangeWorkoutPanel.createOrShow(context.extensionUri);
     });
 
+    const startMLAssessmentCommand = vscode.commands.registerCommand('breakBully.startMLAssessment', () => {
+      console.log('ML Assessment command called');
+      if (state.activityMonitor) {
+        console.log('Activity monitor available, getting activity states');
+        // Get recent activity events for ML generation
+        const activityEvents = state.activityMonitor.getRecentActivityStates();
+        console.log('Got activity events:', activityEvents?.length || 0);
+
+        // Start ML assessment
+        WorkRestAssessmentPanel.createOrShow(context.extensionUri, activityEvents);
+        vscode.window.showInformationMessage('🤖 Starting AI Personalization Assessment...');
+        console.log('ML Assessment panel opened');
+      } else {
+        console.log('Activity monitor not available');
+        vscode.window.showErrorMessage('ML Assessment requires activity monitoring to be enabled. Please check your settings.');
+      }
+    });
+
     const refreshTimerCommand = vscode.commands.registerCommand('breakBully.refreshTimer', () => {
       // Trigger timer refresh in the main webview with work-rest session timing
       if (state.activityBarProvider) {
-        const workRestService = require('./services/workRestService');
-        const timeRemaining = workRestService.getTimeRemaining();
+        const timeRemaining = getTimeRemaining();
 
         if (timeRemaining) {
           // Show work-rest session timing
@@ -97,8 +135,11 @@ export function activate(context: vscode.ExtensionContext): void {
       showAnalyticsReport();
     });
 
+    const showAchievementsCommand = vscode.commands.registerCommand('breakBully.showAchievements', () => {
+      showAchievementsReport();
+    });
+
     const forceUnblockCommand = vscode.commands.registerCommand('breakBully.forceUnblock', () => {
-      const { forceUnblock } = require('./services/screenBlockingService');
       forceUnblock();
       vscode.window.showInformationMessage('🔓 Emergency unblock activated. Rest enforcement temporarily disabled.');
     });
@@ -119,20 +160,32 @@ export function activate(context: vscode.ExtensionContext): void {
       UpdatePanel.createOrShow(context.extensionUri);
     });
 
+    const openTimeBlockingCommand = vscode.commands.registerCommand('breakBully.openTimeBlocking', () => {
+      TimeBlockingPanel.createOrShow(context.extensionUri);
+    });
+
+    // Register temporary debug command
+    registerTempExportCommand(context);
+
     context.subscriptions.push(
       showReminderCommand,
       toggleRemindersCommand,
+      refreshTimerCommand,
       openSettingsCommand,
       takeBreakCommand,
       quickStretchCommand,
       breathingExerciseCommand,
       eyeExerciseCommand,
+      changeWorkoutCommand,
+      startMLAssessmentCommand,
       analyticsCommand,
+      showAchievementsCommand,
       forceUnblockCommand,
       createCustomExerciseCommand,
       showCustomExerciseLibraryCommand,
       triggerGitBreakSuggestionCommand,
-      showUpdatePanelCommand
+      showUpdatePanelCommand,
+      openTimeBlockingCommand
     );
 
     // Initialize activity bar provider
@@ -152,7 +205,7 @@ export function activate(context: vscode.ExtensionContext): void {
     }
 
     // Initialize wellness goals and challenges
-    initializeWellnessGoals();
+    initializeGoals();
     initializeWellnessChallenges();
 
     // Record initial daily wellness data
@@ -198,7 +251,29 @@ export function activate(context: vscode.ExtensionContext): void {
     // Check if we should show the update panel (max 3 days)
     checkAndShowUpdatePanel(context);
 
-    console.log('Break Bully extension activation completed successfully');
+    // Initialize AI Analytics Infrastructure
+    console.log('Initializing AI Analytics Infrastructure...');
+    try {
+      // Usage Analytics Service is already started via singleton pattern
+      console.log('Usage Analytics initialized');
+
+      // Performance Analytics Engine is ready via singleton pattern
+      console.log('Performance Analytics Engine initialized');
+
+      // Adaptive Learning Service - starts continuous learning loops
+      console.log('Adaptive Learning Service initialized and learning cycle started');
+
+      // Track extension startup as first usage event
+      usageAnalytics.trackSessionStart('extension_startup', 0);
+
+      vscode.window.showInformationMessage('🧠 AI Productivity Analytics Active - System learning from your usage patterns!', 'Show Analytics Dashboard');
+
+    } catch (error) {
+      console.warn('AI Analytics initialization failed:', error);
+      vscode.window.showWarningMessage('Could not initialize AI Analytics features - basic functionality is still available.');
+    }
+
+    console.log('Break Bully extension activation completed successfully - AI Analytics Enabled');
   } catch (error) {
     console.error('Error during Break Bully extension activation:', error);
     vscode.window.showErrorMessage(`Break Bully failed to activate: ${(error as Error).message}`);
@@ -250,4 +325,7 @@ export function deactivate(): void {
   if (state.statusBarItem) {
     state.statusBarItem.dispose();
   }
+
+  // Stop smart wellness monitoring
+  smartWellnessManager.stopMonitoring();
 }
