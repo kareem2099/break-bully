@@ -189,8 +189,12 @@
                     <span class="btn-icon">🚀</span>
                     Git Productivity
                 </button>
+                <button class="action-btn secondary" onclick="openDonationModal()">
+                    <span class="btn-icon">💘</span>
+                    Support Marriage
+                </button>
                 <button class="action-btn tertiary" data-action="openTimeBlocking">
-                    <span class="btn-icon">📅</span>
+                    <span class="btn-icon">�📅</span>
                     Time Blocking
                 </button>
             </div>
@@ -292,6 +296,94 @@
             </div>
         </div>
 
+        <!-- Donation Modal -->
+        <div class="donation-modal-overlay hidden" id="donationModalOverlay">
+            <div class="donation-modal">
+                <div class="donation-header">
+                    <h2>💝 Help Build Our Marriage Dream!</h2>
+                    <button class="donation-close-btn" onclick="closeDonationModal()">×</button>
+                </div>
+
+                <div class="donation-content">
+                    <div class="love-story">
+                        <div class="hearts-bg">💕💖💗💘💞💓</div>
+                        <h3>❣️ A Message From the Heart ❣️</h3>
+                        <p class="love-message">
+                            <em>"Hello beautiful souls! 🙏</em>
+                        </p>
+                        <p>
+                            I'm Kareem, the creator of Break Bully, and this extension represents my passion for building AI that genuinely helps people. But today, I need to share something even more important from my heart...
+                        </p>
+                        <p>
+                            I've found the love of my life - an amazing woman who has captured my heart completely. Every great love story deserves a beautiful beginning, and I need your help to make our wedding dreams come true! 💒💍
+                        </p>
+                        <p>
+                            <strong>Every donation, no matter how small, helps us take one step closer to forever together. Your support means the world and helps build my future with the woman I love! 💕</strong>
+                        </p>
+                        <p class="thank-you">
+                            Thank you from the bottom of my heart! 🌹<br>
+                            You are helping make dreams come true. 💫
+                        </p>
+                    </div>
+
+                    <div class="donation-options">
+                        <h3>🌟 Ways to Support Our Love Story</h3>
+                        <div class="donation-buttons">
+                            <a href="https://paypal.me/freerave1" target="_blank" class="donation-btn paypal">
+                                <div class="donation-icon">💳</div>
+                                <div class="donation-info">
+                                    <div class="donation-name">PayPal</div>
+                                    <div class="donation-desc">Direct donation</div>
+                                </div>
+                                <div class="donation-arrow">→</div>
+                            </a>
+
+                            <a href="https://buymeacoffee.com/freerave" target="_blank" class="donation-btn coffee">
+                                <div class="donation-icon">☕</div>
+                                <div class="donation-info">
+                                    <div class="donation-name">Buy Me a Coffee</div>
+                                    <div class="donation-desc">Support for developers</div>
+                                </div>
+                                <div class="donation-arrow">→</div>
+                            </a>
+
+                            <a href="https://ko-fi.com/freerave" target="_blank" class="donation-btn kofi">
+                                <div class="donation-icon">🎯</div>
+                                <div class="donation-info">
+                                    <div class="donation-name">Ko-fi</div>
+                                    <div class="donation-desc">Flexible support</div>
+                                </div>
+                                <div class="donation-arrow">→</div>
+                            </a>
+
+                            <a href="https://github.com/sponsors/kareem2099" target="_blank" class="donation-btn github">
+                                <div class="donation-icon">🐙</div>
+                                <div class="donation-info">
+                                    <div class="donation-name">GitHub Sponsors</div>
+                                    <div class="donation-desc">Recurring support</div>
+                                </div>
+                                <div class="donation-arrow">→</div>
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="impact-message">
+                        <h4>🔥 Your Impact</h4>
+                        <p>
+                            Your generosity doesn't just support open source software - it helps create a real love story! Every contribution brings us closer to the wedding we've dreamed about. 💒🌹
+                        </p>
+                    </div>
+
+                    <div class="footer-cta">
+                        <p class="closing-message">
+                            🌟 <strong>With gratitude and love,</strong><br>
+                            Kareem & My Future Bride 💕
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="screen-time-section hidden" id="screenTimeSection">
             <h3>Screen Time Today</h3>
             <div class="screen-time-display">
@@ -320,6 +412,72 @@
                 <div class="session-info" id="sessionInfo">
                     <span class="session-time" id="sessionTime">--:--</span>
                     <span class="session-label">Current session</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Advanced AI Visibility Dashboard -->
+        <div class="ai-status-section" id="aiStatusSection">
+            <h3>🤖 AI Decision Pipeline</h3>
+            <div class="ai-decision-pipeline">
+                <div class="ai-status-header">
+                    <div class="ai-current-activity" id="aiCurrentActivity">
+                        <span class="ai-status-icon">🧠</span>
+                        <span class="ai-status-text">AI analyzing cognitive patterns...</span>
+                    </div>
+                    <div class="ai-confidence-indicator" id="aiConfidenceIndicator">
+                        <span class="confidence-level">Neutral</span>
+                        <span class="confidence-value">--%</span>
+                    </div>
+                </div>
+
+                <div class="ai-cognitive-analysis" id="aiCognitiveAnalysis">
+                    <div class="analysis-row">
+                        <div class="analysis-item">
+                            <span class="analysis-label">Cognitive State:</span>
+                            <span class="analysis-value" id="cognitiveStateValue">Analyzing...</span>
+                        </div>
+                        <div class="analysis-item">
+                            <span class="analysis-label">Work Immersion:</span>
+                            <span class="analysis-value" id="workImmersionValue">--</span>
+                        </div>
+                    </div>
+                    <div class="analysis-row">
+                        <div class="analysis-item">
+                            <span class="analysis-label">Focus Stability:</span>
+                            <span class="analysis-value" id="focusStabilityValue">--%</span>
+                        </div>
+                        <div class="analysis-item">
+                            <span class="analysis-label">Detected Work Type:</span>
+                            <span class="analysis-value" id="detectedWorkType">analyzing...</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="ai-recommendations" id="aiRecommendations">
+                    <div class="recommendation-item">
+                        <span class="rec-icon">⏰</span>
+                        <span class="rec-text" id="breakRecommendation">Analyzing break timing...</span>
+                        <span class="rec-confidence" id="breakConfidence"></span>
+                    </div>
+                    <div class="recommendation-item">
+                        <span class="rec-icon">🔄</span>
+                        <span class="rec-text" id="modelRecommendation">Evaluating model effectiveness...</span>
+                        <span class="rec-confidence" id="modelConfidence"></span>
+                    </div>
+                </div>
+
+                <div class="ai-activity-log" id="aiActivityLog">
+                    <div class="log-header">
+                        <span class="log-title">Recent AI Decisions</span>
+                        <span class="log-count">(last 5)</span>
+                    </div>
+                    <div class="log-entries" id="aiLogEntries">
+                        <div class="log-entry">
+                            <span class="log-time">2m ago</span>
+                            <span class="log-message">Initialized cognitive pattern analysis</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

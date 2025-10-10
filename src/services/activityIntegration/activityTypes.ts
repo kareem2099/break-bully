@@ -58,6 +58,11 @@ export interface ActivityContext {
   refactorType?: string;
   breakType?: string;
   activityState?: string;
+
+  // Enhanced typing pattern analysis
+  typingMetrics?: AdvancedTypingMetrics;
+  focusQuality?: FocusQualityMetrics;
+  contextSwitch?: ContextSwitchMetrics;
 }
 
 export interface ActivityMetrics {
@@ -167,4 +172,35 @@ export interface TestRunEvent {
     total: number;
   };
   testType: 'unit' | 'integration' | 'e2e';
+}
+
+// Advanced Activity Analytics Interfaces
+
+export interface AdvancedTypingMetrics {
+  keystrokeVelocity: number;        // WPM (words per minute)
+  errorRate: number;               // backspaces per 100 characters typed
+  rhythmVariance: number;          // consistency (0-1, 1 = perfectly consistent)
+  pauseDistribution: number[];     // array of pause lengths in ms
+  correctionPatterns: ('immediate' | 'delayed' | 'bunching')[]; // timing of corrections
+  burstQuality: number;            // overall typing efficiency (0-1)
+  fatigueIndicators: string[];     // detected fatigue patterns
+}
+
+export interface FocusQualityMetrics {
+  contextDepth: number;            // immersion level (0-10, higher = deeper focus)
+  taskSwitchingRate: number;       // switches per hour
+  codeToCommentRatio: number;      // code changes vs comments added
+  documentationEngagement: boolean; // actively reading documentation
+  searchUtilization: number;       // searches per hour (higher = problem-solving)
+  workType: 'deep_coding' | 'debugging' | 'research' | 'administrative' | 'creative' | 'review';
+  focusStability: number;          // consistency of focus periods (0-1)
+}
+
+export interface ContextSwitchMetrics {
+  fromApp: string;                 // application switching away from
+  toApp: string;                   // application switching to
+  durationInPrevious: number;      // how long was user in previous app (minutes)
+  transitionPurpose: 'research' | 'testing' | 'communication' | 'break' | 'distraction' | 'unknown';
+  productivityContext: 'deep_work' | 'administrative' | 'creative' | 'debugging' | 'planning';
+  contextChangeCost: number;       // cognitive cost of switch (0-10, higher = greater disruption)
 }

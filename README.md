@@ -57,6 +57,25 @@ Break Bully has evolved from a simple reminder system into a comprehensive welln
 - **Notification Performance Analytics**: Tracks acceptance rates and optimizes notification strategies
 - **Contextual Wellness Suggestions**: Time-of-day appropriate exercise recommendations
 
+### 💍 **Marriage Support Campaign - Love Story & Donation System**
+- **"Support Marriage" Button**: Beautiful donation integration in Quick Actions (💘 icon)
+- **Heartfelt Love Story**: Personal message about wanting to marry the love of my life 💒
+- **Multiple Donation Platforms**:
+  - **PayPal** (paypal.me/freerave1) - Direct financial support
+  - **Buy Me a Coffee** (buymeacoffee.com/freerave) - Developer appreciation donations
+  - **Ko-fi** (ko-fi.com/freerave) - Flexible support platform
+  - **GitHub Sponsors** (github.com/sponsors/kareem2099) - Recurring developer support
+- **Beautiful Modal Design**: Love-themed interface with floating hearts (💕💖💗💘💞💓)
+- **Personal Impact**: Every donation helps build our future together 💍
+- **Non-Intrusive Presentation**: Touching story without being pushy
+
+### ⏰ **Real-Time Precision Timer**
+- **Second-by-Second Updates**: Timer refreshes every 1 second for exact remaining time
+- **Live Countdown Display**: Users see precise timing (4:30 → 4:29 → 4:28 → ...)
+- **Professional Experience**: Matches expectations of modern timer applications
+- **Reduced User Anxiety**: Crystal clear timing prevents timing uncertainty
+- **Enhanced Productivity Focus**: Precise break timing for better work-life balance
+
 ## 📱 Installation
 
 ### From VSCode Marketplace
@@ -281,6 +300,6 @@ MIT License - See LICENSE file for details.
 
 ---
 
-**Break Bully**: Because your health is too important to ignore! 💚
+**Break Bully v1.1.1**: Because your health is too important to ignore! 💚
 
-*Helping developers worldwide maintain healthy work-life balance, one smart break at a time.*
+*Helping developers worldwide maintain healthy work-life balance, and now helping build beautiful love stories too!* 💍

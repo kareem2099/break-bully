@@ -4,7 +4,10 @@ import {
   ActivityType,
   ActivityLevel,
   ActivityMetrics,
-  ActivityContext
+  ActivityContext,
+  AdvancedTypingMetrics,
+  FocusQualityMetrics,
+  ContextSwitchMetrics
 } from './activityTypes';
 import { activitySettings } from './activitySettings';
 import { ExtensionStorage } from '../../utils/storage';
@@ -40,6 +43,21 @@ export class BaseActivityMonitor {
   private debugSessionActive = false;
   private activityStateHistory: { timestamp: number; state: ActivityState }[] = [];
   private storage: ExtensionStorage | null = null;
+
+  // Advanced typing pattern tracking
+  private currentTypingSession: {
+    startTime: number;
+    keystrokeTimings: number[];
+    backspaceCount: number;
+    totalCharacters: number;
+    correctionTimings: number[];
+    pauseLengths: number[];
+    lastKeystrokeTime: number;
+  } | null = null;
+  private typingPatternsHistory: AdvancedTypingMetrics[] = [];
+  private lastFileFocusTime = 0;
+  private fileFocusDuration = 0;
+  private typingAnalysisTimeout: ReturnType<typeof setTimeout> | null = null; // Used for debouncing typing analysis
 
   constructor(private context?: vscode.ExtensionContext) {
     this.initializeStorage();
@@ -83,29 +101,12 @@ export class BaseActivityMonitor {
     });
     this.disposables.push(fileOpenDisposable);
 
-    // Typing burst detection (simplified)
-    let typingTimer: ReturnType<typeof setTimeout> | null = null;
-    let typingStartTime = 0;
-    let typingCount = 0;
+    // Advanced typing pattern tracking
+    let typingAnalysisTimeout: ReturnType<typeof setTimeout> | null = null;
 
     const typingDisposable = vscode.workspace.onDidChangeTextDocument(event => {
       if (event.contentChanges.length > 0) {
-        if (!typingTimer) {
-          typingStartTime = Date.now();
-          typingCount = 0;
-        }
-
-        typingCount += event.contentChanges.reduce((sum, change) =>
-          sum + change.text.length, 0);
-
-        if (typingTimer) clearTimeout(typingTimer);
-        typingTimer = setTimeout(() => {
-          if (typingCount > 10) { // Minimum characters for a burst
-            this.trackTypingBurst(typingStartTime, Date.now(), typingCount, event.document.languageId);
-          }
-          typingTimer = null;
-          typingCount = 0;
-        }, 1000); // 1 second pause to detect burst end
+        this.analyzeTypingEvent(event);
       }
     });
     this.disposables.push(typingDisposable);
@@ -659,16 +660,17 @@ export class BaseActivityMonitor {
       if (this.context) {
         this.storage = new ExtensionStorage(this.context);
       } else {
-        // Fallback - try to get context dynamically
-        const extension = require('vscode').extensions.getExtension('kareem2099.break-bully');
-        if (extension?.exports?.context) {
-          this.storage = new ExtensionStorage(extension.exports.context);
-        } else {
-          throw new Error('Extension context not available for storage operations');
-        }
+        // Fallback - create temporary storage without context (data won't persist)
+        console.warn('Extension context not available, using temporary storage');
+        this.storage = {
+          loadActivityEvents: () => [],
+          saveActivityEvents: () => {},
+          loadCustomSetting: () => null,
+          saveCustomSetting: () => {}
+        } as any;
       }
     }
-    return this.storage;
+    return this.storage!;
   }
 
   private loadActivityEvents(): ActivityEvent[] {
@@ -685,6 +687,14 @@ export class BaseActivityMonitor {
     if (!this.storage && this.context) {
       this.storage = new ExtensionStorage(this.context);
     }
+  }
+
+  private getStorageSafe(): ExtensionStorage {
+    const storage = this.getStorage();
+    if (!storage) {
+      throw new Error('Storage not available for activity data operations');
+    }
+    return storage!;
   }
 
   // Helper method for refactor tracking
@@ -961,6 +971,292 @@ export class BaseActivityMonitor {
   } {
     const events = this.getRecentEvents(21 * 24 * 60); // Last 3 weeks
     return MachineLearningAnalyzer.analyzeWorkPatterns(events);
+  }
+
+  /**
+   * Analyzes typing events with advanced pattern recognition
+   */
+  private analyzeTypingEvent(event: vscode.TextDocumentChangeEvent): void {
+    const now = Date.now();
+
+    // Start new typing session if none exists or it's been too long since last keystroke
+    if (!this.currentTypingSession ||
+        (now - this.currentTypingSession.lastKeystrokeTime) > 5000) { // 5 second gap
+      this.startNewTypingSession(now);
+    }
+
+    // Analyze the content changes for typing patterns (null check already handled above)
+    const typingMetrics = this.processContentChanges(event.contentChanges);
+    if (this.currentTypingSession) {
+      this.currentTypingSession.lastKeystrokeTime = now;
+    }
+
+    // Continue building the typing session until a pause indicates completion
+    if (this.typingAnalysisTimeout) clearTimeout(this.typingAnalysisTimeout);
+    this.typingAnalysisTimeout = setTimeout(() => {
+      this.completeTypingSessionAndAnalyze();
+    }, 2000); // 2 second pause = end of typing burst
+  }
+
+  /**
+   * Starts a new typing session
+   */
+  private startNewTypingSession(startTime: number): void {
+    this.currentTypingSession = {
+      startTime,
+      keystrokeTimings: [],
+      backspaceCount: 0,
+      totalCharacters: 0,
+      correctionTimings: [],
+      pauseLengths: [],
+      lastKeystrokeTime: startTime
+    };
+  }
+
+  /**
+   * Processes content changes to extract typing metrics
+   */
+  private processContentChanges(changes: readonly vscode.TextDocumentContentChangeEvent[]): {
+    keystrokes: number;
+    backspaces: number;
+    additions: number;
+    deletions: number;
+    isCorrection: boolean;
+  } {
+    let keystrokes = 0;
+    let backspaces = 0;
+    let additions = 0;
+    let deletions = 0;
+    let isCorrection = false;
+
+    changes.forEach(change => {
+      const addedChars = change.text.length;
+      const removedChars = change.rangeLength || 0;
+
+      additions += addedChars;
+      deletions += removedChars;
+      keystrokes += addedChars;
+
+      // Detect backspaces through deletions
+      if (removedChars > 0 && addedChars === 0) {
+        backspaces += removedChars;
+        isCorrection = true;
+      }
+    });
+
+    return { keystrokes, backspaces, additions, deletions, isCorrection };
+  }
+
+  /**
+   * Completes a typing session and generates typing pattern analysis
+   */
+  private completeTypingSessionAndAnalyze(): void {
+    if (!this.currentTypingSession) return;
+
+    const session = this.currentTypingSession;
+    const endTime = Date.now();
+    const duration = endTime - session.startTime;
+
+    // Calculate typing metrics
+    const errorRate = session.totalCharacters > 0 ?
+      (session.backspaceCount / session.totalCharacters) * 100 : 0;
+
+    // Calculate rhythm variance (consistency)
+    let rhythmVariance = 1.0; // Perfectly consistent by default
+    if (session.keystrokeTimings.length > 1) {
+      const intervals = session.keystrokeTimings.slice(1).map((time, i) =>
+        time - session.keystrokeTimings[i]);
+      const mean = intervals.reduce((a, b) => a + b, 0) / intervals.length;
+      const variance = intervals.reduce((sum, interval) =>
+        sum + Math.pow(interval - mean, 2), 0) / intervals.length;
+      rhythmVariance = Math.max(0.1, 1 - (Math.sqrt(variance) / mean)); // 0-1 scale
+    }
+
+    // Calculate WPM (words per minute)
+    const wordsTyped = session.totalCharacters / 5; // Standard: 5 chars = 1 word
+    const minutesElapsed = duration / (1000 * 60);
+    const keystrokeVelocity = minutesElapsed > 0 ? wordsTyped / minutesElapsed : 0;
+
+    // Detect fatigue indicators
+    const fatigueIndicators: string[] = [];
+    if (rhythmVariance < 0.5 && duration > 30000) fatigueIndicators.push('erratic_rhythm');
+    if (errorRate > 5) fatigueIndicators.push('high_error_rate');
+    if (session.correctionTimings.length > session.totalCharacters * 0.1) fatigueIndicators.push('frequent_corrections');
+
+    // Determine correction patterns
+    const correctionPatterns: ('immediate' | 'delayed' | 'bunching')[] = [];
+    if (session.correctionTimings.length > 0) {
+      // Analyze timing of corrections relative to typing flow
+      session.correctionTimings.forEach(correctionTime => {
+        const timeSinceStart = correctionTime - session.startTime;
+        const relativePosition = timeSinceStart / duration;
+
+        if (relativePosition < 0.1) correctionPatterns.push('immediate');
+        else if (relativePosition > 0.9) correctionPatterns.push('delayed');
+        else correctionPatterns.push('bunching');
+      });
+    }
+
+    // Calculate burst quality score
+    const burstQuality = this.calculateBurstQuality(
+      keystrokeVelocity, errorRate, rhythmVariance, duration);
+
+    // Create advanced typing metrics
+    const advancedMetrics: AdvancedTypingMetrics = {
+      keystrokeVelocity: Math.round(keystrokeVelocity * 10) / 10,
+      errorRate: Math.round(errorRate * 10) / 10,
+      rhythmVariance: Math.round(rhythmVariance * 100) / 100,
+      pauseDistribution: session.pauseLengths,
+      correctionPatterns,
+      burstQuality: Math.round(burstQuality * 100) / 100,
+      fatigueIndicators
+    };
+
+    // Store in typing patterns history
+    this.typingPatternsHistory.push(advancedMetrics);
+    if (this.typingPatternsHistory.length > 50) { // Keep recent patterns
+      this.typingPatternsHistory = this.typingPatternsHistory.slice(-50);
+    }
+
+    // Update current activity state based on typing patterns
+    this.updateActivityStateBasedOnTyping(advancedMetrics);
+
+    // Generate focus quality analysis if appropriate
+    const focusMetrics = this.generateFocusQualityMetrics(advancedMetrics);
+    const contextMetrics = this.generateContextSwitchMetrics();
+
+    // Create enhanced activity event
+    const activityEvent: ActivityEvent = {
+      id: `typing_session_${Date.now()}_${Math.random()}`,
+      type: ActivityType.TYPING_BURST,
+      timestamp: session.startTime,
+      duration,
+      intensity: Math.min(10, Math.max(1, Math.floor(burstQuality * 10))),
+      context: {
+        fileType: vscode.window.activeTextEditor?.document.languageId || 'unknown',
+        typingMetrics: advancedMetrics,
+        focusQuality: focusMetrics,
+        contextSwitch: contextMetrics
+      }
+    };
+
+    this.addEvent(activityEvent);
+
+    // Reset session
+    this.currentTypingSession = null;
+
+    console.debug('Completed typing session analysis:', {
+      duration: Math.round(duration/1000) + 's',
+      wpm: advancedMetrics.keystrokeVelocity,
+      errors: advancedMetrics.errorRate + '%',
+      quality: advancedMetrics.burstQuality,
+      patterns: correctionPatterns.length > 0 ? correctionPatterns[0] : 'none'
+    });
+  }
+
+  /**
+   * Calculates overall typing burst quality score
+   */
+  private calculateBurstQuality(
+    velocity: number,
+    errorRate: number,
+    rhythm: number,
+    duration: number
+  ): number {
+    // Velocity score (0-1): 40-60 WPM is excellent, 20-40 good, below poor
+    let velocityScore = 0;
+    if (velocity >= 40) velocityScore = 1.0;
+    else if (velocity >= 30) velocityScore = 0.8;
+    else if (velocity >= 20) velocityScore = 0.6;
+    else velocityScore = Math.max(0.2, velocity / 20);
+
+    // Error rate score (0-1): <2% excellent, <5% good, >10% poor
+    const errorScore = Math.max(0, 1 - (errorRate / 10));
+
+    // Rhythm score (0-1): >0.8 excellent consistency
+    const rhythmScore = rhythm;
+
+    // Duration bonus: longer focused bursts get slight bonus
+    const durationBonus = Math.min(0.1, duration / (1000 * 60 * 10)); // Max 0.1 bonus for 10 minutes
+
+    return Math.min(1.0, (velocityScore * 0.4) + (errorScore * 0.3) + (rhythmScore * 0.3) + durationBonus);
+  }
+
+  /**
+   * Updates activity state based on typing patterns
+   */
+  private updateActivityStateBasedOnTyping(metrics: AdvancedTypingMetrics): void {
+    let newState = ActivityState.CODING;
+
+    // Flow state detection: high quality, consistent typing, no fatigue
+    if (metrics.burstQuality >= 0.8 && metrics.fatigueIndicators.length === 0 &&
+        metrics.rhythmVariance >= 0.7) {
+      newState = ActivityState.CODING; // Stay in coding, potentially flow state
+    }
+
+    // Fatigue state: low quality, inconsistent, high errors
+    else if (metrics.fatigueIndicators.length > 1 || metrics.burstQuality < 0.4) {
+      // Don't change state immediately - might just be a rough patch
+      console.debug('Typing fatigue detected, monitoring closely');
+    }
+
+    // Reading state: slow, inconsistent typing
+    else if (metrics.keystrokeVelocity < 20 && metrics.rhythmVariance < 0.5) {
+      newState = ActivityState.READING;
+    }
+
+    this.updateActivityState(newState);
+  }
+
+  /**
+   * Generates focus quality metrics from typing patterns
+   */
+  private generateFocusQualityMetrics(typingMetrics: AdvancedTypingMetrics): FocusQualityMetrics {
+    const now = Date.now();
+
+    // File immersion: how long current file has been active
+    const fileImmersion = this.fileFocusDuration || 0;
+    const contextDepth = Math.min(10, Math.max(0, fileImmersion / (10 * 60 * 1000))); // 0-10 based on 10 minutes
+
+    // Task switching: analyze file switches in recent activity
+    const recentEvents = this.getRecentEvents(15); // Last 15 minutes
+    const fileSwitches = recentEvents.filter(e => e.type === ActivityType.FILE_OPEN).length;
+    const taskSwitchingRate = fileSwitches * 4; // Rate per hour
+
+    // Classify work type based on patterns
+    let workType: FocusQualityMetrics['workType'] = 'deep_coding';
+    if (typingMetrics.errorRate > 8 || taskSwitchingRate > 12) workType = 'debugging';
+    else if (fileImmersion < 300000) workType = 'administrative'; // Less than 5 minutes
+    else if (typingMetrics.correctionPatterns.includes('immediate')) workType = 'creative';
+    else if (taskSwitchingRate > 6) workType = 'review';
+
+    // Focus stability: inverse of error rate and rhythm variance
+    const focusStability = Math.min(1.0, (1 - typingMetrics.errorRate/10) * typingMetrics.rhythmVariance);
+
+    return {
+      contextDepth: Math.round(contextDepth * 10) / 10,
+      taskSwitchingRate: Math.round(taskSwitchingRate * 10) / 10,
+      codeToCommentRatio: this.readingModeActive ? 0.2 : 2.0, // Placeholder - could be more sophisticated
+      documentationEngagement: this.readingModeActive,
+      searchUtilization: 0, // Would need search event tracking
+      workType,
+      focusStability: Math.round(focusStability * 100) / 100
+    };
+  }
+
+  /**
+   * Generates context switching metrics for current session
+   */
+  private generateContextSwitchMetrics(): ContextSwitchMetrics {
+    // This is a simplified implementation - in production would track actual app switches
+    return {
+      fromApp: 'vscode', // Current app
+      toApp: 'vscode', // Staying in same app
+      durationInPrevious: this.fileFocusDuration || 0,
+      transitionPurpose: 'research', // Assuming research-based transitions
+      productivityContext: 'deep_work', // Based on activity state
+      contextChangeCost: 0 // No app switch = low cost
+    };
   }
 
   /**

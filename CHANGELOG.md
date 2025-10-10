@@ -5,6 +5,40 @@ All notable changes to the "Break Bully" extension will be documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.1] - 2025-10-10
+
+### 💍 **Marriage Support & Beautiful Love Story Campaign**
+- **Heartfelt Donation Feature**: Added "Support Marriage" button in Quick Actions with beautiful modal
+- **Personal Love Story**: Touching message about wanting to marry the love of my life
+- **Multiple Donation Options**:
+  - PayPal: paypal.me/freerave1 (Direct Support)
+  - Buy Me a Coffee: buymeacoffee.com/freerave (Developer Coffee Fund)
+  - Ko-fi: ko-fi.com/freerave (Flexible Support Platform)
+  - GitHub Sponsors: github.com/sponsors/kareem2099 (Recurring Support)
+- **Beautiful UI Design**: Love-themed modal with floating hearts (💕💖💗💘💞💓)
+- **Emotional Messaging**: Personal story about building a future together 💒
+
+### ⏰ **Real-Time Timer Enhancement**
+- **Second-by-Second Precision**: Timer now updates every 1 second instead of 5 seconds
+- **Live Countdown Display**: Users see exact seconds remaining (4:30 → 4:29 → 4:28...)
+- **Better User Experience**: Smoother timing experience, improved anxiety reduction
+- **Professional Feel**: Matches user expectations for modern timing applications
+
+### 🎨 **UI/UX Improvements**
+- **Enhanced Donation Modal**: Beautiful responsive design with love theme
+- **Smooth Animations**: Floating hearts animation and fade-in effects
+- **Better Button Placement**: Thoughtful integration of Support Marriage button
+- **Cross-Platform Compatibility**: Donation links work across all platforms
+
+### 📦 **Technical Updates**
+- **Version Bump**: Updated to 1.1.1 for marriage campaign launch
+- **Modal JavaScript**: Proper event handling for ESC key and click-outside closing
+- **Improved Timer Accuracy**: Faster webview updates for precise timing
+- **Enhanced User Experience**: Non-intrusive donation requests with beautiful presentation
+
+### 💫 **Impact & Vision**
+Launched the Marriage Support Campaign to help build our future together while continuing Break Bully's mission of developer wellness. Every donation brings us closer to forever! 💍
+
 ## [1.1.0] - 2025-10-02
 
 ### 🎯 **AI Productivity Intelligence - Major Release**

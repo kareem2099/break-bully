@@ -130,6 +130,18 @@
             case 'hideCodeTuneSuggestion':
                 hideCodeTuneSuggestion();
                 break;
+            case 'aiCognitiveState':
+                updateAICognitiveState(message.data);
+                break;
+            case 'aiRecommendation':
+                updateAIRecommendation(message.data);
+                break;
+            case 'aiActivityLog':
+                addAILogEntry(message.data);
+                break;
+        case 'aiStatusUpdate':
+            updateAIStatus(message.data);
+            break;
         }
     }
 
@@ -140,11 +152,11 @@
         }
 
         timerInterval = setInterval(() => {
-            // Request current timer status from extension (reduced frequency to prevent overload)
+            // Request current timer status from extension for real-time countdown display
             vscode.postMessage({
                 command: 'requestTimerStatus'
             });
-        }, 5000); // Request every 5 seconds instead of every 1 second
+        }, 1000); // Request every 1 second for real-time second-by-second countdown
     }
 
     // ===== TIME DISPLAY MANAGEMENT =====
@@ -498,9 +510,12 @@
     function handleOnboardingStatus(data) {
         if (!data.completed) {
             // Onboarding not completed, show it
+            onboardingCompleted = false;
             checkOnboardingStatus();
         } else {
             // Onboarding completed, save to webview state for future reference
+            onboardingCompleted = true;
+            currentOnboardingStep = 100; // Mark as fully complete
             const state = vscode.getState() || {};
             state.onboardingCompleted = true;
             vscode.setState(state);
@@ -538,9 +553,6 @@
         suggestionDiv.innerHTML = `<blockquote>${data.message}</blockquote>`;
 
         // Create action buttons based on CodeTune installation status
-        let primaryButtonText, primaryButtonClass, primaryAction;
-        let secondaryButtonText, secondaryAction;
-
         if (data.codeTuneInstalled) {
             // CodeTune is installed - show "Open CodeTune" and "Not Now"
             actionsDiv.innerHTML = `
@@ -613,6 +625,133 @@
         hideCodeTuneSuggestion();
     }
 
+    // ===== AI STATUS UPDATE FUNCTIONS =====
+    function updateAICognitiveState(data) {
+        const cognitiveStateValue = document.getElementById('cognitiveStateValue');
+        const workImmersionValue = document.getElementById('workImmersionValue');
+        const focusStabilityValue = document.getElementById('focusStabilityValue');
+        const detectedWorkType = document.getElementById('detectedWorkType');
+
+        if (cognitiveStateValue && data.cognitiveState) {
+            cognitiveStateValue.textContent = data.cognitiveState;
+        }
+
+        if (workImmersionValue && data.workImmersion !== undefined) {
+            workImmersionValue.textContent = `${data.workImmersion}/10`;
+        }
+
+        if (focusStabilityValue && data.focusStability !== undefined) {
+            focusStabilityValue.textContent = `${Math.round(data.focusStability * 100)}%`;
+        }
+
+        if (detectedWorkType && data.workType) {
+            detectedWorkType.textContent = data.workType.replace('_', ' ');
+        }
+    }
+
+    function updateAIRecommendation(data) {
+        const breakRecommendation = document.getElementById('breakRecommendation');
+        const breakConfidence = document.getElementById('breakConfidence');
+        const modelRecommendation = document.getElementById('modelRecommendation');
+        const modelConfidence = document.getElementById('modelConfidence');
+
+        if (breakRecommendation && data.break) {
+            breakRecommendation.textContent = data.break.text;
+            if (breakConfidence) {
+                breakConfidence.textContent = data.break.confidence ? `${data.break.confidence}%` : '';
+            }
+        }
+
+        if (modelRecommendation && data.model) {
+            modelRecommendation.textContent = data.model.text;
+            if (modelConfidence) {
+                modelConfidence.textContent = data.model.confidence ? `${data.model.confidence}%` : '';
+            }
+        }
+    }
+
+    function addAILogEntry(data) {
+        const aiLogEntries = document.getElementById('aiLogEntries');
+        if (!aiLogEntries) return;
+
+        const logEntry = document.createElement('div');
+        logEntry.className = 'log-entry';
+
+        const logTime = document.createElement('span');
+        logTime.className = 'log-time';
+        logTime.textContent = data.time || 'now';
+
+        const logMessage = document.createElement('span');
+        logMessage.className = 'log-message';
+        logMessage.textContent = data.message;
+
+        logEntry.appendChild(logTime);
+        logEntry.appendChild(logMessage);
+
+        // Add to top of log (most recent first)
+        aiLogEntries.insertBefore(logEntry, aiLogEntries.firstChild);
+
+        // Keep only last 5 entries
+        while (aiLogEntries.children.length > 5) {
+            aiLogEntries.removeChild(aiLogEntries.lastChild);
+        }
+    }
+
+    function updateAIStatus(data) {
+        const aiCurrentActivity = document.getElementById('aiCurrentActivity');
+        const aiConfidenceIndicator = document.getElementById('aiConfidenceIndicator');
+
+        if (aiCurrentActivity && data.activity) {
+            const activityIcon = document.querySelector('.ai-status-icon');
+            const activityText = document.querySelector('.ai-status-text');
+
+            if (activityIcon) activityIcon.textContent = data.activity.icon || '🧠';
+            if (activityText) activityText.textContent = data.activity.text || 'AI analyzing...';
+        }
+
+        if (aiConfidenceIndicator && data.confidence) {
+            const confidenceLevel = document.querySelector('.confidence-level');
+            const confidenceValue = document.querySelector('.confidence-value');
+
+            if (confidenceLevel) confidenceLevel.textContent = data.confidence.level || 'Neutral';
+            if (confidenceValue) confidenceValue.textContent = data.confidence.value ? `${data.confidence.value}%` : '--%';
+        }
+    }
+
+    // ===== DONATION MODAL FUNCTIONS =====
+    function openDonationModal() {
+        const modal = document.getElementById('donationModalOverlay');
+        if (modal) {
+            modal.classList.remove('hidden');
+            modal.style.animation = 'fadeIn 0.3s ease-out';
+        }
+    }
+
+    function closeDonationModal() {
+        const modal = document.getElementById('donationModalOverlay');
+        if (modal) {
+            modal.classList.add('hidden');
+        }
+    }
+
+    // Close modal when clicking outside
+    document.addEventListener('click', function(event) {
+        const modal = document.getElementById('donationModalOverlay');
+        if (modal && event.target === modal) {
+            closeDonationModal();
+        }
+    });
+
+    // Close modal on ESC key
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') {
+            const modal = document.getElementById('donationModalOverlay');
+            if (modal && !modal.classList.contains('hidden')) {
+                closeDonationModal();
+            }
+        }
+    });
+
     // Make functions globally available
     window.createCustomExercise = createCustomExercise;
     window.showCustomExerciseLibrary = showCustomExerciseLibrary;
@@ -621,20 +760,8 @@
     window.hideCodeTuneSuggestion = hideCodeTuneSuggestion;
     window.installCodeTune = installCodeTune;
     window.neverShowCodeTune = neverShowCodeTune;
-
-    // ===== UTILITY FUNCTIONS =====
-    function getTimeAgo(date) {
-        const now = new Date();
-        const diff = now - date;
-        const minutes = Math.floor(diff / 60000);
-        const hours = Math.floor(minutes / 60);
-        const days = Math.floor(hours / 24);
-
-        if (days > 0) return `${days} day${days > 1 ? 's' : ''} ago`;
-        if (hours > 0) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
-        if (minutes > 0) return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
-        return 'Just now';
-    }
+    window.openDonationModal = openDonationModal;
+    window.closeDonationModal = closeDonationModal;
 
     // ===== EVENT HANDLERS =====
     function handleVisibilityChange() {

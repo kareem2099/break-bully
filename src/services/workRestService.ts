@@ -5,6 +5,8 @@ import { getConfiguration } from '../core/configuration';
 import { state } from '../models/state';
 import { startRestEnforcement, stopRestEnforcement } from './screenBlockingService';
 import { usageAnalytics } from './usageAnalyticsService';
+import { realTimeSessionAnalyzer } from './realTimeSessionAnalyzer';
+import { IntelligentModelSwitcher } from './intelligentModelSwitcher';
 
 export interface WorkRestSession {
   model: WorkRestModel;
@@ -37,6 +39,9 @@ export function startWorkRestSession(model: WorkRestModel): void {
     sessionTimer = null;
   }
 
+  // Stop any existing analysis
+  realTimeSessionAnalyzer.stopSessionAnalysis();
+
   currentSession = {
     model,
     currentCycle: 1,
@@ -53,8 +58,15 @@ export function startWorkRestSession(model: WorkRestModel): void {
   // Start the work period
   startWorkPeriod();
 
+  // Start real-time analysis for intelligent break timing
+  realTimeSessionAnalyzer.startSessionAnalysis();
+
+  // Record this model switch for learning (if different context)
+  const modelSwitcher = IntelligentModelSwitcher.getInstance();
+  // Analytics will track context-specific performance
+
   vscode.window.showInformationMessage(
-    `🚀 Started ${model.name} session!\nWork: ${model.workDuration}min | Rest: ${model.restDuration}min\n\n💡 Remember: You must manually confirm rest periods!`
+    `🚀 Started ${model.name} session!\nWork: ${model.workDuration}min | Rest: ${model.restDuration}min\n\n💡 Remember: You must manually confirm rest periods!\n\n🤖 ML Analysis Active: Real-time break suggestions enabled!`
   );
 }
 
@@ -63,6 +75,9 @@ export function stopWorkRestSession(): void {
     clearTimeout(sessionTimer);
     sessionTimer = null;
   }
+
+  // Stop real-time analysis
+  realTimeSessionAnalyzer.stopSessionAnalysis();
 
   if (currentSession) {
     vscode.window.showInformationMessage(`⏹️ Stopped ${currentSession.model.name} session.`);
@@ -208,6 +223,15 @@ function onRestPeriodEnd(): void {
     // Track session completion
     usageAnalytics.trackSessionEnd(currentSession.model.id, actualDuration, completionRate);
 
+    // Record performance for ML learning (default satisfaction if not rated)
+    const modelSwitcher = IntelligentModelSwitcher.getInstance();
+    modelSwitcher.recordModelPerformance(
+      currentSession.model.id,
+      actualDuration,
+      completionRate,
+      4.0 // Default good satisfaction rating
+    );
+
     vscode.window.showInformationMessage(
       `🎉 ${currentSession.model.name} session complete!\nYou've completed ${currentSession.model.cycles} cycles.`
     );
@@ -248,6 +272,15 @@ export function switchWorkRestModel(modelId: string): void {
     const config = vscode.workspace.getConfiguration('breakBully');
     config.update('workRestModel', modelId, vscode.ConfigurationTarget.Global);
   }
+}
+
+export function switchToWorkRestModel(model: WorkRestModel): void {
+  stopWorkRestSession();
+  startWorkRestSession(model);
+
+  // Save preference for AI models
+  const config = vscode.workspace.getConfiguration('breakBully');
+  config.update('workRestModel', model.id, vscode.ConfigurationTarget.Global);
 }
 
 export function getTimeRemaining(): { minutes: number; seconds: number; phase: string } | null {

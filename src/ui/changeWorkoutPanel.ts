@@ -1,9 +1,11 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import { workRestModels } from '../constants/workRestModels';
-import { switchWorkRestModel } from '../services/workRestService';
+import { switchWorkRestModel, switchToWorkRestModel, getCurrentSession } from '../services/workRestService';
 import { state } from '../models/state';
 import { usageAnalytics } from '../services/usageAnalyticsService';
+import { realTimeSessionAnalyzer } from '../services/realTimeSessionAnalyzer';
+import { IntelligentModelSwitcher } from '../services/intelligentModelSwitcher';
 
 export class ChangeWorkoutPanel {
   public static currentPanel: ChangeWorkoutPanel | undefined;
@@ -130,9 +132,10 @@ export class ChangeWorkoutPanel {
               const workRestModel = {
                 id: model.id || `personal_${Date.now()}`,
                 name: model.name || 'AI Personal Model',
+                description: model.description || `AI-generated model optimized for your work patterns: ${model.workDuration}min work, ${model.restDuration}min rest`,
                 workDuration: model.workDuration || 25,
                 restDuration: model.restDuration || 5,
-                basedOn: 'AI_ASSESSMENT'
+                basedOn: 'custom' as const
               };
 
               // Track AI personal model selection for analytics
@@ -141,8 +144,8 @@ export class ChangeWorkoutPanel {
               // Store the current personal model as active
               state.storage?.saveCustomSetting('activePersonalModel', model);
 
-              // Use the existing work-rest service to activate this model
-              switchWorkRestModel(workRestModel.id);
+              // Use the work-rest service to activate this AI model
+              switchToWorkRestModel(workRestModel);
 
               this._panel.webview.postMessage({
                 command: 'personalModelChanged',
@@ -162,6 +165,50 @@ export class ChangeWorkoutPanel {
                 data: { success: false, error: (error as Error).message }
               });
               vscode.window.showErrorMessage(`Failed to activate personal model: ${(error as Error).message}`);
+            }
+            break;
+          case 'getCurrentPersonalModel':
+            try {
+              // Load the currently active personal model from storage
+              const activePersonalModel = state.storage?.loadCustomSetting('activePersonalModel');
+              this._panel.webview.postMessage({
+                command: 'currentPersonalModel',
+                data: activePersonalModel || null
+              });
+            } catch (error) {
+              console.error('Failed to load current personal model:', error);
+              this._panel.webview.postMessage({
+                command: 'currentPersonalModel',
+                data: null
+              });
+            }
+            break;
+          case 'getCurrentSession':
+            try {
+              // Get the current work-rest session
+              const currentSession = getCurrentSession();
+              if (currentSession) {
+                this._panel.webview.postMessage({
+                  command: 'currentSession',
+                  data: {
+                    model: currentSession.model,
+                    isWorking: currentSession.isWorking,
+                    currentCycle: currentSession.currentCycle,
+                    totalCycles: currentSession.totalCycles
+                  }
+                });
+              } else {
+                this._panel.webview.postMessage({
+                  command: 'currentSession',
+                  data: null
+                });
+              }
+            } catch (error) {
+              console.error('Failed to load current session:', error);
+              this._panel.webview.postMessage({
+                command: 'currentSession',
+                data: null
+              });
             }
             break;
         }
@@ -224,7 +271,7 @@ export class ChangeWorkoutPanel {
           </div>
 
           <div class="actions">
-            <button class="btn secondary" onclick="closePanel()">Cancel</button>
+            <button class="btn secondary" id="backButton">⬅️ Back</button>
           </div>
         </div>
 

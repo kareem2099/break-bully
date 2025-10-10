@@ -20,7 +20,6 @@ import { getConfiguration } from './core/configuration';
 import { smartWellnessManager } from './services/activityIntegration/smartWellnessManager';
 import { BaseActivityMonitor } from './services/activityIntegration/baseActivityMonitor';
 import { initializeAdvancedScheduler } from './services/activityIntegration/advancedSchedulerService';
-import { registerTempExportCommand } from './tempExportCommand';
 import { usageAnalytics } from './services/usageAnalyticsService';
 
 export function activate(context: vscode.ExtensionContext): void {
@@ -165,7 +164,7 @@ export function activate(context: vscode.ExtensionContext): void {
     });
 
     // Register temporary debug command
-    registerTempExportCommand(context);
+    // registerTempExportCommand(context);
 
     context.subscriptions.push(
       showReminderCommand,
