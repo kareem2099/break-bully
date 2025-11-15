@@ -45,3 +45,6 @@ dist/
 # Temporary files
 *.tmp
 *.temp
+
+# Test files
+test/
