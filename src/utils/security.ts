@@ -11,9 +11,12 @@ export function sanitizeHtml(input: string): string {
     .replace(/\//g, '&#x2F;');
 }
 
-export function validateWebviewMessage(message: any): boolean {
+export function validateWebviewMessage(message: unknown): boolean {
   if (!message || typeof message !== 'object') return false;
-  if (!message.command || typeof message.command !== 'string') return false;
+
+  const msg = message as Record<string, unknown>;
+
+  if (!msg.command || typeof msg.command !== 'string') return false;
 
   const allowedCommands = [
     'takeBreak', 'openSettings', 'showStretch', 'breathingExercise',
@@ -22,5 +25,5 @@ export function validateWebviewMessage(message: any): boolean {
     'exerciseComplete', 'closePanel'
   ];
 
-  return allowedCommands.includes(message.command);
+  return allowedCommands.includes(msg.command);
 }

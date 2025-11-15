@@ -1,6 +1,42 @@
 import * as vscode from 'vscode';
 import { BreakStats, WellnessGoal, WellnessChallenge, CustomExercise, SmartNotificationsData, ScreenTimeStats, Achievement, DailyWellnessData } from '../types';
-import { ActivityEvent } from '../services/activityIntegration/activityTypes';
+import { ActivityEvent, ActivityContext, ActivityType } from '../services/activityIntegration/activityTypes';
+
+export interface BackupData {
+  breakStats: BreakStats;
+  wellnessGoals: WellnessGoal[];
+  wellnessChallenges: WellnessChallenge[];
+  customExercises: CustomExercise[];
+  smartNotifications: SmartNotificationsData;
+  screenTimeStats: ScreenTimeStats;
+  achievements: Achievement[];
+  dailyWellnessData: DailyWellnessData[];
+  exportDate: string;
+  version: string;
+}
+
+export interface StorageInfo {
+  keys: readonly string[];
+  lastUpdate: string;
+}
+
+export interface ActivityEventsMetadata {
+  totalEvents: number;
+  retentionDays: number;
+  lastCleanup: number;
+  storageSize: number;
+}
+
+export interface CompressedActivityEvent {
+  i: string; // id
+  t: string; // type
+  ts: number; // timestamp
+  d?: number; // duration
+  w: number; // intensity
+  c: Record<string, unknown>; // context
+}
+
+
 
 export class ExtensionStorage {
   constructor(private context: vscode.ExtensionContext) {}
@@ -108,7 +144,7 @@ export class ExtensionStorage {
   }
 
   // Data Export/Import for backup
-  exportAllData(): any {
+  exportAllData(): BackupData {
     return {
       breakStats: this.loadBreakStats(),
       wellnessGoals: this.loadWellnessGoals(),
@@ -123,7 +159,7 @@ export class ExtensionStorage {
     };
   }
 
-  importAllData(data: any): boolean {
+  importAllData(data: Partial<BackupData>): boolean {
     try {
       if (data.breakStats) this.saveBreakStats(data.breakStats);
       if (data.wellnessGoals) this.saveWellnessGoals(data.wellnessGoals);
@@ -154,7 +190,7 @@ export class ExtensionStorage {
   }
 
   // Get storage info
-  getStorageInfo(): any {
+  getStorageInfo(): StorageInfo {
     return {
       keys: this.context.globalState.keys(),
       lastUpdate: new Date().toISOString()
@@ -162,11 +198,11 @@ export class ExtensionStorage {
   }
 
   // Custom settings storage (for extension-specific settings)
-  saveCustomSetting(key: string, value: any): void {
+  saveCustomSetting<T>(key: string, value: T): void {
     this.context.globalState.update(`custom_${key}`, value);
   }
 
-  loadCustomSetting(key: string, defaultValue?: any): any {
+  loadCustomSetting<T>(key: string, defaultValue?: T): T | undefined {
     return this.context.globalState.get(`custom_${key}`, defaultValue);
   }
 
@@ -207,7 +243,7 @@ export class ExtensionStorage {
   }
 
   // Activity Events Metadata
-  getActivityEventsMetadata() {
+  getActivityEventsMetadata(): ActivityEventsMetadata {
     return this.context.globalState.get('activityEventsMetadata', {
       totalEvents: 0,
       retentionDays: 30,
@@ -244,7 +280,7 @@ export class ExtensionStorage {
     dateRange?: { start: number; end: number };
   }): string {
     const events = this.loadActivityEvents();
-    const metadata = options.includeMetadata ? this.getActivityEventsMetadata() : null;
+    const metadata = options.includeMetadata ? this.getActivityEventsMetadata() : undefined;
 
     // Apply date range filter
     let filteredEvents = events;
@@ -371,35 +407,42 @@ export class ExtensionStorage {
 
   // ===== PRIVATE UTILITY METHODS =====
 
-  private compressActivityData(events: ActivityEvent[]): any {
+  private compressActivityData(events: ActivityEvent[]): CompressedActivityEvent[] {
     // Basic compression - could be enhanced with gzip in future
     // For now, remove redundant context properties and optimize structure
     return events.map(event => ({
       i: event.id,
       t: event.type,
       ts: event.timestamp,
-      d: event.duration,
+      ...(event.duration !== undefined && { d: event.duration }),
       w: event.intensity,
       c: this.compressContext(event.context)
     }));
   }
 
-  private decompressActivityData(compressedData: any): ActivityEvent[] {
+  private decompressActivityData(compressedData: CompressedActivityEvent[]): ActivityEvent[] {
     if (!Array.isArray(compressedData)) return [];
 
-    return compressedData.map(item => ({
-      id: item.i,
-      type: item.t,
-      timestamp: item.ts,
-      duration: item.d,
-      intensity: item.w,
-      context: this.decompressContext(item.c)
-    })).filter(event => this.isValidActivityEvent(event));
+    return compressedData.map(item => {
+      const baseEvent: Partial<ActivityEvent> = {
+        id: item.i,
+        type: item.t as ActivityType,
+        timestamp: item.ts,
+        intensity: item.w,
+        context: this.decompressContext(item.c)
+      };
+
+      if (typeof item.d === 'number') {
+        baseEvent.duration = item.d;
+      }
+
+      return baseEvent as ActivityEvent;
+    }).filter(event => this.isValidActivityEvent(event));
   }
 
-  private compressContext(context: any): any {
+  private compressContext(context: ActivityContext): Record<string, unknown> {
     // Remove undefined properties and compress common fields
-    const compressed: any = {};
+    const compressed: Record<string, unknown> = {};
 
     if (context.fileType) compressed.ft = context.fileType;
     if (context.linesChanged) compressed.lc = context.linesChanged;
@@ -410,13 +453,13 @@ export class ExtensionStorage {
     return compressed;
   }
 
-  private decompressContext(compressed: any): any {
-    const context: any = {};
+  private decompressContext(compressed: Record<string, unknown>): ActivityContext {
+    const context: ActivityContext = {};
 
-    if (compressed.ft) context.fileType = compressed.ft;
-    if (compressed.lc) context.linesChanged = compressed.lc;
-    if (compressed.cs) context.commitSize = compressed.cs;
-    if (compressed.cm) context.commitMessage = compressed.cm;
+    if (compressed.ft) context.fileType = compressed.ft as string;
+    if (compressed.lc) context.linesChanged = compressed.lc as number;
+    if (compressed.cs) context.commitSize = compressed.cs as number;
+    if (compressed.cm) context.commitMessage = compressed.cm as string;
 
     return context;
   }
@@ -433,7 +476,7 @@ export class ExtensionStorage {
       }
       // Remove debug configuration and other PII
       if ('debugConfiguration' in anonymizedContext) {
-        delete (anonymizedContext as any).debugConfiguration;
+        delete anonymizedContext.debugConfiguration;
       }
 
       return {
@@ -444,7 +487,7 @@ export class ExtensionStorage {
     });
   }
 
-  private exportToCSV(events: ActivityEvent[], metadata?: any): string {
+  private exportToCSV(events: ActivityEvent[], metadata?: ActivityEventsMetadata): string {
     const headers = [
       'timestamp',
       'date',
@@ -499,15 +542,18 @@ export class ExtensionStorage {
       .sort((a, b) => a.timestamp - b.timestamp);
   }
 
-  private isValidActivityEvent(event: any): event is ActivityEvent {
+  private isValidActivityEvent(event: unknown): event is ActivityEvent {
+    if (!event || typeof event !== 'object') return false;
+
+    const e = event as Record<string, unknown>;
+
     return (
-      event &&
-      typeof event.id === 'string' &&
-      typeof event.type === 'string' &&
-      typeof event.timestamp === 'number' &&
-      typeof event.intensity === 'number' &&
-      event.intensity >= 1 && event.intensity <= 10 &&
-      typeof event.context === 'object'
+      typeof e.id === 'string' &&
+      typeof e.type === 'string' &&
+      typeof e.timestamp === 'number' &&
+      typeof e.intensity === 'number' &&
+      e.intensity >= 1 && e.intensity <= 10 &&
+      typeof e.context === 'object' && e.context !== null
     );
   }
 }

@@ -12,6 +12,11 @@ export interface WorkRestModel {
 /**
  * User Assessment Data Types
  */
+
+/**
+ * Score value type for flexible scoring attributes
+ */
+export type ScoreValue = number | string | string[];
 export interface UserAssessment {
   id: string;
   timestamp: Date;
@@ -38,11 +43,11 @@ export interface UserAssessment {
     energyAfternoon: number;
   };
   preferredBreakActivities?: string[];
-  scoredAttributes?: Record<string, any>;
+  scoredAttributes?: Record<string, ScoreValue>;
   questionResponses?: {
     questionId: string;
     answerId: string;
-    score: Record<string, any>;
+    score: Record<string, ScoreValue>;
     timestamp: Date;
   }[];
 }
@@ -91,7 +96,7 @@ export interface AnswerOption {
   label: string;
   description: string;
   icon: string;
-  score: Record<string, any>; // Scoring weights for different attributes
+  score: Record<string, ScoreValue>; // Scoring weights for different attributes
 }
 
 /**
@@ -340,7 +345,7 @@ export interface UsageEvent {
   modelId?: string;
   source?: 'user_selection' | 'ai_recommendation' | 'default';
   context: ContextSnapshot;
-  metadata: Record<string, any>;
+  metadata: Record<string, unknown>;
 }
 
 export enum UsageEventType {
@@ -366,9 +371,9 @@ export interface ContextSnapshot {
 }
 
 export interface UserBehaviorProfile {
-  preferencePatterns: Record<string, any>; // Time-based, task-based patterns
+  preferencePatterns: Record<string, string | number>; // Time-based, task-based patterns
   successRates: Record<string, number>; // Success rates by context
-  behavioralTendencies: Record<string, any>; // Learned user tendencies
+  behavioralTendencies: Record<string, string | number>; // Learned user tendencies
 }
 
 export interface LearningDataPoint {
@@ -388,7 +393,7 @@ export interface LearningDataPoint {
     idealDurationAdjustment: number; // Minutes to adjust
     preferredBreakPattern: 'frequent_short' | 'infrequent_long' | 'as_needed';
     optimalBreakFrequency: number; // Minutes between breaks
-    contextAdaptations: Record<string, any>; // Context-specific adjustments
+    contextAdaptations: Record<string, string | number>; // Context-specific adjustments
   };
 }
 
@@ -447,7 +452,7 @@ export interface AggregatedStatistics {
 }
 
 export interface AnswerScoreData {
-  [key: string]: any; // For flexible assessment scores
+  [key: string]: ScoreValue; // For flexible assessment scores
 }
 
 /**

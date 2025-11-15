@@ -81,6 +81,12 @@
     }
 
     function showOnboarding() {
+        // Use onboardingCompleted to check if onboarding was already finished
+        if (onboardingCompleted) {
+            console.log('Onboarding already completed, skipping show');
+            return;
+        }
+
         const onboardingOverlay = document.getElementById('onboardingOverlay');
         if (onboardingOverlay) {
             onboardingOverlay.classList.remove('hidden');

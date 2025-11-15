@@ -1,5 +1,28 @@
-import { ActivityEvent } from './activityTypes';
+import { ActivityEvent, WellnessNotification } from './activityTypes';
 import { MachineLearningAnalyzer } from './machineLearningAnalyzer';
+
+type WellnessExercise = {
+  type: string;
+  duration: number;
+  instruction: string;
+};
+
+type WellnessPattern = {
+  eyeEngagement: number;
+  breathingEngagement: number;
+  stretchEngagement: number;
+  waterConsumption: number;
+  typicalSessionLength: number;
+  dehydrationRisk: 'low' | 'medium' | 'high';
+};
+
+type WaterScheduleItem = {
+  time: string;
+  amount: string;
+  reason: string;
+};
+
+type WaterScheduleReturn = Array<WaterScheduleItem>;
 
 /**
  * Machine Learning Analyzer for Wellness Activities
@@ -89,10 +112,13 @@ export class WellnessMLAnalyzer extends MachineLearningAnalyzer {
   } {
     const targetDayOfWeek = new Date().getDay();
 
-    // Find historical completion patterns for this exercise type
-    const relevantEvents = events.filter(e =>
-      e.context && (e.context as any).exerciseType === exerciseType
-    );
+    // Find historical completion patterns for this exercise type and same day of week
+    const relevantEvents = events.filter(e => {
+      if (!e.context || e.context.exerciseType !== exerciseType) return false;
+      // Only include events from the same day of week for more accurate predictions
+      const eventDayOfWeek = new Date(e.timestamp).getDay();
+      return eventDayOfWeek === targetDayOfWeek;
+    });
 
     if (relevantEvents.length < 10) {
       return {
@@ -223,13 +249,7 @@ export class WellnessMLAnalyzer extends MachineLearningAnalyzer {
    */
   static optimizeNotifications(
     events: ActivityEvent[],
-    notificationHistory: Array<{
-      timestamp: number;
-      type: 'stretch' | 'breathing' | 'eye' | 'water';
-      successful: boolean;
-      responseTime: number;
-      userAccepted: boolean;
-    }>
+    notificationHistory: WellnessNotification[]
   ): {
     optimalNotificationTiming: { [activityType: string]: { hours: number[]; confidence: number } };
     personalizedMessaging: { [activityType: string]: string[] };
@@ -259,7 +279,8 @@ export class WellnessMLAnalyzer extends MachineLearningAnalyzer {
 
     const learningInsights = this.generateNotificationLearningInsights(
       timingAnalysis,
-      engagementAnalysis
+      engagementAnalysis,
+      notificationHistory
     );
 
     return {
@@ -283,7 +304,7 @@ export class WellnessMLAnalyzer extends MachineLearningAnalyzer {
 
       // Filter for wellness activity completions
       const wellnessEvents = events.filter(e =>
-        e.context && (e.context as any).exerciseType === activityType
+        e.context && e.context.exerciseType === activityType
       );
 
       if (wellnessEvents.length === 0) {
@@ -428,7 +449,7 @@ export class WellnessMLAnalyzer extends MachineLearningAnalyzer {
     typicalSessionLength: number;
     dehydrationRisk: 'low' | 'medium' | 'high';
   } {
-    const wellnessEvents = events.filter(e => e.context && (e.context as any).exerciseType);
+    const wellnessEvents = events.filter(e => e.context?.exerciseType);
 
     if (wellnessEvents.length === 0) {
       return {
@@ -442,10 +463,10 @@ export class WellnessMLAnalyzer extends MachineLearningAnalyzer {
     }
 
     // Calculate engagement scores (0-1 scale)
-    const eyeEngagement = wellnessEvents.filter(e => (e.context as any).exerciseType === 'eye').length / Math.max(wellnessEvents.length * 0.3, 1);
-    const breathingEngagement = wellnessEvents.filter(e => (e.context as any).exerciseType === 'breath').length / Math.max(wellnessEvents.length * 0.25, 1);
-    const stretchEngagement = wellnessEvents.filter(e => (e.context as any).exerciseType === 'stretch').length / Math.max(wellnessEvents.length * 0.25, 1);
-    const waterConsumption = wellnessEvents.filter(e => (e.context as any).exerciseType === 'water').length / Math.max(wellnessEvents.length * 0.4, 1);
+    const eyeEngagement = wellnessEvents.filter(e => e.context.exerciseType === 'eye').length / Math.max(wellnessEvents.length * 0.3, 1);
+    const breathingEngagement = wellnessEvents.filter(e => e.context.exerciseType === 'breath').length / Math.max(wellnessEvents.length * 0.25, 1);
+    const stretchEngagement = wellnessEvents.filter(e => e.context.exerciseType === 'stretch').length / Math.max(wellnessEvents.length * 0.25, 1);
+    const waterConsumption = wellnessEvents.filter(e => e.context.exerciseType === 'water').length / Math.max(wellnessEvents.length * 0.4, 1);
 
     // Analyze session length patterns
     const sessionsByDay = this.groupEventsByDay(events);
@@ -485,9 +506,9 @@ export class WellnessMLAnalyzer extends MachineLearningAnalyzer {
 
   private static buildDailyRoutine(
     period: 'morning' | 'afternoon' | 'evening',
-    userPattern: any,
+    userPattern: WellnessPattern,
     isPreferredTime: boolean
-  ): Array<{ type: string; duration: number; instruction: string }> {
+  ): WellnessExercise[] {
     const baseRoutine: Array<{ type: string; duration: number; instruction: string }> = [];
 
     if (period === 'morning') {
@@ -550,7 +571,7 @@ export class WellnessMLAnalyzer extends MachineLearningAnalyzer {
   private static createPersonalizedWaterSchedule(
     dehydrationRisk: 'low' | 'medium' | 'high',
     sessionLength: number
-  ): Array<{ time: string; amount: string; reason: string }> {
+  ): WaterScheduleReturn {
     const baseSchedule: Array<{ time: string; amount: string; reason: string }> = [];
 
     // Morning hydration
@@ -584,10 +605,10 @@ export class WellnessMLAnalyzer extends MachineLearningAnalyzer {
   }
 
   private static generateRoutineInsights(
-    morning: any[],
-    afternoon: any[],
-    evening: any[],
-    userPattern: any
+    morning: WellnessExercise[],
+    afternoon: WellnessExercise[],
+    evening: WellnessExercise[],
+    userPattern: WellnessPattern
   ): string[] {
     const insights: string[] = [];
 
@@ -610,13 +631,7 @@ export class WellnessMLAnalyzer extends MachineLearningAnalyzer {
     return insights;
   }
 
-  private static analyzeNotificationTiming(notificationHistory: Array<{
-    timestamp: number;
-    type: string;
-    successful: boolean;
-    responseTime: number;
-    userAccepted: boolean;
-  }>): { [hour: number]: { sent: number; accepted: number; avgResponseTime: number } } {
+  private static analyzeNotificationTiming(notificationHistory: WellnessNotification[]): { [hour: number]: { sent: number; accepted: number; avgResponseTime: number } } {
     const timingData: { [hour: number]: { sent: number; accepted: number; responseTimes: number[] } } = {};
 
     notificationHistory.forEach(notification => {
@@ -647,13 +662,7 @@ export class WellnessMLAnalyzer extends MachineLearningAnalyzer {
     return result;
   }
 
-  private static analyzeNotificationEngagement(notificationHistory: Array<{
-    timestamp: number;
-    type: string;
-    successful: boolean;
-    responseTime: number;
-    userAccepted: boolean;
-  }>): { [activityType: string]: { successRate: number; avgResponseTime: number; totalSent: number } } {
+  private static analyzeNotificationEngagement(notificationHistory: WellnessNotification[]): { [activityType: string]: { successRate: number; avgResponseTime: number; totalSent: number } } {
     const engagementData: { [activityType: string]: { accepted: number; total: number; responseTimes: number[] } } = {};
 
     notificationHistory.forEach(notification => {
@@ -686,7 +695,7 @@ export class WellnessMLAnalyzer extends MachineLearningAnalyzer {
   }
 
   private static calculateOptimalNotificationTimes(
-    notificationHistory: any[],
+    notificationHistory: WellnessNotification[],
     timingData: { [hour: number]: { sent: number; accepted: number; avgResponseTime: number } }
   ): { [activityType: string]: { hours: number[]; confidence: number } } {
     const activityTypes = ['stretch', 'breathing', 'eye', 'water'];
@@ -704,9 +713,9 @@ export class WellnessMLAnalyzer extends MachineLearningAnalyzer {
       } else {
         // Find top performing hours for this activity
         const hourlyPerformance = Object.entries(timingData)
-          .filter(([hour, data]) => data.sent >= 5) // Minimum sample size
-          .map(([hour, data]) => ({
-            hour: parseInt(hour),
+          .filter(([hour, data]) => parseInt(hour) >= 0 && data.sent >= 5) // Hour validation and minimum sample size
+          .map(([hourKey, data]) => ({
+            hour: parseInt(hourKey),
             successRate: data.accepted / data.sent,
             avgResponseTime: data.avgResponseTime,
             sampleSize: data.sent
@@ -726,9 +735,14 @@ export class WellnessMLAnalyzer extends MachineLearningAnalyzer {
 
   private static createPersonalizedMessageStrategies(
     engagementData: { [activityType: string]: { successRate: number; avgResponseTime: number; totalSent: number } },
-    notificationHistory: any[]
+    notificationHistory: WellnessNotification[]
   ): { [activityType: string]: string[] } {
     const strategies: { [activityType: string]: string[] } = {};
+
+    // Analyze recent notification patterns
+    const recentNotifications = notificationHistory.filter(n =>
+      Date.now() - n.timestamp < 7 * 24 * 60 * 60 * 1000 // Last 7 days
+    ).length;
 
     Object.entries(engagementData).forEach(([activityType, data]) => {
       const messages: string[] = [];
@@ -753,6 +767,7 @@ export class WellnessMLAnalyzer extends MachineLearningAnalyzer {
       }
 
       messages.push(`Learned from ${data.totalSent} notification interactions`);
+      messages.push(`Recent notifications (last 7 days): ${recentNotifications}`);
 
       strategies[activityType] = messages;
     });
@@ -767,7 +782,11 @@ export class WellnessMLAnalyzer extends MachineLearningAnalyzer {
     const frequency: { [activityType: string]: 'high' | 'medium' | 'low' } = {};
 
     Object.entries(engagementData).forEach(([activityType, data]) => {
-      if (data.successRate > 0.7 && data.totalSent >= 20) {
+      // Adjust frequency based on total notification volume and individual performance
+      if (totalNotifications < 50) {
+        // Low notification history - be conservative
+        frequency[activityType] = 'medium';
+      } else if (data.successRate > 0.7 && data.totalSent >= 20) {
         frequency[activityType] = 'high';
       } else if (data.successRate > 0.4 || data.totalSent < 10) {
         frequency[activityType] = 'medium';
@@ -781,15 +800,16 @@ export class WellnessMLAnalyzer extends MachineLearningAnalyzer {
 
   private static generateNotificationLearningInsights(
     timingData: { [hour: number]: { sent: number; accepted: number; avgResponseTime: number } },
-    engagementData: { [activityType: string]: { successRate: number; avgResponseTime: number; totalSent: number } }
+    engagementData: { [activityType: string]: { successRate: number; avgResponseTime: number; totalSent: number } },
+    notificationHistory?: WellnessNotification[]
   ): string[] {
     const insights: string[] = [];
 
     // Find best performing hours overall
     const bestHours = Object.entries(timingData)
-      .filter(([hour, data]) => data.sent >= 10)
-      .map(([hour, data]) => ({
-        hour: parseInt(hour),
+      .filter(([hourKey, data]) => parseInt(hourKey) >= 0 && data.sent >= 10)
+      .map(([hourKey, data]) => ({
+        hour: parseInt(hourKey),
         successRate: data.accepted / data.sent
       }))
       .sort((a, b) => b.successRate - a.successRate)
@@ -816,6 +836,10 @@ export class WellnessMLAnalyzer extends MachineLearningAnalyzer {
       insights.push('⚡ Fast response times suggest highly engaged users');
     } else if (avgResponseTimeTrend > 600) { // Over 10 minutes
       insights.push('📊 Response times indicate opportunity for more engaging notifications');
+    }
+
+    if (notificationHistory && notificationHistory.length > 0) {
+      insights.push(`📧 Analyzed ${notificationHistory.length} total notifications`);
     }
 
     return insights;

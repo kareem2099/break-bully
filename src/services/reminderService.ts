@@ -4,6 +4,30 @@ import { reminderMessages } from '../constants/reminderMessages';
 import { getConfiguration } from '../core/configuration';
 import { state } from '../models/state';
 
+interface ContextAnalysis {
+  time: number;
+  isProductiveTime: boolean;
+  activity: string;
+  recentAcceptanceRate: number;
+  isPreferredTime: boolean;
+  sessionDuration: number;
+  continuousScreenTime: number;
+  breakStreak: number;
+}
+
+interface NotificationStyle {
+  urgency: string;
+  buttons: string[];
+  showMultiple: boolean;
+  followUpDelay: number;
+}
+
+interface NotificationHistoryEntry {
+  timestamp: number;
+  accepted: boolean;
+  context: string;
+}
+
 export function getRandomMessage(type: ReminderType): string {
   const messages = reminderMessages[type] || reminderMessages.gentle;
   const randomIndex = Math.floor(Math.random() * messages.length);
@@ -41,7 +65,7 @@ export function showSmartReminder(): void {
   updateSmartStatusBar(context);
 }
 
-function analyzeCurrentContext(): any {
+function analyzeCurrentContext(): ContextAnalysis {
   const now = new Date();
   const currentHour = now.getHours();
   const isProductiveTime = state.smartNotifications.userPatterns.productiveHours.includes(currentHour);
@@ -49,7 +73,7 @@ function analyzeCurrentContext(): any {
   // Analyze recent activity patterns
   const recentHistory = state.smartNotifications.notificationHistory.slice(-10);
   const recentAcceptanceRate = recentHistory.length > 0 ?
-    recentHistory.filter((h: any) => h.accepted).length / recentHistory.length : 0.5;
+    recentHistory.filter((h: NotificationHistoryEntry) => h.accepted).length / recentHistory.length : 0.5;
 
   // Determine activity context
   let activityContext = 'normal';
@@ -79,7 +103,7 @@ function analyzeCurrentContext(): any {
   };
 }
 
-function generateSmartMessage(context: any): string {
+function generateSmartMessage(context: ContextAnalysis): string {
   const config = getConfiguration();
   let baseMessageType: ReminderType = config.reminderType;
 
@@ -119,7 +143,7 @@ function generateSmartMessage(context: any): string {
   return message;
 }
 
-function determineNotificationStyle(context: any): any {
+function determineNotificationStyle(context: ContextAnalysis): NotificationStyle {
   const config = getConfiguration();
 
   // Base notification style
@@ -159,7 +183,7 @@ function determineNotificationStyle(context: any): any {
   return style;
 }
 
-function showContextualNotification(message: string, style: any, context: any): void {
+function showContextualNotification(message: string, style: NotificationStyle, context: ContextAnalysis): void {
   const showNotification = (msg: string, buttons: string[]) => {
     if (style.showMultiple && style.urgency === 'urgent') {
       // Show multiple urgent notifications
@@ -190,7 +214,7 @@ function showContextualNotification(message: string, style: any, context: any): 
   showNotification(message, style.buttons);
 }
 
-function handleNotificationResponse(selection: string | undefined, context: any): void {
+function handleNotificationResponse(selection: string | undefined, context: ContextAnalysis): void {
   const config = getConfiguration();
   const notificationEntry = state.smartNotifications.notificationHistory[state.smartNotifications.notificationHistory.length - 1];
 
@@ -252,7 +276,7 @@ function updateSmartPatterns(): void {
 
   // Update break frequency based on recent history
   const recentBreaks = state.smartNotifications.notificationHistory
-    .filter((h: any) => h.accepted)
+    .filter((h: NotificationHistoryEntry) => h.accepted)
     .slice(-10);
 
   if (recentBreaks.length >= 2) {
@@ -270,7 +294,7 @@ function updateSmartPatterns(): void {
   // Update response time average
   const recentResponses = state.smartNotifications.notificationHistory.slice(-5);
   if (recentResponses.length > 0) {
-    const avgResponseTime = recentResponses.reduce((sum: number, h: any) => {
+    const avgResponseTime = recentResponses.reduce((sum: number, h: NotificationHistoryEntry) => {
       return sum + (h.timestamp - (h.timestamp - 30000)); // Simplified
     }, 0) / recentResponses.length;
 
@@ -279,7 +303,7 @@ function updateSmartPatterns(): void {
   }
 }
 
-function updateSmartStatusBar(context: any): void {
+function updateSmartStatusBar(context: ContextAnalysis): void {
   const config = getConfiguration();
 
   if (config.enabled) {

@@ -476,7 +476,7 @@ export class AdvancedNotificationManager {
       const [hour, stats] = bestHour;
       const hour12 = parseInt(hour) === 0 ? 12 : parseInt(hour) > 12 ? parseInt(hour) - 12 : hour;
       const ampm = parseInt(hour) >= 12 ? 'PM' : 'AM';
-      const hourName = parseInt(hour) <= 12 ? hour12 + ' AM' : (hour12 || 12) + ' PM';
+      const hourName = hour12 + ' ' + ampm;
 
       insights.push(`🏆 Best hour: ${hourName} (${Math.round(stats.successRate * 100)}% acceptance)`);
     }

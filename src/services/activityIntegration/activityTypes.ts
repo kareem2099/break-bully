@@ -58,6 +58,7 @@ export interface ActivityContext {
   refactorType?: string;
   breakType?: string;
   activityState?: string;
+  exerciseType?: string; // For wellness activities: 'stretch' | 'breathing' | 'eye' | 'water'
 
   // Enhanced typing pattern analysis
   typingMetrics?: AdvancedTypingMetrics;
@@ -204,3 +205,35 @@ export interface ContextSwitchMetrics {
   productivityContext: 'deep_work' | 'administrative' | 'creative' | 'debugging' | 'planning';
   contextChangeCost: number;       // cognitive cost of switch (0-10, higher = greater disruption)
 }
+
+interface WellnessExercise {
+  type: string;
+  duration: number;
+  instruction: string;
+}
+
+interface WellnessPattern {
+  eyeEngagement: number;
+  breathingEngagement: number;
+  stretchEngagement: number;
+  waterConsumption: number;
+  typicalSessionLength: number;
+  dehydrationRisk: 'low' | 'medium' | 'high';
+}
+
+interface WaterScheduleItem {
+  time: string;
+  amount: string;
+  reason: string;
+}
+
+// Notification history for ML analysis
+export interface WellnessNotification {
+  timestamp: number;
+  type: 'stretch' | 'breathing' | 'eye' | 'water';
+  successful: boolean;
+  responseTime: number;
+  userAccepted: boolean;
+}
+
+export { WellnessExercise, WellnessPattern, WaterScheduleItem };

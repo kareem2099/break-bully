@@ -363,7 +363,7 @@ export interface StatusUpdateData {
 
 export interface WebviewMessage {
   command: string;
-  data?: any;
+  data?: unknown;
 }
 
 export interface BreakBullyActivityBarProvider extends vscode.WebviewViewProvider {
@@ -399,11 +399,53 @@ export interface DailyWellnessData {
   streakDays: number;
 }
 
+export interface WellnessTrends {
+  goalCompletionTrend: string;
+  achievementUnlockTrend: string;
+  breakConsistency: string;
+  screenTimeTrend?: string;
+  overallProgress?: string;
+}
+
+export interface CurrentDayStats {
+  breaksTaken: number;
+  screenTimeMinutes: number;
+  goalsCompleted: number;
+  exercisesCompleted: number;
+  streakDays: number;
+}
+
+export interface WellnessInsights {
+  timeRange: 'today' | 'week' | 'month' | 'all';
+  startDate: Date;
+  endDate: Date;
+  dailyBreakdown: DailyWellnessData[];
+  totalBreaks: number;
+  averageBreaksPerDay: number;
+  longestStreak: number;
+  totalGoalsCompleted: number;
+  goalCompletionRate: number;
+  totalExercises: number;
+  averageExercisesPerDay: number;
+  totalScreenTimeMinutes: number;
+  averageScreenTimePerDay: number;
+  totalAchievementsUnlocked: number;
+  achievementsPerDay: number;
+  trends: WellnessTrends;
+  overallTrends: WellnessTrends;
+  overallAverageBreaksPerDay: number;
+  overallGoalCompletionRate: number;
+  averageScreenTime: number;
+  currentDay: CurrentDayStats;
+  recommendations: string[];
+  basicRecommendations: string[];
+}
+
 export interface VSCodeAPI {
   postMessage(message: WebviewMessage): void;
 }
 
 declare global {
-  const vscode: any;
+  const vscode: unknown;
   const acquireVsCodeApi: () => VSCodeAPI;
 }

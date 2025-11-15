@@ -514,6 +514,68 @@
     color: rgba(255, 255, 255, 0.9);
 }
 
+/* Social Media Section */
+.social-media-section {
+    padding: 12px;
+    background: var(--vscode-editorWidget-background, #252526);
+    border-radius: 6px;
+    border: 1px solid var(--vscode-panel-border, #3e3e42);
+}
+
+.social-media-section h3 {
+    font-size: 14px;
+    font-weight: 600;
+    margin: 0 0 8px 0;
+    color: var(--vscode-foreground, #d4d4d4);
+}
+
+.social-media-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 8px;
+}
+
+.social-media-link {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    border-radius: 6px;
+    text-decoration: none;
+    background: var(--vscode-button-secondaryBackground, #3c3c3c);
+    border: 1px solid var(--vscode-panel-border, #3e3e42);
+    transition: all 0.2s ease;
+    color: var(--vscode-foreground, #d4d4d4);
+}
+
+.social-media-link:hover {
+    background: var(--vscode-button-secondaryHoverBackground, #505050);
+    transform: translateY(-1px);
+}
+
+.social-media-icon {
+    font-size: 16px;
+    min-width: 16px;
+    text-align: center;
+}
+
+.social-media-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.social-media-name {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--vscode-foreground, #d4d4d4);
+    margin-bottom: 2px;
+}
+
+.social-media-desc {
+    font-size: 10px;
+    color: var(--vscode-descriptionForeground, #cccccc99);
+}
+
 /* Motivation Section */
 .motivation-section {
     padding: 12px;

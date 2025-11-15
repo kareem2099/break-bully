@@ -138,6 +138,18 @@ export class IntelligentModelSwitcher {
   }
 
   /**
+   * Record a model selection for context-specific learning
+   */
+  recordModelSelection(modelId: string, reason: string): void {
+    const context = this.analyzeCurrentContext();
+
+    // Store context for learning purposes (can be used to improve recommendations)
+    console.log(`Model selected: ${modelId} for ${reason}, context: ${context.timeOfDay}/${context.energyLevel}/${context.workType}`);
+
+    // Could track selections in a separate history if needed for future enhancement
+  }
+
+  /**
    * Evaluate if a model switch should be made
    */
   private async evaluateModelSwitching(): Promise<void> {
@@ -656,7 +668,11 @@ This model is better suited for your current work type.`,
    */
   private loadPerformanceData(): void {
     try {
-      const savedData = state.storage?.loadCustomSetting('intelligentModelSwitcher');
+      const savedData = state.storage?.loadCustomSetting('intelligentModelSwitcher') as {
+        performanceHistory?: ModelPerformanceData[];
+        lastSwitchTime?: number;
+        isActive?: boolean;
+      } | undefined;
       if (savedData) {
         this.performanceHistory = savedData.performanceHistory || [];
         this.lastSwitchTime = savedData.lastSwitchTime || 0;

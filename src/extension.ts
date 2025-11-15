@@ -21,6 +21,7 @@ import { smartWellnessManager } from './services/activityIntegration/smartWellne
 import { BaseActivityMonitor } from './services/activityIntegration/baseActivityMonitor';
 import { initializeAdvancedScheduler } from './services/activityIntegration/advancedSchedulerService';
 import { usageAnalytics } from './services/usageAnalyticsService';
+import { MLWorkRestGenerator } from './services/mlWorkRestGenerator';
 
 export function activate(context: vscode.ExtensionContext): void {
   console.log('Break Bully extension is now active - prepare to be bullied into wellness!');
@@ -85,12 +86,23 @@ export function activate(context: vscode.ExtensionContext): void {
       console.log('ML Assessment command called');
       if (state.activityMonitor) {
         console.log('Activity monitor available, getting activity states');
-        // Get recent activity events for ML generation
-        const activityEvents = state.activityMonitor.getRecentActivityStates();
+        // Get recent activity events for ML analysis
+        const activityEvents = state.activityMonitor.getRecentEvents();
         console.log('Got activity events:', activityEvents?.length || 0);
 
+        // Transform ActivityEvent[] to ActivityAnalysis[] for the panel
+        const activityAnalysis = activityEvents.length > 0 ?
+          MLWorkRestGenerator['analyzeActivityData'](activityEvents) : {
+            averageSessionLength: 45,
+            peakProductivityHours: [9, 10, 11],
+            burnoutPatterns: [],
+            flowStateFrequency: 0.3,
+            breakAcceptanceRate: 0.6,
+            workPatternStability: 0.5
+          };
+
         // Start ML assessment
-        WorkRestAssessmentPanel.createOrShow(context.extensionUri, activityEvents);
+        WorkRestAssessmentPanel.createOrShow(context.extensionUri, [activityAnalysis]);
         vscode.window.showInformationMessage('🤖 Starting AI Personalization Assessment...');
         console.log('ML Assessment panel opened');
       } else {
@@ -168,6 +180,7 @@ export function activate(context: vscode.ExtensionContext): void {
 
     context.subscriptions.push(
       showReminderCommand,
+      
       toggleRemindersCommand,
       refreshTimerCommand,
       openSettingsCommand,

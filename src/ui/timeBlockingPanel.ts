@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import * as path from 'path';
+import { state } from '../models/state';
 import {
   TimeBlock,
   AdvancedWorkRestModel,
@@ -89,9 +89,9 @@ export class TimeBlockingPanel {
             break;
 
           case 'getCurrentModel':
-            const model = advancedScheduler ? advancedScheduler.getCurrentModel() : null;
+            { const model = advancedScheduler ? advancedScheduler.getCurrentModel() : null;
             this.sendCurrentModel(model);
-            break;
+            break; }
 
           case 'clearAllBlocks':
             this.clearAllBlocks();
@@ -109,7 +109,7 @@ export class TimeBlockingPanel {
   private loadTimeBlocks(): void {
     // Load time blocks from storage
     try {
-      const allBlocks = require('../models/state').state.storage?.loadCustomSetting('timeBlocking.blocks', {}) || {};
+      const allBlocks: {[key: number]: TimeBlock[]} = state.storage?.loadCustomSetting('timeBlocking.blocks', {}) || {};
       this.timeBlocks = allBlocks[this.currentDay] || [];
       this.sendTimeBlocks();
     } catch (error) {
@@ -139,7 +139,7 @@ export class TimeBlockingPanel {
     });
   }
 
-  private addTimeBlock(blockData: any): void {
+  private addTimeBlock(blockData: Partial<Omit<TimeBlock, 'id'>>): void {
     const block = {
       id: `block_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       name: blockData.name || 'New Block',
@@ -212,9 +212,9 @@ export class TimeBlockingPanel {
 
   private saveTimeBlocks(): void {
     try {
-      const allBlocks = require('../models/state').state.storage?.loadCustomSetting('timeBlocking.blocks', {}) || {};
+      const allBlocks: {[key: number]: TimeBlock[]} = state.storage?.loadCustomSetting('timeBlocking.blocks', {}) || {};
       allBlocks[this.currentDay] = this.timeBlocks;
-      require('../models/state').state.storage?.saveCustomSetting('timeBlocking.blocks', allBlocks);
+      state.storage?.saveCustomSetting('timeBlocking.blocks', allBlocks);
     } catch (error) {
       console.error('Failed to save time blocks:', error);
     }
@@ -304,14 +304,15 @@ export class TimeBlockingPanel {
 
     // Create or update advanced work-rest model with time blocking
     const currentModel = advancedScheduler.getCurrentModel();
+    const scheduleType: SchedulingModelType = 'time-blocking';
     const timeBlockingModel: AdvancedWorkRestModel = {
       id: 'time-blocking-schedule',
       name: 'Time Blocking Schedule',
       description: 'Custom time blocks for structured daily planning',
-      workDuration: 25, // Default fallback
-      restDuration: 5,  // Default fallback
+      workDuration: currentModel?.workDuration ?? 25, // Default fallback
+      restDuration: currentModel?.restDuration ?? 5,  // Default fallback
       basedOn: 'custom',
-      type: 'time-blocking',
+      type: scheduleType,
       advancedConfig: {
         timeBlocks: this.timeBlocks.filter(block =>
           !block.daysOfWeek || block.daysOfWeek.includes(this.currentDay)

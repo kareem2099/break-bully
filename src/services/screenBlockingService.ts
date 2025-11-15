@@ -11,8 +11,8 @@ export interface BlockingState {
 
 let blockingState: BlockingState | null = null;
 let blockingDecoration: vscode.TextEditorDecorationType | null = null;
-let warningTimer: NodeJS.Timeout | null = null;
-let blockingTimer: NodeJS.Timeout | null = null;
+let warningTimer: ReturnType<typeof setTimeout> | null = null;
+let blockingTimer: ReturnType<typeof setTimeout> | null = null;
 
 // Command override disposables for blocking input
 let commandDisposables: vscode.Disposable[] = [];
@@ -284,7 +284,7 @@ function registerInputBlockingCommands(): void {
 
   // Register command overrides
   for (const command of commandsToBlock) {
-    const disposable = vscode.commands.registerCommand(command, (...args: any[]) => {
+    const disposable = vscode.commands.registerCommand(command, (...args: unknown[]) => {
       if (blockingState?.isActive) {
         // Block the command and show feedback
         showBlockedInputMessage();

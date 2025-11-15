@@ -61,9 +61,9 @@ export function startWorkRestSession(model: WorkRestModel): void {
   // Start real-time analysis for intelligent break timing
   realTimeSessionAnalyzer.startSessionAnalysis();
 
-  // Record this model switch for learning (if different context)
+  // Record this model selection for learning (context-aware performance tracking)
   const modelSwitcher = IntelligentModelSwitcher.getInstance();
-  // Analytics will track context-specific performance
+  modelSwitcher.recordModelSelection(model.id, 'user_selection');
 
   vscode.window.showInformationMessage(
     `🚀 Started ${model.name} session!\nWork: ${model.workDuration}min | Rest: ${model.restDuration}min\n\n💡 Remember: You must manually confirm rest periods!\n\n🤖 ML Analysis Active: Real-time break suggestions enabled!`

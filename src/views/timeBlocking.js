@@ -137,7 +137,7 @@ function updateTimeBlocks(blocks) {
 
       if (blockStartHour === hour) {
         // Block starts in this hour
-        const blockDiv = createBlockElement(block, blockStartMinute, blockDurationHours);
+        const blockDiv = createBlockElement(block, blockStartMinute, blockDurationHours, pixelsPerMinute);
         hourDiv.appendChild(blockDiv);
       }
     });
@@ -150,12 +150,12 @@ function updateTimeBlocks(blocks) {
 }
 
 // Create visual block element
-function createBlockElement(block, startMinute, durationHours) {
+function createBlockElement(block, startMinute, durationHours, pixelsPerMinute) {
   const blockDiv = document.createElement('div');
   blockDiv.className = `timeline-block block-${block.type}`;
   blockDiv.dataset.blockId = block.id;
-  blockDiv.style.top = `${startMinute}px`; // Start position within hour
-  blockDiv.style.height = `${Math.max(30, durationHours * 60)}px`; // Height based on duration
+  blockDiv.style.top = `${startMinute * pixelsPerMinute}px`; // Start position within hour
+  blockDiv.style.height = `${Math.max(30, block.duration * pixelsPerMinute)}px`; // Height based on duration
 
   blockDiv.innerHTML = `
     <div class="block-header">
@@ -229,6 +229,11 @@ function clearAllBlocks() {
 
 // Block editor functions
 function showBlockEditor(blockData) {
+  selectedBlock = blockData.id || null; // Track currently selected block for editing
+  // Use selectedBlock to determine if we are editing an existing block
+  if (selectedBlock) {
+    console.log('Currently editing block:', selectedBlock);
+  }
   const isNew = !blockData.id;
 
   blockEditor.innerHTML = `

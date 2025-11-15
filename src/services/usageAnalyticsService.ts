@@ -412,10 +412,10 @@ export class UsageAnalyticsService {
     return baseFrequency;
   }
 
-  private identifyContextAdaptations(): Record<string, boolean | string | number> {
+  private identifyContextAdaptations(): Record<string, string | number> {
     return {
-      morningPerformance: this.sessionMetrics.context.timeOfDay >= 9 && this.sessionMetrics.context.timeOfDay <= 11,
-      codingEfficiency: this.sessionMetrics.context.workType === 'coding',
+      morningPerformance: this.sessionMetrics.context.timeOfDay >= 9 && this.sessionMetrics.context.timeOfDay <= 11 ? 1 : 0,
+      codingEfficiency: this.sessionMetrics.context.workType === 'coding' ? 1 : 0,
       loadCapacity: this.sessionMetrics.context.openEditors
     };
   }
@@ -481,11 +481,15 @@ export class UsageAnalyticsService {
   private saveEvent(event: UsageEvent): void {
     try {
       // Get existing usage data
-      const existingData = state.storage?.loadCustomSetting('usageAnalyticsData', {
+      const existingData: { events: UsageEvent[], sessions: unknown[], learningData: LearningDataPoint[] } = state.storage?.loadCustomSetting('usageAnalyticsData', {
         events: [],
         sessions: [],
         learningData: []
-      });
+      }) || {
+        events: [],
+        sessions: [],
+        learningData: []
+      };
 
       // Add new event
       existingData.events.push(event);
@@ -620,19 +624,156 @@ export class UsageAnalyticsService {
     };
   }
 
-  private analyzePreferencePatterns(_events: UsageEvent[]): Record<string, string | number | boolean> {
+  private analyzePreferencePatterns(_events: UsageEvent[]): Record<string, string | number> {
     // Analyze time-based, task-based, and context-based patterns
-    return {};
+    const patterns: Record<string, string | number> = {};
+
+    if (_events.length === 0) return patterns;
+
+    // Most used model
+    const modelUsage = new Map<string, number>();
+    _events.filter(e => e.type === UsageEventType.MODEL_SELECTED && e.modelId)
+           .forEach(e => modelUsage.set(e.modelId!, (modelUsage.get(e.modelId!) || 0) + 1));
+    const mostUsedModel = Array.from(modelUsage.entries()).sort((a, b) => b[1] - a[1])[0];
+    patterns.mostUsedModel = mostUsedModel?.[0] || 'none';
+    patterns.modelUsageCount = mostUsedModel?.[1] || 0;
+
+    // Average time of day
+    const times = _events.map(e => e.timestamp.getHours());
+    patterns.averageWorkHour = Math.round(times.reduce((a, b) => a + b, 0) / times.length);
+
+    // Event count by type
+    const eventCounts = new Map<string, number>();
+    _events.forEach(e => eventCounts.set(e.type, (eventCounts.get(e.type) || 0) + 1));
+    patterns.totalEvents = _events.length;
+    for (const [type, count] of eventCounts) {
+      patterns[`${type.toLowerCase()}Count`] = count;
+    }
+
+    return patterns;
   }
 
   private calculateSuccessRates(_events: UsageEvent[]): Record<string, number> {
     // Calculate success rates by model, time, context, etc.
-    return {};
+    const rates: Record<string, number> = {};
+
+    if (_events.length === 0) return rates;
+
+    // Success rate by model (completion rate > 0.7)
+    const modelStats = new Map<string, { total: number, completed: number }>();
+    _events.filter(e => e.type === UsageEventType.SESSION_ENDED && e.modelId)
+           .forEach(e => {
+             if (!modelStats.has(e.modelId!)) {
+               modelStats.set(e.modelId!, { total: 0, completed: 0 });
+             }
+             const stats = modelStats.get(e.modelId!)!;
+             stats.total++;
+             // Assume completion rate is in metadata
+             const metadata = e.metadata as Record<string, unknown>;
+             const completionRate = metadata.completionRate;
+             if (typeof completionRate === 'number' && completionRate > 0.7) {
+               stats.completed++;
+             }
+           });
+
+    for (const [modelId, stats] of modelStats) {
+      rates[`${modelId}SuccessRate`] = stats.total > 0 ? stats.completed / stats.total : 0;
+      rates[`${modelId}TotalSessions`] = stats.total;
+    }
+
+    // Overall success rate
+    const allSessions = _events.filter(e => e.type === UsageEventType.SESSION_ENDED);
+    const completedSessions = allSessions.filter(e => {
+      const metadata = e.metadata as Record<string, unknown>;
+      const completionRate = metadata.completionRate;
+      return typeof completionRate === 'number' && completionRate > 0.7;
+    });
+    rates.overallSuccessRate = allSessions.length > 0 ? completedSessions.length / allSessions.length : 0;
+    rates.totalSessions = allSessions.length;
+
+    // Break adherence rate
+    const breakTaken = _events.filter(e => e.type === UsageEventType.BREAK_TAKEN).length;
+    const breakSkipped = _events.filter(e => e.type === UsageEventType.BREAK_SKIPPED).length;
+    const totalBreaks = breakTaken + breakSkipped;
+    rates.breakAdherenceRate = totalBreaks > 0 ? breakTaken / totalBreaks : 0;
+    rates.breakSkipRate = totalBreaks > 0 ? breakSkipped / totalBreaks : 0;
+
+    return rates;
   }
 
-  private extractBehavioralTendencies(_events: UsageEvent[]): Record<string, string | number | boolean> {
+  private extractBehavioralTendencies(_events: UsageEvent[]): Record<string, string | number> {
     // Extract behavioral patterns and tendencies
-    return {};
+    const tendencies: Record<string, string | number> = {};
+
+    if (_events.length === 0) return tendencies;
+
+    // Break pattern tendencies
+    const breakPatterns = new Map<string, number>();
+    _events.filter(e => e.type === UsageEventType.BREAK_TAKEN)
+           .forEach(e => {
+             const metadata = e.metadata as Record<string, unknown>;
+             const trigger = (metadata.triggeredBy as string) || 'unknown';
+             breakPatterns.set(trigger, (breakPatterns.get(trigger) || 0) + 1);
+           });
+
+    for (const [pattern, count] of breakPatterns) {
+      tendencies[`break${pattern.charAt(0).toUpperCase() + pattern.slice(1)}Count`] = count;
+    }
+
+    // Distraction patterns
+    const distractionSeverity = new Map<string, number>();
+    _events.filter(e => e.type === UsageEventType.DISTRACTION_DETECTED)
+           .forEach(e => {
+             const metadata = e.metadata as Record<string, unknown>;
+             const severity = (metadata.severity as string) || 'unknown';
+             distractionSeverity.set(severity, (distractionSeverity.get(severity) || 0) + 1);
+           });
+
+    for (const [severity, count] of distractionSeverity) {
+      tendencies[`distraction${severity.charAt(0).toUpperCase() + severity.slice(1)}Count`] = count;
+    }
+
+    // Skip reasons
+    const skipReasons = new Map<string, number>();
+    _events.filter(e => e.type === UsageEventType.BREAK_SKIPPED)
+           .forEach(e => {
+             const metadata = e.metadata as Record<string, unknown>;
+             const reason = (metadata.skipReason as string) || 'unknown';
+             skipReasons.set(reason, (skipReasons.get(reason) || 0) + 1);
+           });
+
+    for (const [reason, count] of skipReasons) {
+      tendencies[`skip${reason.charAt(0).toUpperCase() + reason.slice(1)}Count`] = count;
+    }
+
+    // User interaction patterns
+    const userSelection = _events.filter(e => {
+      const metadata = e.metadata as Record<string, unknown>;
+      return e.type === UsageEventType.MODEL_SELECTED && metadata.source === 'user_selection';
+    }).length;
+    const aiRecommendation = _events.filter(e => {
+      const metadata = e.metadata as Record<string, unknown>;
+      return e.type === UsageEventType.MODEL_SELECTED && metadata.source === 'ai_recommendation';
+    }).length;
+    const userInteractionRate = (userSelection + aiRecommendation) > 0 ? userSelection / (userSelection + aiRecommendation) : 0;
+
+    tendencies.userInteractionRate = Math.round(userInteractionRate * 100) / 100;
+    tendencies.manualBreakInitiationRate = _events.filter(e => {
+      if (e.type !== UsageEventType.BREAK_TAKEN) return false;
+      const metadata = e.metadata as Record<string, unknown>;
+      return metadata.userInitiated === true;
+    }).length / Math.max(1, _events.filter(e => e.type === UsageEventType.BREAK_TAKEN).length);
+
+    // Time patterns
+    const workHours = _events.map(e => e.timestamp.getHours());
+    const averageHour = workHours.reduce((a, b) => a + b, 0) / workHours.length;
+    tendencies.preferredWorkHour = Math.round(averageHour);
+
+    const dayOfWeek = _events.map(e => e.timestamp.getDay());
+    const averageDay = dayOfWeek.reduce((a, b) => a + b, 0) / dayOfWeek.length;
+    tendencies.preferredWorkDay = Math.round(averageDay); // 0=Sunday, 6=Saturday
+
+    return tendencies;
   }
 
   dispose(): void {

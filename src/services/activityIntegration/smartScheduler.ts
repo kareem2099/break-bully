@@ -17,9 +17,10 @@ export class FlowStateDetector {
 
     const settings = activitySettings.getSettings();
     const now = Date.now();
-    const twentyMinutesAgo = now - (20 * 60 * 1000);
+    const flowDetectionWindow = vscode.workspace.getConfiguration('breakBully').get('flowDetectionWindow', 20);
+    const twentyMinutesAgo = now - (flowDetectionWindow * 60 * 1000);
 
-    // Get events from last 20 minutes
+    // Get events from last N minutes
     const recentEvents = events.filter(e => e.timestamp > twentyMinutesAgo);
 
     if (recentEvents.length < 5) return false; // Need minimum activity
@@ -152,9 +153,13 @@ export class SmartScheduler {
     const activityScore = this.baseMonitor.getActivityScore();
     const recentEvents = this.baseMonitor.getRecentEvents(60);
 
-    // High activity → longer break
+    // Use recent activity patterns for more accurate break duration
+    const highIntensityEvents = recentEvents.filter(e => e.intensity >= 7);
+    const prolongedHighActivity = highIntensityEvents.length > 10; // More than 10 high-intensity events
+
+    // High activity → longer break, extended if prolonged high activity
     if (activityScore >= 8) {
-      return 15;
+      return prolongedHighActivity ? 20 : 15;
     }
 
     // Medium activity → standard break

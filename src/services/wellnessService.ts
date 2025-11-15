@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { getConfiguration } from '../core/configuration';
 import { state } from '../models/state';
-import { WellnessGoal, WellnessChallenge, ExerciseCategory, DifficultyLevel, CustomExercise, DailyWellnessData } from '../types';
+import { WellnessGoal, WellnessChallenge, ExerciseCategory, DifficultyLevel, CustomExercise, DailyWellnessData, WellnessInsights, WellnessTrends } from '../types';
 
 export function initializeWellnessGoals(): void {
   // Import and call the goal service initialization
@@ -529,7 +529,7 @@ export function getCompletedChallenges(): WellnessChallenge[] {
 }
 
 // Wellness Insights & Analytics
-export function getWellnessInsights(timeRange: 'today' | 'week' | 'month' | 'all' = 'week'): any {
+export function getWellnessInsights(timeRange: 'today' | 'week' | 'month' | 'all' = 'week'): WellnessInsights {
   const now = new Date();
   let startDate = new Date();
 
@@ -583,6 +583,12 @@ export function getWellnessInsights(timeRange: 'today' | 'week' | 'month' | 'all
 
     // Trends analysis
     trends: calculateTrendsFromDailyData(dailyData),
+    overallTrends: calculateTrends(startDate),
+
+    // Additional calculations from startDate
+    overallAverageBreaksPerDay: calculateAverageBreaksPerDay(startDate),
+    overallGoalCompletionRate: calculateGoalCompletionRate(startDate),
+    averageScreenTime: calculateAverageScreenTime(startDate),
 
     // Current day comparison
     currentDay: {
@@ -596,7 +602,8 @@ export function getWellnessInsights(timeRange: 'today' | 'week' | 'month' | 'all
     },
 
     // Recommendations
-    recommendations: generateRecommendationsFromDailyData(dailyData)
+    recommendations: generateRecommendationsFromDailyData(dailyData),
+    basicRecommendations: generateRecommendations()
   };
 
   return insights;
@@ -616,12 +623,15 @@ function calculateGoalCompletionRate(startDate: Date): number {
 }
 
 function calculateAverageScreenTime(startDate: Date): number {
-  // This would need historical screen time data
-  // For now, return current daily average
-  return Math.round(state.screenTimeStats.totalScreenTimeToday / 24 * 60); // Convert to minutes
+  // Calculate average screen time from historical daily data since startDate
+  const dailyData = getDailyWellnessData(startDate);
+  if (dailyData.length === 0) {
+    return Math.round(state.screenTimeStats.totalScreenTimeToday / 24 * 60); // Fallback to current day
+  }
+  return Math.round(dailyData.reduce((sum, day) => sum + day.screenTimeMinutes, 0) / dailyData.length);
 }
 
-function calculateTrends(startDate: Date): any {
+function calculateTrends(startDate: Date): WellnessTrends {
   // Calculate trends over time
   const recentGoals = state.wellnessGoals.filter(g => g.createdAt >= startDate);
   const recentAchievements = state.achievements.filter(a => a.unlockedAt && a.unlockedAt >= startDate);
@@ -633,13 +643,14 @@ function calculateTrends(startDate: Date): any {
   };
 }
 
-function calculateTrendsFromDailyData(dailyData: DailyWellnessData[]): any {
+function calculateTrendsFromDailyData(dailyData: DailyWellnessData[]): WellnessTrends {
   if (dailyData.length < 2) {
     return {
       goalCompletionTrend: 'stable',
       achievementUnlockTrend: 'stable',
       breakConsistency: 'stable',
-      screenTimeTrend: 'stable'
+      screenTimeTrend: 'stable',
+      overallProgress: 'building'
     };
   }
 
@@ -666,6 +677,7 @@ function calculateTrendsFromDailyData(dailyData: DailyWellnessData[]): any {
 
   return {
     goalCompletionTrend: getTrend(firstHalfAvgGoals, secondHalfAvgGoals),
+    achievementUnlockTrend: 'stable', // Achievement trends are harder to track from daily data
     breakConsistency: getTrend(firstHalfAvgBreaks, secondHalfAvgBreaks),
     screenTimeTrend: getTrend(firstHalfAvgScreenTime, secondHalfAvgScreenTime),
     overallProgress: dailyData.length >= 7 ? 'good' : 'building'

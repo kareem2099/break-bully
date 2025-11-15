@@ -46,18 +46,19 @@
     }
 
     function showGoalCelebration(message) {
-        // Create enhanced welcome screen instead of simple popup
-        showWelcomeScreen();
+        // Create enhanced welcome screen with custom message
+        showWelcomeScreen(message);
     }
 
-    function showWelcomeScreen() {
+    function showWelcomeScreen(message) {
         const welcomeScreen = document.createElement('div');
         welcomeScreen.className = 'welcome-screen-overlay';
+        const displayMessage = message || 'Welcome to Break Bully!';
         welcomeScreen.innerHTML = `
             <div class="welcome-screen">
                 <div class="welcome-header">
                     <div class="welcome-icon">🎉</div>
-                    <h1>Welcome to Break Bully!</h1>
+                    <h1>${displayMessage}</h1>
                     <p class="welcome-subtitle">Your journey to healthier coding habits starts now</p>
                 </div>
 

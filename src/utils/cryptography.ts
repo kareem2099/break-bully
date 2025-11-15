@@ -5,6 +5,30 @@
 
 import * as crypto from 'crypto';
 
+// Type definitions for cryptographic utilities
+interface ValidityProofData {
+  userId: string;
+  dataHash: string;
+  timestamp: number;
+  nonce: string;
+  format: string;
+}
+
+interface SanitizedData {
+  [key: string]: unknown;
+}
+
+interface CommunityData {
+  [key: string]: unknown;
+}
+
+interface DecryptionResult {
+  status: string;
+  userKey: string;
+  userId: string;
+  userKeyLength: number;
+}
+
 // Cryptographic constants
 const ALGORITHM = 'aes-256-gcm';
 const KEY_LENGTH = 32; // 256 bits
@@ -14,10 +38,37 @@ const HMAC_KEY_LENGTH = 32; // For additional HMAC integrity
 // Note: Uses AES-256-GCM with HMAC-SHA256 for authenticated encryption
 // GCM provides confidentiality and integrity, HMAC adds extra verification
 
+/**
+ * Encrypt data using a provided key (AES-256-GCM)
+ * Returns base64-encoded encrypted data with IV and auth tag
+ */
+function encryptWithKey(data: string, key: Buffer): string {
+  try {
+    const iv = crypto.randomBytes(IV_LENGTH);
+
+    const cipher = crypto.createCipheriv(ALGORITHM, key, iv);
+    const dataWithAuth = 'breakBullyContribution' + data;
+
+    let encrypted = cipher.update(dataWithAuth, 'utf8', 'base64');
+    encrypted += cipher.final('base64');
+
+    // Get the authentication tag for GCM
+    const authTag = cipher.getAuthTag();
+
+    // Combine: IV|encrypted|authTag
+    const encryptedWithTag = iv.toString('base64') + '|' + encrypted + '|' + authTag.toString('base64');
+
+    return Buffer.from(encryptedWithTag).toString('base64');
+  } catch (error) {
+    console.error('Encryption with key failed:', error);
+    throw new Error('Failed to encrypt data with key');
+  }
+}
+
 // Derive a key from user-specific data (deterministic but unique per user/installation)
-function deriveKey(salt: string, userId: string): Buffer {
+function deriveKey(salt: string, userId: string, length = KEY_LENGTH): Buffer {
   const input = `${userId}.${salt}`;
-  return crypto.scryptSync(input, 'breakBullySalt2024', KEY_LENGTH);
+  return crypto.scryptSync(input, 'breakBullySalt2024', length);
 }
 
 /**
@@ -28,7 +79,7 @@ export function encryptData(data: string, userId: string): string {
   try {
     const salt = crypto.randomBytes(16).toString('hex');
     const key = deriveKey(salt, userId);
-    const hmacKey = deriveKey(salt + 'hmac', userId);
+    const hmacKey = deriveKey(salt + 'hmac', userId, HMAC_KEY_LENGTH);
     const iv = crypto.randomBytes(IV_LENGTH);
 
     const cipher = crypto.createCipheriv(ALGORITHM, key, iv);
@@ -79,7 +130,7 @@ export function decryptData(encryptedData: string, userId: string): string {
     const authTag = Buffer.from(authTagBase64, 'base64');
 
     const key = deriveKey(saltStr, userId);
-    const hmacKey = deriveKey(saltStr + 'hmac', userId);
+    const hmacKey = deriveKey(saltStr + 'hmac', userId, HMAC_KEY_LENGTH);
 
     // Recreate the encryptedWithTag for HMAC verification
     const encryptedWithTag = ivBase64 + '|' + encryptedText + '|' + authTagBase64;
@@ -141,14 +192,14 @@ export function generateSecureId(): string {
  * Note: This is a simplified version for the open-source implementation.
  * Production systems should use proper ZKP libraries like SnarkJS.
  */
-export function createValidityProof(data: any, userId: string): string {
+export function createValidityProof(data: unknown, userId: string): string {
   // Create a hash-based proof that data exists and follows expected format
   // without revealing the actual data
   const dataHash = createHash(JSON.stringify(data));
   const timestamp = Date.now();
   const nonce = crypto.randomBytes(16).toString('hex');
 
-  const proofData = {
+  const proofData: ValidityProofData = {
     userId: createHash(userId), // Hash user ID to anonymize
     dataHash,
     timestamp,
@@ -194,15 +245,15 @@ export function createAnonymousId(machineId: string, installDate: string): strin
 /**
  * Sanitize data for contribution by removing personally identifiable information
  */
-export function sanitizeForContribution(data: any): any {
+export function sanitizeForContribution(data: unknown): SanitizedData {
   // Deep clone to avoid modifying original
-  const sanitized = JSON.parse(JSON.stringify(data));
+  const sanitized: SanitizedData = JSON.parse(JSON.stringify(data));
 
   // Remove or hash any potentially identifying fields
   const fieldsToRemove = ['userName', 'email', 'workspace', 'filePaths'];
   const fieldsToHash = ['sessionId', 'taskName', 'projectName'];
 
-  function sanitizeObject(obj: any): void {
+  function sanitizeObject(obj: Record<string, unknown>): void {
     if (!obj || typeof obj !== 'object') return;
 
     // Remove sensitive fields
@@ -213,14 +264,14 @@ export function sanitizeForContribution(data: any): any {
     // Hash identifying but useful fields
     fieldsToHash.forEach(field => {
       if (field in obj && typeof obj[field] === 'string') {
-        obj[field] = createHash(obj[field]).substring(0, 8); // Short hash
+        obj[field] = createHash(obj[field] as string).substring(0, 8); // Short hash
       }
     });
 
     // Recurse into nested objects
     Object.values(obj).forEach(val => {
-      if (typeof val === 'object' && val !== null) {
-        sanitizeObject(val);
+      if (typeof val === 'object' && val !== null && !Array.isArray(val)) {
+        sanitizeObject(val as Record<string, unknown>);
       }
     });
   }
@@ -238,7 +289,7 @@ export interface EncryptionResult {
  * Encrypt data for community sharing (simplified federated learning approach)
  * Uses a community key derived from known constants (transparent)
  */
-export function encryptForCommunity(data: any, userId: string): EncryptionResult {
+export function encryptForCommunity(data: CommunityData, userId: string): EncryptionResult {
   const sanitizedData = sanitizeForContribution(data);
   const jsonData = JSON.stringify(sanitizedData);
 
@@ -246,11 +297,11 @@ export function encryptForCommunity(data: any, userId: string): EncryptionResult
   const communityKey = deriveKey('breakBullyCommunity2024', 'community_shared');
 
   // Encrypt with community key
-  const encrypted = encryptData(jsonData, 'community_key');
+  const encrypted = encryptWithKey(jsonData, communityKey);
 
   // User key for this contribution (for user to access their own data later)
   const userKey = deriveKey(crypto.randomBytes(16).toString('hex'), userId);
-  const encryptedUserKey = encryptData(userKey.toString('hex'), 'community_key');
+  const encryptedUserKey = encryptWithKey(userKey.toString('hex'), communityKey);
 
   return {
     data: encrypted,
@@ -261,7 +312,7 @@ export function encryptForCommunity(data: any, userId: string): EncryptionResult
 /**
  * Decrypt community data using provided key
  */
-export function decryptCommunityData(encryptedData: string, encryptedKey: string, userId: string): any {
+export function decryptCommunityData(encryptedData: string, encryptedKey: string, userId: string): DecryptionResult {
   try {
     // Decrypt the user key
     const userKeyHex = decryptData(encryptedKey, 'community_key');
@@ -269,7 +320,7 @@ export function decryptCommunityData(encryptedData: string, encryptedKey: string
 
     // Decrypt the data (this would be done by the community aggregator)
     // For now, return placeholder - full implementation would use proper federated learning
-    return { status: 'placeholder', userKey: userKeyHex };
+    return { status: 'placeholder', userKey: userKeyHex, userId, userKeyLength: userKey.length };
   } catch (error) {
     console.error('Community data decryption failed:', error);
     throw new Error('Failed to decrypt community data');

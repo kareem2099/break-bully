@@ -1,6 +1,37 @@
 import * as vscode from 'vscode';
 import { state } from '../models/state';
 
+interface AnalyticsReport {
+  period: string;
+  startDate: string;
+  endDate: string;
+  summary: {
+    totalBreaks: number;
+    totalScreenTime: number;
+    averageSessionLength: number;
+    goalsCompleted: number;
+    challengesCompleted: number;
+  };
+  dailyStats: DailyStats[];
+  trends: TrendsData;
+  recommendations: string[];
+}
+
+interface DailyStats {
+  date: string;
+  breaks: number;
+  screenTime: number;
+  exercises: number;
+  goalsCompleted: number;
+}
+
+interface TrendsData {
+  breakConsistency: string;
+  screenTimeTrend: string;
+  exerciseFrequency: string;
+  goalCompletionRate: number;
+}
+
 export function showAnalyticsReport(): void {
   const report = generateWellnessReport();
 
@@ -27,12 +58,12 @@ export function showAnalyticsReport(): void {
           exportAnalyticsReport(report);
           break;
         case 'refreshData':
-          const updatedReport = generateWellnessReport();
+          { const updatedReport = generateWellnessReport();
           panel.webview.postMessage({
             command: 'updateReport',
             data: updatedReport
           });
-          break;
+          break; }
       }
     },
     undefined,
@@ -40,7 +71,7 @@ export function showAnalyticsReport(): void {
   );
 }
 
-function generateAnalyticsHtml(report: any): string {
+function generateAnalyticsHtml(report: AnalyticsReport): string {
   const totalGoals = state.wellnessGoals.length;
   const completedGoals = report.summary.goalsCompleted;
   const completionRate = totalGoals > 0 ? Math.round((completedGoals / totalGoals) * 100) : 0;
@@ -388,7 +419,7 @@ function generateAnalyticsHtml(report: any): string {
   `;
 }
 
-function exportAnalyticsReport(report: any): void {
+function exportAnalyticsReport(report: AnalyticsReport): void {
   const exportData = {
     generatedAt: new Date().toISOString(),
     report: report,
@@ -418,7 +449,7 @@ function exportAnalyticsReport(report: any): void {
   });
 }
 
-function generateWellnessReport(): any {
+function generateWellnessReport(): AnalyticsReport {
   const today = new Date();
   const weekAgo = new Date(today);
   weekAgo.setDate(today.getDate() - 7);
@@ -449,7 +480,7 @@ function calculateAverageSessionLength(): number {
     Math.floor((Date.now() - state.screenTimeStats.codingSessionStart.getTime()) / (1000 * 60)) : 0;
 }
 
-function generateDailyStats(): any[] {
+function generateDailyStats(): DailyStats[] {
   // Generate stats for the past 7 days
   const stats = [];
   for (let i = 6; i >= 0; i--) {
@@ -467,7 +498,7 @@ function generateDailyStats(): any[] {
   return stats;
 }
 
-function analyzeTrends(): any {
+function analyzeTrends(): TrendsData {
   return {
     breakConsistency: 'improving',
     screenTimeTrend: 'stable',

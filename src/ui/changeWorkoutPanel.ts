@@ -44,6 +44,10 @@ export class ChangeWorkoutPanel {
     this._panel = panel;
     this._extensionUri = extensionUri;
 
+    // Normalize the extension URI path using path module
+    const normalizedPath = path.posix.normalize(this._extensionUri.path);
+    console.debug('Extension path:', normalizedPath);
+
     // Set the webview's initial html content
     this._update();
 
@@ -55,12 +59,16 @@ export class ChangeWorkoutPanel {
     this._panel.webview.onDidReceiveMessage(
       async (message) => {
         switch (message.command) {
-          case 'getWorkRestModels':
+          case 'getWorkRestModels': {
+            // Activate intelligent model switcher if not already active
+            IntelligentModelSwitcher.getInstance();
+
             this._panel.webview.postMessage({
               command: 'workRestModels',
               data: workRestModels
             });
             break;
+          }
           case 'changeWorkRestModel':
             try {
               console.log('Attempting to switch to model:', message.data.modelId);
@@ -188,13 +196,19 @@ export class ChangeWorkoutPanel {
               // Get the current work-rest session
               const currentSession = getCurrentSession();
               if (currentSession) {
+                // Include real-time session analysis data
+                const realTimeAnalysis = realTimeSessionAnalyzer.getCurrentAnalysis();
                 this._panel.webview.postMessage({
                   command: 'currentSession',
                   data: {
                     model: currentSession.model,
                     isWorking: currentSession.isWorking,
                     currentCycle: currentSession.currentCycle,
-                    totalCycles: currentSession.totalCycles
+                    totalCycles: currentSession.totalCycles,
+                    realTimeAnalysis: realTimeAnalysis ? {
+                      fatigueIndicators: realTimeAnalysis.fatigueSignals,
+                      suggestions: realTimeAnalysis.adaptationSuggestions
+                    } : null
                   }
                 });
               } else {

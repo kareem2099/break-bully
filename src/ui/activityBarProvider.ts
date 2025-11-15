@@ -1,10 +1,18 @@
+
 import * as vscode from 'vscode';
-import * as path from 'path';
-import { BreakBullyActivityBarProvider, BreakStats, WebviewMessage } from '../types';
+import { BreakBullyActivityBarProvider, BreakStats, WebviewMessage, ExerciseCategory, DifficultyLevel, WorkRestModel, Achievement } from '../types';
+import { ActivityIntegrationLevel } from '../services/activityIntegration/activityTypes';
 import { state } from '../models/state';
 import { takeBreak } from '../services/breakService';
-import { showStretchExercise, showBreathingExercise, showEyeExercise, showWaterReminder } from '../services/exerciseService';
+import { showStretchExercise, showBreathingExercise, showEyeExercise, showWaterReminder, showCustomExerciseCreator, showCustomExerciseLibrary, triggerGitBasedBreakSuggestion, showGitProductivityDashboard } from '../services/exerciseService';
 import { showAnalyticsReport } from '../services/analyticsService';
+import { workRestModels, getWorkRestModelById } from '../constants/workRestModels';
+import * as workRestService from '../services/workRestService';
+import { activitySettings } from '../services/activityIntegration/activitySettings';
+import { SmartScheduler } from '../services/activityIntegration/smartScheduler';
+import * as baseActivityMonitor from '../services/activityIntegration/baseActivityMonitor';
+import { exportAchievements, generateAchievementShareText, getAchievementStats } from '../services/achievementService';
+import { createCustomGoal, createChallenge, getWellnessInsights, createCustomExercise } from '../services/wellnessService';
 
 export class BreakBullyActivityBarProviderImpl implements BreakBullyActivityBarProvider {
   private _view?: vscode.WebviewView;
@@ -14,7 +22,7 @@ export class BreakBullyActivityBarProviderImpl implements BreakBullyActivityBarP
     this._extensionUri = extensionUri;
   }
 
-  resolveWebviewView(webviewView: vscode.WebviewView): void | Thenable<void> {
+  resolveWebviewView(webviewView: vscode.WebviewView): void | Promise<void> {
     console.log('resolveWebviewView called - webview provider is working!');
     console.log('Webview view type:', webviewView.viewType);
     console.log('Webview view ID:', webviewView.viewType);
@@ -243,11 +251,11 @@ export class BreakBullyActivityBarProviderImpl implements BreakBullyActivityBarP
         vscode.commands.executeCommand('breakBully.openSettings');
         break;
       case 'showTimer':
-        vscode.window.showInformationMessage(`Timer started for ${message.data?.duration} seconds`);
+        vscode.window.showInformationMessage(`Timer started for ${(message.data as { duration: number })?.duration} seconds`);
         break;
       case 'updateStats':
         if (message.data) {
-          this.updateStats(message.data);
+          this.updateStats(message.data as BreakStats);
         }
         break;
       case 'requestInitialData':
@@ -274,22 +282,25 @@ export class BreakBullyActivityBarProviderImpl implements BreakBullyActivityBarP
       case 'showWaterReminder':
         showWaterReminder();
         break;
-      case 'getWorkRestModels':
-        const models = require('../constants/workRestModels').workRestModels;
+      case 'getWorkRestModels': {
+        const models = workRestModels;
         this._view?.webview.postMessage({
           command: 'workRestModels',
           data: models
         });
         break;
-      case 'getWorkRestModelsForQuickPick':
-        const quickPickModels = require('../constants/workRestModels').workRestModels;
+      }
+      case 'getWorkRestModelsForQuickPick': {
+        const quickPickModels = workRestModels;
         this._view?.webview.postMessage({
           command: 'workRestModelsForQuickPick',
           data: quickPickModels
         });
         break;
-      case 'getWorkRestModelDetails':
-        const modelDetails = require('../constants/workRestModels').getWorkRestModelById(message.data.modelId);
+      }
+      case 'getWorkRestModelDetails': {
+        const data = message.data as { modelId: string };
+        const modelDetails: WorkRestModel | undefined = getWorkRestModelById(data.modelId);
         if (modelDetails) {
           this._view?.webview.postMessage({
             command: 'workRestModelDetails',
@@ -297,50 +308,51 @@ export class BreakBullyActivityBarProviderImpl implements BreakBullyActivityBarP
           });
         }
         break;
+      }
       case 'showQuickPick':
-        this.showWorkRestModelQuickPick(message.data);
+        this.showWorkRestModelQuickPick(message.data as { items: (vscode.QuickPickItem & { modelId: string })[], placeHolder: string });
         break;
       case 'showInfoMessage':
-        vscode.window.showInformationMessage(message.data.message);
+        vscode.window.showInformationMessage((message.data as { message: string }).message);
         break;
       case 'showErrorMessage':
-        vscode.window.showErrorMessage(message.data.message);
+        vscode.window.showErrorMessage((message.data as { message: string }).message);
         break;
-      case 'startWorkRestSession':
-        const workRestService = require('../services/workRestService');
-        workRestService.switchWorkRestModel(message.data.modelId);
+      case 'switchWorkRestModel':
+        { const data = message.data as { modelId: string };
+        workRestService.switchWorkRestModel(data.modelId);
         // Send current session info
         const currentSession = workRestService.getCurrentSession();
         this._view?.webview.postMessage({
           command: 'workRestSessionUpdate',
           data: currentSession
         });
-        break;
-      case 'stopWorkRestSession':
-        const workRestServiceStop = require('../services/workRestService');
-        workRestServiceStop.stopWorkRestSession();
+        break; }
+      case 'stopWorkRestSessionOld':
+        workRestService.stopWorkRestSession();
         this._view?.webview.postMessage({
           command: 'workRestSessionUpdate',
           data: null
         });
         break;
-      case 'setOnboardingWorkRestModel':
+      case 'setOnboardingWorkRestModel': {
+        const data = message.data as { modelId: string };
         // Save the selected model for onboarding
         const config = vscode.workspace.getConfiguration('breakBully');
-        config.update('workRestModel', message.data.modelId, vscode.ConfigurationTarget.Global).then(() => {
+        config.update('workRestModel', data.modelId, vscode.ConfigurationTarget.Global).then(() => {
           // Start the work-rest session with the selected model
-          const workRestService = require('../services/workRestService');
-          const model = require('../constants/workRestModels').getWorkRestModelById(message.data.modelId);
+          const model = getWorkRestModelById(data.modelId);
           if (model) {
             workRestService.startWorkRestSession(model);
           }
         });
         break;
-      case 'changeWorkRestModel':
+      }
+      case 'changeWorkRestModel': {
+        const data = message.data as { modelId: string };
         // Change the work-rest model from settings
-        const workRestServiceChange = require('../services/workRestService');
         try {
-          workRestServiceChange.switchWorkRestModel(message.data.modelId);
+          workRestService.switchWorkRestModel(data.modelId);
           // Send success response
           this._view?.webview.postMessage({
             command: 'workRestModelChanged',
@@ -356,6 +368,7 @@ export class BreakBullyActivityBarProviderImpl implements BreakBullyActivityBarP
           });
         }
         break;
+      }
       case 'showAnalytics':
         showAnalyticsReport();
         break;
@@ -374,32 +387,32 @@ export class BreakBullyActivityBarProviderImpl implements BreakBullyActivityBarP
       case 'createChallenge':
         this.createChallenge();
         break;
-      case 'createCustomExercise':
-        const { showCustomExerciseCreator } = require('../services/exerciseService');
+      case 'createCustomExercise': {
         showCustomExerciseCreator();
         break;
-      case 'showCustomExerciseLibrary':
-        const { showCustomExerciseLibrary } = require('../services/exerciseService');
+      }
+      case 'showCustomExerciseLibrary': {
         showCustomExerciseLibrary();
         break;
-      case 'triggerGitBreakSuggestion':
-        const { triggerGitBasedBreakSuggestion } = require('../services/exerciseService');
+      }
+      case 'triggerGitBreakSuggestion': {
         triggerGitBasedBreakSuggestion();
         break;
-      case 'showGitProductivityDashboard':
-        const { showGitProductivityDashboard } = require('../services/exerciseService');
+      }
+      case 'showGitProductivityDashboard': {
         showGitProductivityDashboard();
         break;
+      }
       case 'getWellnessInsights':
-        this.getWellnessInsights(message.data);
+        this.getWellnessInsights(message.data as { timeRange: string });
         break;
       case 'onboardingCompleted':
         // Mark onboarding as completed in global state
-        const onboardingConfig = vscode.workspace.getConfiguration('breakBully');
+        { const onboardingConfig = vscode.workspace.getConfiguration('breakBully');
         onboardingConfig.update('onboardingCompleted', true, vscode.ConfigurationTarget.Global).then(() => {
           console.log('Onboarding marked as completed');
         });
-        break;
+        break; }
       case 'openChangeWorkoutPanel':
         vscode.commands.executeCommand('breakBully.changeWorkout');
         break;
@@ -410,16 +423,16 @@ export class BreakBullyActivityBarProviderImpl implements BreakBullyActivityBarP
         this.sendActivityIntegrationSettings();
         break;
       case 'applySettingsChanges':
-        this.applySettingsChanges(message.data);
+        this.applySettingsChanges(message.data as { activityLevel: string; workRestModel?: string });
         break;
       case 'startWorkRestSession':
-        this.startWorkRestSession(message.data.modelId);
+        this.startWorkRestSession((message.data as { modelId: string }).modelId);
         break;
       case 'stopWorkRestSession':
         this.stopWorkRestSession();
         break;
       case 'showCodeTuneSuggestion':
-        this.showCodeTuneSuggestion(message.data);
+        this.showCodeTuneSuggestion(message.data as { message: string; codeTuneInstalled: boolean });
         break;
       case 'hideCodeTuneSuggestion':
         this.hideCodeTuneSuggestion();
@@ -472,6 +485,18 @@ export class BreakBullyActivityBarProviderImpl implements BreakBullyActivityBarP
         data: state.breakStats
       });
 
+      // Send initial configuration settings
+      this._view.webview.postMessage({
+        command: 'updateInitialConfig',
+        data: {
+          isEnabled: config.get('enabled', true),
+          interval: config.get('interval', 30),
+          enableGoals: config.get('enableGoals', true),
+          enableAchievements: config.get('enableAchievements', true),
+          workRestModel: config.get('workRestModel', 'standard')
+        }
+      });
+
       // Send initial status
       this.updateStatus();
 
@@ -488,8 +513,7 @@ export class BreakBullyActivityBarProviderImpl implements BreakBullyActivityBarP
       const config = vscode.workspace.getConfiguration('breakBully');
 
       // Check if there's an active work-rest session
-      const workRestService = require('../services/workRestService');
-      const timeRemaining = workRestService.getTimeRemaining();
+      const timeRemaining = workRestService.getTimeRemaining ? workRestService.getTimeRemaining() : null;
 
       if (timeRemaining) {
         // Show work-rest session timing with ML enhancements
@@ -499,10 +523,8 @@ export class BreakBullyActivityBarProviderImpl implements BreakBullyActivityBarP
 
         // Integrate ML smart scheduling if enabled and available
         try {
-          const { activitySettings } = require('../services/activityIntegration/activitySettings');
           if (activitySettings && activitySettings.isSmartEnabled && activitySettings.isSmartEnabled() && state.activityMonitor) {
             try {
-              const { SmartScheduler } = require('../services/activityIntegration/smartScheduler');
               const baseMonitor = state.activityMonitor;
               const smartScheduler = new SmartScheduler(baseMonitor);
               mlEnhanced = true;
@@ -548,10 +570,8 @@ export class BreakBullyActivityBarProviderImpl implements BreakBullyActivityBarP
 
         // Check for ML-enhanced break suggestions
         try {
-          const { activitySettings } = require('../services/activityIntegration/activitySettings');
           if (activitySettings && activitySettings.isSmartEnabled && activitySettings.isSmartEnabled() && state.activityMonitor) {
             try {
-              const { SmartScheduler } = require('../services/activityIntegration/smartScheduler');
               const baseMonitor = state.activityMonitor;
               const smartScheduler = new SmartScheduler(baseMonitor);
               mlEnhanced = true;
@@ -628,11 +648,10 @@ export class BreakBullyActivityBarProviderImpl implements BreakBullyActivityBarP
 
       try {
         // Import activity monitor dynamically
-        const activityMonitorModule = require('../services/activityIntegration/baseActivityMonitor');
-        if (activityMonitorModule && state.activityMonitor &&
+        if (baseActivityMonitor && state.activityMonitor &&
             typeof state.activityMonitor.getCurrentActivityState === 'function') {
           const activityMonitor = state.activityMonitor;
-          const stateEnum = activityMonitorModule.ActivityState;
+          const stateEnum = baseActivityMonitor.ActivityState;
 
           currentState = activityMonitor.getCurrentActivityState();
           activityScore = activityMonitor.getActivityScore ? activityMonitor.getActivityScore() : 0;
@@ -746,7 +765,6 @@ export class BreakBullyActivityBarProviderImpl implements BreakBullyActivityBarP
   }
 
   private exportAchievements(): void {
-    const { exportAchievements, generateAchievementShareText } = require('../services/achievementService');
     const exportData = exportAchievements();
 
     // Create a temporary file with the export data
@@ -768,7 +786,7 @@ export class BreakBullyActivityBarProviderImpl implements BreakBullyActivityBarP
           // Also copy shareable text to clipboard
           const unlockedAchievements = exportData.achievements;
           if (unlockedAchievements.length > 0) {
-            const latestAchievement = unlockedAchievements[unlockedAchievements.length - 1];
+            const latestAchievement = unlockedAchievements[unlockedAchievements.length - 1] as Achievement;
             const shareText = generateAchievementShareText(latestAchievement);
             vscode.env.clipboard.writeText(shareText);
             vscode.window.showInformationMessage('Achievement share text copied to clipboard!');
@@ -781,7 +799,6 @@ export class BreakBullyActivityBarProviderImpl implements BreakBullyActivityBarP
   }
 
   private showAchievementStats(): void {
-    const { getAchievementStats } = require('../services/achievementService');
     const stats = getAchievementStats();
 
     // Send stats to webview for display
@@ -858,15 +875,17 @@ ${stats.fastestAchievement ? `⚡ Fastest Achievement: ${stats.fastestAchievemen
                 prompt: 'Reward (optional)',
                 placeHolder: 'e.g., 🎉 Great job!'
               }).then(reward => {
-                const { createCustomGoal } = require('../services/wellnessService');
-                const goal = createCustomGoal({
+                const goalData: Parameters<typeof createCustomGoal>[0] = {
                   description,
                   target,
-                  type: type as 'daily' | 'weekly' | 'custom',
-                  customType: customType || undefined,
-                  customUnit: customUnit || undefined,
-                  reward: reward || undefined
-                });
+                  type: type as 'daily' | 'weekly' | 'custom'
+                };
+
+                if (customType) goalData.customType = customType;
+                if (customUnit) goalData.customUnit = customUnit;
+                if (reward) goalData.reward = reward;
+
+                const goal = createCustomGoal(goalData);
 
                 vscode.window.showInformationMessage(`Custom goal created: ${goal.description}`);
               });
@@ -908,7 +927,6 @@ ${stats.fastestAchievement ? `⚡ Fastest Achievement: ${stats.fastestAchievemen
           }).then(reward => {
             if (!reward) return;
 
-            const { createChallenge } = require('../services/wellnessService');
             const challenge = createChallenge({
               name,
               description,
@@ -953,13 +971,12 @@ ${stats.fastestAchievement ? `⚡ Fastest Achievement: ${stats.fastestAchievemen
             }).then(difficulty => {
               if (!difficulty) return;
 
-              const { createCustomExercise } = require('../services/wellnessService');
               const exercise = createCustomExercise({
                 name,
                 duration,
                 instructions,
-                category: category as any,
-                difficulty: difficulty as any
+                category: category as ExerciseCategory,
+                difficulty: difficulty as DifficultyLevel
               });
 
               vscode.window.showInformationMessage(`Custom exercise created: ${exercise.name}`);
@@ -970,22 +987,14 @@ ${stats.fastestAchievement ? `⚡ Fastest Achievement: ${stats.fastestAchievemen
     });
   }
 
-  private showWorkRestModelQuickPick(data: { items: any[], placeHolder: string }): void {
-    const quickPickItems = data.items.map(item => ({
-      label: item.label,
-      detail: item.detail,
-      description: item.description,
-      modelId: item.modelId
-    }));
-
-    vscode.window.showQuickPick(quickPickItems, {
+  private showWorkRestModelQuickPick(data: { items: (vscode.QuickPickItem & { modelId: string })[], placeHolder: string }): void {
+    vscode.window.showQuickPick(data.items, {
       placeHolder: data.placeHolder,
       matchOnDetail: true,
       matchOnDescription: true
     }).then(selection => {
       if (selection && selection.modelId) {
         // Change the work-rest model
-        const workRestService = require('../services/workRestService');
         try {
           workRestService.switchWorkRestModel(selection.modelId);
           // Send success response
@@ -1007,7 +1016,6 @@ ${stats.fastestAchievement ? `⚡ Fastest Achievement: ${stats.fastestAchievemen
   }
 
   private getWellnessInsights(data: { timeRange: string }): void {
-    const { getWellnessInsights } = require('../services/wellnessService');
     const insights = getWellnessInsights(data.timeRange as 'today' | 'week' | 'month' | 'all');
 
     // Send insights to webview for display
@@ -1038,7 +1046,6 @@ ${stats.fastestAchievement ? `⚡ Fastest Achievement: ${stats.fastestAchievemen
 
   private sendActivityIntegrationSettings(): void {
     if (this._view) {
-      const { activitySettings } = require('../services/activityIntegration/activitySettings');
       const settings = activitySettings.getSettings();
 
       this._view.webview.postMessage({
@@ -1052,16 +1059,14 @@ ${stats.fastestAchievement ? `⚡ Fastest Achievement: ${stats.fastestAchievemen
 
   private applySettingsChanges(data: { activityLevel: string; workRestModel?: string }): void {
     try {
-      const { activitySettings } = require('../services/activityIntegration/activitySettings');
 
       // Update activity integration level
       if (data.activityLevel) {
-        activitySettings.setIntegrationLevel(data.activityLevel as any);
+        activitySettings.setIntegrationLevel(data.activityLevel as ActivityIntegrationLevel);
       }
 
       // Update work-rest model if provided
       if (data.workRestModel) {
-        const workRestService = require('../services/workRestService');
         workRestService.switchWorkRestModel(data.workRestModel);
       }
 
@@ -1096,8 +1101,7 @@ ${stats.fastestAchievement ? `⚡ Fastest Achievement: ${stats.fastestAchievemen
 
   private startWorkRestSession(modelId: string): void {
     try {
-      const workRestService = require('../services/workRestService');
-      const model = require('../constants/workRestModels').getWorkRestModelById(modelId);
+      const model = getWorkRestModelById(modelId);
 
       if (!model) {
         vscode.window.showErrorMessage('Invalid work-rest model selected.');
@@ -1119,7 +1123,6 @@ ${stats.fastestAchievement ? `⚡ Fastest Achievement: ${stats.fastestAchievemen
 
   private stopWorkRestSession(): void {
     try {
-      const workRestService = require('../services/workRestService');
       workRestService.stopWorkRestSession();
 
       vscode.window.showInformationMessage('Work-rest session stopped.');

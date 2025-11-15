@@ -23,7 +23,7 @@ export interface ActivityNotificationOptions extends EnhancedNotificationOptions
 /**
  * Shows an enhanced notification with sound and visual improvements
  */
-export function showEnhancedNotification(options: EnhancedNotificationOptions): Thenable<string | undefined> {
+export function showEnhancedNotification(options: EnhancedNotificationOptions): Promise<string | undefined> {
   const config = getConfiguration();
   const { message, type = 'info', actions = [], playSound, priority = 'normal' } = options;
 
@@ -36,14 +36,14 @@ export function showEnhancedNotification(options: EnhancedNotificationOptions): 
   }
 
   // Choose notification method based on type and priority
-  let notificationPromise: Thenable<string | undefined>;
+  let notificationPromise: Promise<string | undefined>;
 
   if (type === 'error' || (type === 'warning' && priority === 'high')) {
-    notificationPromise = vscode.window.showErrorMessage(message, ...actions);
+    notificationPromise = vscode.window.showErrorMessage(message, ...actions) as Promise<string | undefined>;
   } else if (type === 'warning') {
-    notificationPromise = vscode.window.showWarningMessage(message, ...actions);
+    notificationPromise = vscode.window.showWarningMessage(message, ...actions) as Promise<string | undefined>;
   } else {
-    notificationPromise = vscode.window.showInformationMessage(message, ...actions);
+    notificationPromise = vscode.window.showInformationMessage(message, ...actions) as Promise<string | undefined>;
   }
 
   return notificationPromise;
@@ -52,7 +52,7 @@ export function showEnhancedNotification(options: EnhancedNotificationOptions): 
 /**
  * Shows a celebratory completion notification for exercises
  */
-export function showExerciseCompletionNotification(exerciseName: string, exerciseType: string): Thenable<string | undefined> {
+export function showExerciseCompletionNotification(exerciseName: string, exerciseType: string): Promise<string | undefined> {
   const config = getConfiguration();
 
   if (!config.showExerciseCompletionNotification) {
@@ -164,9 +164,9 @@ export function showExerciseStartNotification(exerciseName: string, duration: st
 /**
  * Shows a notification when the user enters flow state
  */
-export function showFlowStateNotification(flowDuration: number): Thenable<string | undefined> {
+export function showFlowStateNotification(flowDuration: number): Promise<string | undefined> {
   const config = getConfiguration();
-  const showActivityNotifications = (config as any).showActivityNotifications ?? true;
+  const showActivityNotifications = config.showActivityNotifications;
 
   if (!showActivityNotifications) return Promise.resolve(undefined);
 
@@ -192,9 +192,9 @@ export function showFlowStateNotification(flowDuration: number): Thenable<string
 /**
  * Shows a notification when activity state changes
  */
-export function showActivityStateChangeNotification(fromState: string, toState: string): Thenable<string | undefined> {
+export function showActivityStateChangeNotification(fromState: string, toState: string): Promise<string | undefined> {
   const config = getConfiguration();
-  const showActivityNotifications = (config as any).showActivityNotifications ?? true;
+  const showActivityNotifications = config.showActivityNotifications;
 
   if (!showActivityNotifications) return Promise.resolve(undefined);
 
@@ -247,9 +247,9 @@ export function showActivityStateChangeNotification(fromState: string, toState: 
 /**
  * Shows productivity milestone celebration
  */
-export function showProductivityMilestoneNotification(milestone: string, score: number): Thenable<string | undefined> {
+export function showProductivityMilestoneNotification(milestone: string, score: number): Promise<string | undefined> {
   const config = getConfiguration();
-  const showActivityNotifications = (config as any).showActivityNotifications ?? true;
+  const showActivityNotifications = config.showActivityNotifications;
 
   if (!showActivityNotifications) return Promise.resolve(undefined);
 
@@ -292,9 +292,9 @@ export function showProductivityMilestoneNotification(milestone: string, score: 
 /**
  * Shows break timing suggestion based on activity level
  */
-export function showBreakTimingSuggestion(reason: string, recommendedBreak: number): Thenable<string | undefined> {
+export function showBreakTimingSuggestion(reason: string, recommendedBreak: number): Promise<string | undefined> {
   const config = getConfiguration();
-  const showActivityNotifications = (config as any).showActivityNotifications ?? true;
+  const showActivityNotifications = config.showActivityNotifications;
 
   if (!showActivityNotifications) return Promise.resolve(undefined);
 
@@ -335,9 +335,9 @@ export function showBreakTimingSuggestion(reason: string, recommendedBreak: numb
 /**
  * Shows hourly productivity summary
  */
-export function showHourlyProductivityReport(hour: number, productivity: number, trend: 'up' | 'down' | 'stable'): Thenable<string | undefined> {
+export function showHourlyProductivityReport(hour: number, productivity: number, trend: 'up' | 'down' | 'stable'): Promise<string | undefined> {
   const config = getConfiguration();
-  const showActivityNotifications = (config as any).showActivityNotifications ?? false; // Default off for hourly reports
+  const showActivityNotifications = config.showActivityNotifications ?? false; // Default off for hourly reports
 
   if (!showActivityNotifications) return Promise.resolve(undefined);
 
@@ -364,7 +364,7 @@ export function showHourlyProductivityReport(hour: number, productivity: number,
 /**
  * Main function to show activity notifications based on type
  */
-export function showActivityNotification(options: ActivityNotificationOptions): Thenable<string | undefined> {
+export function showActivityNotification(options: ActivityNotificationOptions): Promise<string | undefined> {
   const { activityType, activityData = {} } = options;
 
   switch (activityType) {

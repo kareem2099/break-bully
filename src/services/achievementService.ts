@@ -2,6 +2,58 @@ import * as vscode from 'vscode';
 import { Achievement } from '../types';
 import { state } from '../models/state';
 
+interface AchievementExport {
+  exportDate: string;
+  version: string;
+  achievements: Array<{
+    id: string;
+    name: string;
+    description: string;
+    icon: string;
+    category: 'streaks' | 'exercises' | 'goals' | 'consistency';
+    rarity: 'common' | 'rare' | 'epic' | 'legendary';
+    unlockedAt: Date | undefined;
+    requirement: number;
+  }>;
+  statistics: AchievementStats;
+  totalUnlocked: number;
+  totalAvailable: number;
+}
+
+interface AchievementStats {
+  totalAchievements: number;
+  unlockedAchievements: number;
+  completionPercentage: number;
+  categoryBreakdown: {
+    streaks: { unlocked: number; total: number };
+    exercises: { unlocked: number; total: number };
+    goals: { unlocked: number; total: number };
+    consistency: { unlocked: number; total: number };
+  };
+  rarityBreakdown: {
+    common: { unlocked: number; total: number };
+    rare: { unlocked: number; total: number };
+    epic: { unlocked: number; total: number };
+    legendary: { unlocked: number; total: number };
+  };
+  fastestAchievement: {
+    name: string;
+    unlockedAt: Date;
+    daysToUnlock: number;
+  } | null;
+  mostUnlockedCategory: {
+    category: string;
+    unlocked: number;
+    total: number;
+  };
+  averageRarity: string;
+}
+
+interface AchievementReport extends AchievementStats {
+  unlockedAchievementsArray: Achievement[];
+  recentAchievements: Achievement[];
+}
+
 // Predefined achievements
 const ACHIEVEMENT_DEFINITIONS: Omit<Achievement, 'unlockedAt' | 'progress'>[] = [
   // Streak Achievements
@@ -439,7 +491,7 @@ export function getAchievementsByCategory(category: Achievement['category']): Ac
   return state.achievements.filter(a => a.category === category);
 }
 
-export function exportAchievements(): any {
+export function exportAchievements(): AchievementExport {
   const unlockedAchievements = getUnlockedAchievements();
   const stats = getAchievementStats();
 
@@ -462,7 +514,7 @@ export function exportAchievements(): any {
   };
 }
 
-export function getAchievementStats(): any {
+export function getAchievementStats(): AchievementStats {
   const unlocked = getUnlockedAchievements();
   const all = state.achievements;
 
@@ -509,7 +561,7 @@ export function getAchievementStats(): any {
 
   const fastestAchievement = sortedByUnlock.length > 0 ? {
     name: sortedByUnlock[0].name,
-    unlockedAt: sortedByUnlock[0].unlockedAt,
+    unlockedAt: sortedByUnlock[0].unlockedAt!,
     daysToUnlock: Math.floor((new Date(sortedByUnlock[0].unlockedAt!).getTime() - new Date('2024-01-01').getTime()) / (1000 * 60 * 60 * 24))
   } : null;
 
@@ -594,12 +646,12 @@ export function showAchievementsReport(): void {
           vscode.commands.executeCommand('breakBully.exportAchievements');
           break;
         case 'refreshData':
-          const updatedReport = generateAchievementReport();
+          { const updatedReport = generateAchievementReport();
           panel.webview.postMessage({
             command: 'updateReport',
             data: updatedReport
           });
-          break;
+          break; }
       }
     },
     undefined,
@@ -607,19 +659,19 @@ export function showAchievementsReport(): void {
   );
 }
 
-function generateAchievementsHtml(report: any): string {
+function generateAchievementsHtml(report: AchievementReport): string {
   const totalAchievements = state.achievements.length;
   const unlockedAchievements = report.unlockedAchievementsArray.length;
   const completionRate = totalAchievements > 0 ? Math.round((unlockedAchievements / totalAchievements) * 100) : 0;
 
-  const categoryHtml = Object.entries(report.categoryBreakdown).map(([category, stats]: [string, any]) => `
+  const categoryHtml = Object.entries(report.categoryBreakdown).map(([category, stats]: [string, { unlocked: number; total: number }]) => `
     <div class="stat-card">
         <div class="stat-value">${stats.unlocked}/${stats.total}</div>
         <div class="stat-label">${category.charAt(0).toUpperCase() + category.slice(1)}</div>
     </div>
   `).join('');
 
-  const rarityHtml = Object.entries(report.rarityBreakdown).map(([rarity, stats]: [string, any]) => {
+  const rarityHtml = Object.entries(report.rarityBreakdown).map(([rarity, stats]: [string, { unlocked: number; total: number }]) => {
     const rarityEmoji = { common: '🥉', rare: '🥈', epic: '🥇', legendary: '👑' }[rarity] || '🏅';
     return `
       <div class="stat-card">
@@ -961,7 +1013,7 @@ function generateAchievementsHtml(report: any): string {
   `;
 }
 
-function generateAchievementReport(): any {
+function generateAchievementReport(): AchievementReport {
   const unlockedAchievements = getUnlockedAchievements();
   const stats = getAchievementStats();
   const recentAchievements = getRecentAchievements(7);

@@ -65,6 +65,15 @@
         }
 
         lastUpdateTime = Date.now();
+        updateLastUpdateDisplay();
+    }
+
+    function updateLastUpdateDisplay() {
+        const lastUpdatedElement = document.getElementById('lastUpdatedDisplay');
+        if (lastUpdatedElement) {
+            const timeAgo = getTimeAgo(new Date(lastUpdateTime));
+            lastUpdatedElement.textContent = `Last updated: ${timeAgo}`;
+        }
     }
 
     function updateStatValue(elementId, newValue) {

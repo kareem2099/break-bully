@@ -1,17 +1,17 @@
 import * as vscode from 'vscode';
 import { ExtensionStorage } from '../utils/storage';
-import { BreakStats, ScreenTimeStats, WellnessGoal, WellnessChallenge, CustomExercise, SmartNotificationsData, Achievement, DailyWellnessData } from '../types';
+import { BreakBullyActivityBarProvider, BreakStats, ScreenTimeStats, WellnessGoal, WellnessChallenge, CustomExercise, SmartNotificationsData, Achievement, DailyWellnessData } from '../types';
 import { BaseActivityMonitor } from '../services/activityIntegration/baseActivityMonitor';
 
 export const state = {
-  reminderTimer: undefined as NodeJS.Timeout | undefined,
-  annoyanceTimer: undefined as NodeJS.Timeout | undefined,
-  screenTimeTimer: undefined as NodeJS.Timeout | undefined,
+  reminderTimer: undefined as ReturnType<typeof setTimeout> | undefined,
+  annoyanceTimer: undefined as ReturnType<typeof setTimeout> | undefined,
+  screenTimeTimer: undefined as ReturnType<typeof setTimeout> | undefined,
   annoyanceLevel: 0,
   statusBarItem: undefined as vscode.StatusBarItem | undefined,
   nextReminderTime: null as number | null,
   storage: undefined as ExtensionStorage | undefined,
-  activityBarProvider: null as any, // Will be typed properly later
+  activityBarProvider: null as BreakBullyActivityBarProvider | null,
   activityMonitor: undefined as BaseActivityMonitor | undefined,
 
   // Data loaded from storage

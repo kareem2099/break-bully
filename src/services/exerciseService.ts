@@ -27,8 +27,34 @@ export interface GitProductivityStats {
   shouldSuggestBreak: boolean;
 }
 
+interface GitCommit {
+  hash: string;
+  message: string;
+  authorName: string;
+  date: Date;
+  parents?: unknown[];
+  authorEmail?: string;
+}
+
+interface WaterTip {
+  title: string;
+  duration: string;
+  instructions: string;
+  benefits: string[];
+  steps: string[];
+}
+
+interface GitRepository {
+  log(options: { maxEntries: number; since: Date }): Promise<GitCommit[]>;
+}
+
+interface GitAPI {
+  repositories: readonly GitRepository[];
+  getRepository?(uri: unknown): unknown;
+}
+
 class GitIntegrationService {
-  private gitExtension: any = null;
+  private gitExtension: GitAPI | null = null;
   private commitHistory: CommitInfo[] = [];
   private sessionStartTime: Date = new Date();
 
@@ -65,7 +91,7 @@ class GitIntegrationService {
 
       const commits = await repo.log({ maxEntries: 50, since });
 
-      return commits.map((commit: any) => ({
+      return commits.map((commit: GitCommit): CommitInfo => ({
         hash: commit.hash,
         message: commit.message,
         author: commit.authorName,
@@ -147,7 +173,7 @@ class GitIntegrationService {
   }
 
   private generateBreakSuggestionMessage(commitCount: number, stats: GitProductivityStats): string {
-    const messages = [
+    const baseMessages = [
       `🎉 ${commitCount} commits down! Your code is looking great. Ready for a well-deserved break?`,
       `💪 ${commitCount} commits completed! You've been productive - time to recharge.`,
       `🚀 ${commitCount} commits pushed! Great work today. How about a quick break?`,
@@ -155,7 +181,19 @@ class GitIntegrationService {
       `⚡ ${commitCount} commits accomplished! Your productivity is impressive. Break time!`
     ];
 
-    return messages[Math.min(commitCount - 1, messages.length - 1)];
+    // Customize message based on productivity stats
+    let messageIndex = Math.min(commitCount - 1, baseMessages.length - 1);
+
+    // Use productivity level to enhance the message
+    if (stats.productiveSession && stats.averageCommitsPerHour >= 2) {
+      // Highly productive session - add encouragement
+      return `${baseMessages[messageIndex]} Your productivity stats show you're in the zone!`;
+    } else if (stats.productiveSession && stats.commitsToday > commitCount) {
+      // Has been productive throughout the day
+      return `${baseMessages[messageIndex]} You've had a productive day overall!`;
+    }
+
+    return baseMessages[messageIndex];
   }
 
   resetSession(): void {
@@ -797,6 +835,7 @@ function showExerciseModal(title: string, exercise: Exercise): void {
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>${title}</title>
+        <link rel="stylesheet" href="${cssUri}">
         <style>
             body {
                 font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
@@ -925,7 +964,7 @@ function showExerciseModal(title: string, exercise: Exercise): void {
             .timer-active .timer-display {
                 animation: pulse 1s infinite;
             }
-        </style>
+        </link>
     </head>
     <body>
         <div class="exercise-container">
@@ -991,7 +1030,11 @@ function showExerciseModal(title: string, exercise: Exercise): void {
                     const totalDuration = ${durationSeconds};
                     const progress = ((totalDuration - remainingSeconds) / totalDuration) * 100;
                     if (progress === 50 || progress === 75) {
-                        showExerciseProgressNotification(exercise.name, Math.round(progress));
+                        vscode.postMessage({
+                            command: 'showProgress',
+                            exerciseName: exercise.name,
+                            progress: Math.round(progress)
+                        });
                     }
 
                     if (remainingSeconds <= 0) {
@@ -1063,12 +1106,15 @@ function showExerciseModal(title: string, exercise: Exercise): void {
   panel.webview.onDidReceiveMessage(
     message => {
       switch (message.command) {
+        case 'showProgress':
+          showExerciseProgressNotification(message.exerciseName, message.progress);
+          break;
         case 'timerStarted':
           showExerciseStartNotification(exercise.name, exercise.duration);
           break;
         case 'exerciseComplete':
           // Determine exercise type for notification
-          let exerciseType = 'default';
+          { let exerciseType = 'default';
           if (exercise.name.toLowerCase().includes('stretch') || exercise.name.toLowerCase().includes('neck') || exercise.name.toLowerCase().includes('shoulder')) {
             exerciseType = 'stretch';
           } else if (exercise.name.toLowerCase().includes('breath') || exercise.name.toLowerCase().includes('breathing')) {
@@ -1096,7 +1142,7 @@ function showExerciseModal(title: string, exercise: Exercise): void {
               });
             }
           });
-          break;
+          break; }
         case 'closePanel':
           panel.dispose();
           break;
@@ -2127,12 +2173,12 @@ export function showCustomExerciseLibrary(): void {
           showCustomExerciseCreator();
           break;
         case 'startCustomExercise':
-          const exercise = getCustomExerciseById(message.exerciseId);
+          { const exercise = getCustomExerciseById(message.exerciseId);
           if (exercise) {
             incrementExerciseUsage(message.exerciseId);
             showExerciseModal('Custom Exercise', exercise);
           }
-          break;
+          break; }
         case 'editExercise':
           // For now, just show an info message - full edit functionality would be complex
           vscode.window.showInformationMessage('Edit functionality coming soon! For now, delete and recreate the exercise.');
@@ -2166,7 +2212,7 @@ export function showCustomExerciseLibrary(): void {
   );
 }
 
-function showWaterModal(waterTip: any): void {
+function showWaterModal(waterTip: WaterTip): void {
   const panel = vscode.window.createWebviewPanel(
     'breakBullyWater',
     waterTip.title,
@@ -2196,6 +2242,7 @@ function showWaterModal(waterTip: any): void {
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>${waterTip.title}</title>
+        <link rel="stylesheet" href="${cssUri}">
         <style>
             body {
                 font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;

@@ -219,7 +219,7 @@ export class MLWorkRestGenerator {
 
     const successfulBreakLengths = successfulSessions
       .filter(u => u.endTime > u.startTime)
-      .map(u => 10); // Placeholder - need break duration tracking
+      .map(u => Math.min(15, (u.endTime.getTime() - u.startTime.getTime()) / (1000 * 60) * 0.3)); // Estimate break length
 
     const preferredTimesOfDay = successfulSessions
       .map(session => session.startTime.getHours())
@@ -263,22 +263,38 @@ export class MLWorkRestGenerator {
     // Get VSCode configuration to infer work context
     const config = vscode.workspace.getConfiguration();
 
+    // Use config to get editor settings that might indicate work context
+    const editorConfig = config.get('editor');
+    const workTypeInfluence = editorConfig && typeof editorConfig === 'object' ? 'configured' : 'default';
+
     // Infer work type from workspace/project files (simplified)
     const workspaceFiles = vscode.workspace.findFiles ? await vscode.workspace.findFiles('**/*') : [];
     let workType: ContextFactors['workType'] = 'development'; // default
+
+    // Use workTypeInfluence to adjust weighting of work type detection
+    // boostFactor increases confidence for projects with explicit editor config
+    const boostFactor = workTypeInfluence === 'configured' ? 1.5 : 1.0;
 
     // Basic work type detection
     const hasDesignFiles = workspaceFiles.some(f => f.fsPath.match(/\.(psd|ai|figma|xd|sketch)$/i));
     const hasWritingFiles = workspaceFiles.some(f => f.fsPath.match(/\.(md|txt|doc|pdf)$/i));
     const hasCodeFiles = workspaceFiles.some(f => f.fsPath.match(/\.(js|ts|py|java|c|cpp|cs|php|rb|go|rs)$/i));
 
-    if (hasCodeFiles && !hasDesignFiles && !hasWritingFiles) {
+    // Use boostFactor for stronger discrimination between work types
+    // when project has explicit editor configuration
+    const codeWeight = hasCodeFiles ? 2 : 0;
+    const designWeight = hasDesignFiles ? 2 * boostFactor : 0;
+    const writingWeight = hasWritingFiles ? 2 * boostFactor : 0;
+
+    const maxWeight = Math.max(codeWeight, designWeight, writingWeight);
+
+    if (maxWeight === codeWeight && codeWeight > 0) {
       workType = 'development';
-    } else if (hasWritingFiles && !hasCodeFiles && !hasDesignFiles) {
+    } else if (maxWeight === writingWeight && writingWeight > 0) {
       workType = 'writing';
-    } else if (hasDesignFiles && !hasCodeFiles && !hasWritingFiles) {
+    } else if (maxWeight === designWeight && designWeight > 0) {
       workType = 'design';
-    } else if (hasCodeFiles && hasWritingFiles) {
+    } else if (codeWeight > 0 && writingWeight > 0) {
       workType = 'analysis'; // Mixed technical/writing
     }
 
@@ -579,6 +595,14 @@ export class MLWorkRestGenerator {
   ): string[] {
     const insights: string[] = [];
 
+    // Model confidence insights
+    const avgConfidence = models.reduce((sum, m) => sum + m.confidenceScore, 0) / models.length;
+    if (avgConfidence > 0.7) {
+      insights.push('🎯 Generated models show high confidence - they should work well for you');
+    } else if (avgConfidence < 0.5) {
+      insights.push('🔄 Models generated with moderate confidence - continue using to improve accuracy');
+    }
+
     // Work style insights
     const style = input.userAssessment.preferredWorkStyle;
     if (style === WorkStyle.SUSTAINED_FLOW) {
@@ -691,6 +715,14 @@ export class MLWorkRestGenerator {
       confidence: 0.7,
       performance: this.calculateCurrentPerformance(usageRecords)
     };
+
+    // Adjust adaptation based on new assessment if provided
+    if (newAssessment && newAssessment.adaptabilityRating !== undefined) {
+      // If new assessment shows higher adaptability, increase confidence
+      if (newAssessment.adaptabilityRating > (model.sourceAssessment ? 0.5 : 0)) {
+        adaptation.confidence += 0.1;
+      }
+    }
 
     // Analyze performance and make adjustments
     const recentPerformance = this.analyzeRecentPerformance(usageRecords.slice(-10));

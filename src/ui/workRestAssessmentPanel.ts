@@ -6,10 +6,24 @@ import {
   AssessmentQuestion,
   AnswerOption,
   AssessmentFlow,
-  ModelScenario
+  ModelScenario,
+  ActivityAnalysis,
+  ScoreValue
 } from '../types/mlWorkRestTypes';
 import { MLWorkRestGenerator } from '../services/mlWorkRestGenerator';
+import { ActivityEvent } from '../services/activityIntegration/activityTypes';
 import { state } from '../models/state';
+
+// Type definitions for the assessment panel
+interface WebviewMessage {
+  type: string;
+  data?: unknown;
+}
+
+interface AnswerSubmissionData {
+  questionId: string;
+  answerId: string;
+}
 
 /**
  * Work-Rest Assessment Panel
@@ -23,9 +37,9 @@ export class WorkRestAssessmentPanel {
   private currentAssessment: Partial<UserAssessment> = {};
   private currentFlow: AssessmentFlow;
   private currentQuestionIndex = 0;
-  private activityEvents: any[] = [];
+  private activityEvents: ActivityAnalysis[] = [];
 
-  constructor(panel: vscode.WebviewPanel, extensionUri: vscode.Uri, activityEvents: any[] = []) {
+  constructor(panel: vscode.WebviewPanel, extensionUri: vscode.Uri, activityEvents: ActivityAnalysis[] = []) {
     this._panel = panel;
     this._extensionUri = extensionUri;
 
@@ -70,7 +84,7 @@ export class WorkRestAssessmentPanel {
   /**
    * Create and show the assessment panel
    */
-  public static createOrShow(extensionUri: vscode.Uri, activityEvents?: any[]): void {
+  public static createOrShow(extensionUri: vscode.Uri, activityEvents?: ActivityAnalysis[]): void {
     const column = vscode.window.activeTextEditor
       ? vscode.ViewColumn.Beside
       : undefined;
@@ -98,6 +112,7 @@ export class WorkRestAssessmentPanel {
 
   /**
    * Initialize the assessment flow with personality-based questions
+   * Uses AnswerOption[] for answer definitions with scoring information
    */
   private initializeAssessmentFlow(): AssessmentFlow {
     return {
@@ -673,13 +688,13 @@ export class WorkRestAssessmentPanel {
   /**
    * Handle messages from the webview
    */
-  private async handleMessage(message: any): Promise<void> {
+  private async handleMessage(message: WebviewMessage): Promise<void> {
     console.log('WorkRestAssessmentPanel handling message:', message);
 
     switch (message.type) {
       case 'submitAnswer':
         console.log('Handling submit answer:', message.data);
-        await this.handleAnswerSubmission(message.data);
+        await this.handleAnswerSubmission(message.data as AnswerSubmissionData);
         break;
       case 'previousQuestion':
         console.log('Moving to previous question');
@@ -695,7 +710,7 @@ export class WorkRestAssessmentPanel {
    */
   private async handleAnswerSubmission(data: { questionId: string; answerId: string }): Promise<void> {
     const question = this.currentFlow.questions.find(q => q.id === data.questionId);
-    const answer = question?.answers.find(a => a.id === data.answerId);
+    const answer = question?.answers.find(a => a.id === data.answerId) as AnswerOption | undefined;
 
     if (!question || !answer) return;
 
@@ -718,7 +733,7 @@ export class WorkRestAssessmentPanel {
   /**
    * Accumulate assessment scores from answers
    */
-  private accumulateAssessmentScores(scores: any): void {
+  private accumulateAssessmentScores(scores: Record<string, ScoreValue>): void {
     // Initialize assessment with proper structure
     this.currentAssessment.userPreferences = this.currentAssessment.userPreferences || {
       preferredWorkStyle: WorkStyle.FOCUSED_BURSTS,
@@ -743,15 +758,17 @@ export class WorkRestAssessmentPanel {
     // Accumulate scores
     Object.entries(scores).forEach(([key, value]) => {
       if (typeof value === 'number') {
-        this.currentAssessment.scoredAttributes![key] = (this.currentAssessment.scoredAttributes![key] || 0) + value;
+        const currentValue = this.currentAssessment.scoredAttributes![key];
+        const currentNum = typeof currentValue === 'number' ? currentValue : 0;
+        this.currentAssessment.scoredAttributes![key] = currentNum + value;
       } else if (Array.isArray(value)) {
         // Handle array values like preferredBreakActivities
-        if (!this.currentAssessment.scoredAttributes![key]) {
-          this.currentAssessment.scoredAttributes![key] = [];
-        }
-        (this.currentAssessment.scoredAttributes![key] as any[]).push(...value);
+        const currentValue = this.currentAssessment.scoredAttributes![key];
+        const currentArray = Array.isArray(currentValue) ? currentValue : [];
+        currentArray.push(...value);
+        this.currentAssessment.scoredAttributes![key] = currentArray;
       } else {
-        // Handle object values - take the maximum score for work styles
+        // Handle string or other values
         this.currentAssessment.scoredAttributes![key] = value;
       }
     });
@@ -786,10 +803,10 @@ export class WorkRestAssessmentPanel {
 
     // Determine work style (highest score wins)
     const workStyleScores = {
-      [WorkStyle.FOCUSED_BURSTS]: scoredAttrs['focused_bursts'] || 0,
-      [WorkStyle.SUSTAINED_FLOW]: scoredAttrs['sustained_flow'] || 0,
-      [WorkStyle.FLEXIBLE_ADAPTIVE]: scoredAttrs['flexible_adaptive'] || 0,
-      [WorkStyle.SHORT_ITERATIONS]: scoredAttrs['short_iterations'] || 0
+      [WorkStyle.FOCUSED_BURSTS]: (scoredAttrs['focused_bursts'] as number) || 0,
+      [WorkStyle.SUSTAINED_FLOW]: (scoredAttrs['sustained_flow'] as number) || 0,
+      [WorkStyle.FLEXIBLE_ADAPTIVE]: (scoredAttrs['flexible_adaptive'] as number) || 0,
+      [WorkStyle.SHORT_ITERATIONS]: (scoredAttrs['short_iterations'] as number) || 0
     };
 
     const preferredWorkStyle = Object.entries(workStyleScores)
@@ -797,10 +814,10 @@ export class WorkRestAssessmentPanel {
 
     // Determine break style (highest score wins)
     const breakStyleScores = {
-      mind_clearing: scoredAttrs['mind_clearing'] || 0,
-      light_distraction: scoredAttrs['light_distraction'] || 0,
-      physical_activity: scoredAttrs['physical_activity'] || 0,
-      social_interaction: scoredAttrs['social_interaction'] || 0
+      mind_clearing: (scoredAttrs['mind_clearing'] as number) || 0,
+      light_distraction: (scoredAttrs['light_distraction'] as number) || 0,
+      physical_activity: (scoredAttrs['physical_activity'] as number) || 0,
+      social_interaction: (scoredAttrs['social_interaction'] as number) || 0
     };
 
     const preferredBreakStyle = Object.entries(breakStyleScores)
@@ -812,20 +829,20 @@ export class WorkRestAssessmentPanel {
       userPreferences: {
         preferredWorkStyle,
         preferredBreakStyle,
-        preferredBreakDuration: scoredAttrs.preferredBreakDuration || 10,
-        adaptabilityRating: scoredAttrs.adaptabilityRating || 0.5,
-        motivationStyle: scoredAttrs.motivationStyle || 'balanced'
+        preferredBreakDuration: (scoredAttrs.preferredBreakDuration as number) || 10,
+        adaptabilityRating: (scoredAttrs.adaptabilityRating as number) || 0.5,
+        motivationStyle: (scoredAttrs.motivationStyle as string) || 'balanced'
       },
       energyPatterns: {
-        morningPeak: scoredAttrs.morningPeak || 0,
-        middayPeak: scoredAttrs.middayPeak || 0,
-        afternoonPeak: scoredAttrs.afternoonPeak || 0,
-        eveningPeak: scoredAttrs.eveningPeak || 0,
-        energyMorning: scoredAttrs.energyMorning || 0.7,
-        energyMidday: scoredAttrs.energyMidday || 0.7,
-        energyAfternoon: scoredAttrs.energyAfternoon || 0.7
+        morningPeak: (scoredAttrs.morningPeak as number) || 0,
+        middayPeak: (scoredAttrs.middayPeak as number) || 0,
+        afternoonPeak: (scoredAttrs.afternoonPeak as number) || 0,
+        eveningPeak: (scoredAttrs.eveningPeak as number) || 0,
+        energyMorning: (scoredAttrs.energyMorning as number) || 0.7,
+        energyMidday: (scoredAttrs.energyMidday as number) || 0.7,
+        energyAfternoon: (scoredAttrs.energyAfternoon as number) || 0.7
       },
-      preferredBreakActivities: Array.from(new Set(scoredAttrs.preferredBreakActivities || [])),
+      preferredBreakActivities: Array.from(new Set((scoredAttrs.preferredBreakActivities as string[]) || [])),
       completionScore: 1.0, // Completed all questions
       scoredAttributes: scoredAttrs,
       questionResponses: this.currentAssessment.questionResponses || []
@@ -862,11 +879,11 @@ export class WorkRestAssessmentPanel {
         // Generate models using ML service with activity data
         const generationResult = MLWorkRestGenerator.generatePersonalModels(
           assessment,
-          this.activityEvents, // Use activity events passed to constructor
+          this.activityEvents as unknown as ActivityEvent[], // Use activity events passed to constructor
           []  // No usage history initially
         );
 
-        progress.report({ increment: 40, message: "Creating scenario-specific models..." });
+        progress.report({ increment: 40, message: `Creating ${Object.values(ModelScenario).length} scenario-specific models (${ModelScenario.MORNING_FOCUS}, ${ModelScenario.AFTERNOON_SUSTAINED}, ${ModelScenario.EVENING_MAINTENANCE}, etc.)...` });
 
         // Store generated models
         const personalModels = {

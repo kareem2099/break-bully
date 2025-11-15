@@ -95,12 +95,13 @@
             case 'updateWellnessInsightsDisplay':
                 updateWellnessInsightsDisplay(message.data);
                 break;
-            case 'addStreakFire':
+            case 'addStreakFire': {
                 const streakElement = document.getElementById('streakDays');
                 if (streakElement) {
                     addStreakFire(streakElement);
                 }
                 break;
+            }
             case 'workRestModels':
                 populateOnboardingModels(message.data);
                 populateSettingsWorkRestModels(message.data);
@@ -516,6 +517,7 @@
             // Onboarding completed, save to webview state for future reference
             onboardingCompleted = true;
             currentOnboardingStep = 100; // Mark as fully complete
+            console.log('Onboarding completed at step', currentOnboardingStep, 'last update:', lastUpdateTime, 'status:', onboardingCompleted);
             const state = vscode.getState() || {};
             state.onboardingCompleted = true;
             vscode.setState(state);
@@ -753,6 +755,11 @@
     });
 
     // Make functions globally available
+    window.changeWorkRestModel = changeWorkRestModel;
+    window.loadActivityIntegrationSettings = loadActivityIntegrationSettings;
+    window.startWorkRestSession = startWorkRestSession;
+    window.stopWorkRestSession = stopWorkRestSession;
+    window.applySettingsChanges = applySettingsChanges;
     window.createCustomExercise = createCustomExercise;
     window.showCustomExerciseLibrary = showCustomExerciseLibrary;
     window.checkGitProductivity = checkGitProductivity;

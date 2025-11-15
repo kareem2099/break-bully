@@ -69,9 +69,10 @@ function syncCountersFromGoals(): void {
   state.wellnessGoals.forEach(goal => {
     if (goal.type === 'daily' && goal.deadline) {
       const deadline = new Date(goal.deadline);
+      const deadlineStr = deadline.toDateString();
 
       // Only sync if the goal is for today (deadline is tomorrow, so today and tomorrow match)
-      if (today.toDateString() === deadline.toDateString() ||
+      if (todayStr === deadlineStr ||
           Math.abs(today.getTime() - deadline.getTime()) < 24 * 60 * 60 * 1000) {
         // Don't overwrite if it's been reset for a new day
         if (goal.current > 0 && !goal.completed) {
@@ -109,12 +110,12 @@ export function updateGoalsProgress(): void {
           goal.current = todayBreaksCount;
           break;
         case 'exercises':
-          // Track actual exercise completions (initialize and maintain current progress)
-          // Progress will be updated when exercises are actually completed
+          // Track actual exercise completions using the counter
+          goal.current = todayExerciseCount;
           break;
         case 'screen-breaks':
           // Track actual eye break completions
-          // Progress will be updated when eye breaks are actually taken
+          goal.current = todayEyeBreakCount;
           break;
       }
 
@@ -143,7 +144,7 @@ export function updateGoalsProgress(): void {
 export function incrementExerciseProgress(): void {
   const exerciseGoal = state.wellnessGoals.find(g => g.category === 'exercises' && g.type === 'daily');
   if (exerciseGoal && !exerciseGoal.completed) {
-    exerciseGoal.current = Math.min(exerciseGoal.current + 1, exerciseGoal.target);
+    todayExerciseCount++;
     updateGoalsProgress();
 
     // Check if goal is now completed
@@ -165,7 +166,6 @@ export function incrementBreakProgress(): void {
   const breakGoal = state.wellnessGoals.find(g => g.category === 'breaks' && g.type === 'daily');
   if (breakGoal && !breakGoal.completed) {
     todayBreaksCount++;
-    breakGoal.current = todayBreaksCount;
     updateGoalsProgress();
 
     // Check if goal is now completed
@@ -186,7 +186,7 @@ export function incrementBreakProgress(): void {
 export function incrementEyeBreakProgress(): void {
   const eyeBreakGoal = state.wellnessGoals.find(g => g.category === 'screen-breaks' && g.type === 'daily');
   if (eyeBreakGoal && !eyeBreakGoal.completed) {
-    eyeBreakGoal.current = Math.min(eyeBreakGoal.current + 1, eyeBreakGoal.target);
+    todayEyeBreakCount++;
     updateGoalsProgress();
 
     // Check if goal is now completed

@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { state } from '../models/state';
 import { checkAchievements } from './achievementService';
 import { getCurrentSession, takeManualBreak, endRestEarly, getTimeRemaining } from './workRestService';
+import { getConfiguration } from '../core/configuration';
 
 export function takeBreak(): void {
   // Check if there's an active work-rest session
@@ -144,7 +145,7 @@ function resetScreenTimeOnBreak(): void {
  */
 function showCodeTuneSuggestionInWebview(): void {
   import('./codeTuneIntegration').then(codeTune => {
-    const config = require('../core/configuration').getConfiguration();
+    const config = getConfiguration();
 
     // Check if CodeTune suggestions are enabled and not permanently ignored
     if (!config.suggestCodeTuneDuringBreaks || config.codeTunePermanentlyIgnored) {

@@ -86,8 +86,8 @@
 
     function convertLists(text) {
         const lines = text.split('\n');
-        let inList = false;
-        let listType = '';
+        let listStack = []; // array of 'ul' or 'ol'
+        let currentLevel = 0;
         let result = '';
 
         for (let i = 0; i < lines.length; i++) {
@@ -98,29 +98,47 @@
                 const indent = listMatch[1].length;
                 const bullet = listMatch[2];
                 const content = listMatch[3];
+                const newType = bullet.match(/\d+\./) ? 'ol' : 'ul';
+                const level = Math.floor(indent / 2); // assuming 2 spaces per nesting level
 
-                if (!inList || (bullet.match(/\d+\./) && listType !== 'ol') || (!bullet.match(/\d+\./) && listType !== 'ul')) {
-                    if (inList) {
-                        result += listType === 'ul' ? '</ul>' : '</ol>';
-                    }
+                // Adjust nesting for level changes
+                while (currentLevel > level) {
+                    const closeType = listStack.pop();
+                    result += `</${closeType}>`;
+                    currentLevel--;
+                }
 
-                    listType = bullet.match(/\d+\./) ? 'ol' : 'ul';
-                    result += `<${listType}>`;
-                    inList = true;
+                while (currentLevel < level) {
+                    listStack.push(newType);
+                    result += `<${newType}>`;
+                    currentLevel++;
+                }
+
+                // If same level but different type, close and reopen the list
+                if (currentLevel > 0 && listStack[listStack.length - 1] !== newType) {
+                    const prevType = listStack.pop();
+                    result += `</${prevType}>`;
+                    listStack.push(newType);
+                    result += `<${newType}>`;
                 }
 
                 result += `<li>${content}</li>`;
             } else {
-                if (inList) {
-                    result += listType === 'ul' ? '</ul>' : '</ol>';
-                    inList = false;
+                // Close all open lists when non-list line encountered
+                while (currentLevel > 0) {
+                    const closeType = listStack.pop();
+                    result += `</${closeType}>`;
+                    currentLevel--;
                 }
                 result += line + '\n';
             }
         }
 
-        if (inList) {
-            result += listType === 'ul' ? '</ul>' : '</ol>';
+        // Close any remaining open lists
+        while (currentLevel > 0) {
+            const closeType = listStack.pop();
+            result += `</${closeType}>`;
+            currentLevel--;
         }
 
         return result;

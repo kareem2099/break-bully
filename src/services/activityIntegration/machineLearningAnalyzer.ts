@@ -175,7 +175,7 @@ export class MachineLearningAnalyzer {
 
       // Activity type bonus (if specified)
       const typeBonus = activityType && event.context &&
-                       (event.context as any).fileType === activityType ? 0.5 : 0;
+                       event.context.fileType === activityType ? 0.5 : 0;
 
       const finalWeight = temporalWeight * (1 + typeBonus);
 
@@ -212,6 +212,16 @@ export class MachineLearningAnalyzer {
     peakProductivityPatterns: string[];
     productivityTrends: 'improving' | 'stable' | 'declining';
   } {
+    if (!events || !Array.isArray(events)) {
+      return {
+        optimalSessionLength: 45,
+        optimalBreakLength: 10,
+        workRestRatio: '45:10',
+        peakProductivityPatterns: [],
+        productivityTrends: 'stable'
+      };
+    }
+
     const recentSessions = this.getRecentSessions(events, 14); // Last 2 weeks
 
     if (recentSessions.length < 20) {
@@ -391,6 +401,12 @@ export class MachineLearningAnalyzer {
     factors.push(`Historical data from ${sampleSize} similar time periods`);
     factors.push(`Time of day: ${targetHour}:00`);
 
+    if (predictedScore >= 8) {
+      factors.push('High productivity potential predicted for this time slot');
+    } else if (predictedScore < 4) {
+      factors.push('Lower productivity potential predicted - consider alternative scheduling');
+    }
+
     if (sampleSize < 20) {
       factors.push('Limited sample size - predictions may improve with more activity data');
     } else if (sampleSize > 100) {
@@ -417,6 +433,18 @@ export class MachineLearningAnalyzer {
       if (confidence > 0.5) {
         recommendations.push('This appears to be a low-productivity time - consider avoiding complex tasks');
       }
+
+      // Add time-specific advice for low productivity hours
+      if (targetHour >= 22 || targetHour <= 6) {
+        recommendations.push('Late/early hours - consider rest instead of intensive work');
+      }
+    }
+
+    // Add morning vs evening specific advice
+    if (targetHour >= 9 && targetHour <= 12 && predictedScore >= 7) {
+      recommendations.push('🔄 Morning momentum - great for tackling your most important tasks');
+    } else if (targetHour >= 14 && targetHour <= 16 && predictedScore < 6) {
+      recommendations.push('🌅 Afternoon slump - consider a short walk or hydration break');
     }
 
     if (confidence > 0.8) {

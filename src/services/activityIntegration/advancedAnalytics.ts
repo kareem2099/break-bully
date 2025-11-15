@@ -387,15 +387,26 @@ export class AdvancedAnalytics {
   // Export detailed analytics data
   exportAnalyticsData(): {
     summary: ProductivityInsights;
-    productivityScore: any;
-    burnoutAnalysis: any;
+    productivityScore: ReturnType<AdvancedAnalytics['calculateProductivityScore']>;
+    burnoutAnalysis: ReturnType<PatternAnalyzer['detectBurnoutPatterns']>;
+    activityMetrics: ActivityMetrics;
     rawData: ActivityEvent[];
   } {
     return {
       summary: this.generateInsights(),
       productivityScore: this.calculateProductivityScore(),
       burnoutAnalysis: this.patternAnalyzer.detectBurnoutPatterns(),
+      activityMetrics: this.baseMonitor.getMetrics(),
       rawData: this.baseMonitor.getRecentEvents(168) // Last week
     };
+  }
+
+  // Export analytics to VSCode
+  exportToVSCode(): void {
+    const data = this.exportAnalyticsData();
+    vscode.workspace.openTextDocument({
+      content: JSON.stringify(data, null, 2),
+      language: 'json'
+    }).then(doc => vscode.window.showTextDocument(doc));
   }
 }

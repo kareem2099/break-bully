@@ -85,7 +85,9 @@ export class AdvancedSchedulerService {
       return { type: 'break', duration: 5, reason: 'No scheduling model active', confidence: 0.5 };
     }
 
-    switch (this.currentModel.type) {
+    const currentType: SchedulingModelType = this.currentModel.type as SchedulingModelType;
+
+    switch (currentType) {
       case 'time-blocking':
         return this.getTimeBlockingRecommendation();
       case 'eisenhower':
@@ -107,7 +109,7 @@ export class AdvancedSchedulerService {
    * Time Blocking Recommendation Logic
    */
   private getTimeBlockingRecommendation() {
-    const blocks = this.currentModel!.advancedConfig?.timeBlocks;
+    const blocks: TimeBlock[] | undefined = this.currentModel!.advancedConfig?.timeBlocks;
     if (!blocks || blocks.length === 0) {
       return { type: 'work' as const, duration: 25, reason: 'Default time block', confidence: 0.5 };
     }
@@ -160,11 +162,16 @@ export class AdvancedSchedulerService {
    */
   private getEisenhowerRecommendation() {
     const config = this.currentModel!.advancedConfig?.eisenhowerConfig;
-    if (!config?.enabled || !config.taskQueue) {
+    if (!config?.enabled) {
       return { type: 'break' as const, duration: 5, reason: 'No Eisenhower tasks configured', confidence: 0.5 };
     }
 
-    const urgentImportant = config.taskQueue
+    const taskQueue: EisenhowerTask[] | undefined = config.taskQueue;
+    if (!taskQueue) {
+      return { type: 'break' as const, duration: 5, reason: 'No Eisenhower tasks configured', confidence: 0.5 };
+    }
+
+    const urgentImportant = taskQueue
       .filter(task => !task.completed && task.priority === 'urgent-important')
       .sort((a, b) => (a.deadline?.getTime() || Number.MAX_SAFE_INTEGER) - (b.deadline?.getTime() || Number.MAX_SAFE_INTEGER));
 
@@ -178,7 +185,7 @@ export class AdvancedSchedulerService {
       };
     }
 
-    const urgentNotImportant = config.taskQueue
+    const urgentNotImportant = taskQueue
       .filter(task => !task.completed && task.priority === 'urgent-not-important');
 
     if (urgentNotImportant.length > 0) {
@@ -214,7 +221,7 @@ export class AdvancedSchedulerService {
       return {
         type: 'work' as const,
         duration: remainingInCycle,
-        reason: 'Ultradian work phase (90-min cycle)',
+        reason: `Ultradian work phase (90-min cycle, slot ${ninetyMinSlots})`,
         confidence: 0.85
       };
     } else if (remainingInCycle > 15) {
@@ -222,7 +229,7 @@ export class AdvancedSchedulerService {
       return {
         type: 'work' as const,
         duration: remainingInCycle - 15,
-        reason: 'Ultradian work phase (90-min cycle)',
+        reason: `Ultradian work phase (90-min cycle, slot ${ninetyMinSlots})`,
         confidence: 0.85
       };
     } else {
@@ -230,7 +237,7 @@ export class AdvancedSchedulerService {
       return {
         type: 'break' as const,
         duration: remainingInCycle,
-        reason: 'Ultradian break phase (90-min cycle)',
+        reason: `Ultradian break phase (90-min cycle, slot ${ninetyMinSlots})`,
         confidence: 0.85
       };
     }
@@ -240,10 +247,13 @@ export class AdvancedSchedulerService {
    * Energy-Based Scheduling Recommendation
    */
   private getEnergyBasedRecommendation() {
-    const profile = this.currentModel!.advancedConfig?.energyProfile;
+    const profile: EnergyProfile | undefined = this.currentModel!.advancedConfig?.energyProfile;
     if (!profile) {
       return { type: 'energy-check' as const, reason: 'Energy profile not configured', confidence: 0.5 };
     }
+
+    const highEnergyLevels: EnergyLevel[] = ['high', 'very-high'];
+    const lowEnergyLevels: EnergyLevel[] = ['low', 'very-low'];
 
     const currentHour = new Date().getHours();
     const energyLevel = profile.hourlyEnergy[currentHour] || 5;
@@ -252,7 +262,7 @@ export class AdvancedSchedulerService {
 
     if (isPeakHour && energyLevel >= 7) {
       const pendingTasks = this.taskSchedules
-        .filter(task => !task.completed && (task.energyRequired === 'high' || task.energyRequired === 'very-high'))
+        .filter(task => !task.completed && highEnergyLevels.includes(task.energyRequired))
         .sort((a, b) => this.getTaskPriorityScore(b) - this.getTaskPriorityScore(a));
 
       if (pendingTasks.length > 0) {
@@ -268,7 +278,7 @@ export class AdvancedSchedulerService {
 
     if (isLowEnergy || energyLevel <= 3) {
       const lowEnergyTasks = this.taskSchedules
-        .filter(task => !task.completed && (task.energyRequired === 'low' || task.energyRequired === 'very-low'))
+        .filter(task => !task.completed && lowEnergyLevels.includes(task.energyRequired))
         .sort((a, b) => this.getTaskPriorityScore(b) - this.getTaskPriorityScore(a));
 
       if (lowEnergyTasks.length > 0) {
@@ -527,7 +537,7 @@ export class AdvancedSchedulerService {
         const avgEnergy = hourReadings.reduce((sum, r) => sum + r.energyLevel, 0) / hourReadings.length;
         const avgCompletion = hourReadings.reduce((sum, r) => sum + r.completionRate, 0) / hourReadings.length;
 
-        const score = (avgEnergy - 5) / 5; // Normalize to -1 to 1
+        const score = (avgEnergy + avgCompletion * 10) / 2; // Normalize like other functions
 
         preferences.push({
           startHour: hour,
@@ -623,8 +633,9 @@ export class AdvancedSchedulerService {
     profile.learned = true;
   }
 
-  private updateLearningData(completedTask: TaskSchedule): void {
+  private updateLearningData(_completedTask: TaskSchedule): void {
     // TODO: Update adaptation rules based on task completion
+    console.log('Completed task for learning:', _completedTask.id, _completedTask.name);
   }
 
   /**
@@ -635,7 +646,7 @@ export class AdvancedSchedulerService {
       this.taskSchedules = state.storage?.loadCustomSetting('advancedScheduler.tasks', []) || [];
       this.energyReadings = state.storage?.loadCustomSetting('advancedScheduler.energyReadings', []) || [];
       this.adaptationRules = state.storage?.loadCustomSetting('advancedScheduler.adaptationRules', []) || [];
-      this.schedulingIntelligence = state.storage?.loadCustomSetting('advancedScheduler.intelligence', null);
+      this.schedulingIntelligence = (state.storage?.loadCustomSetting('advancedScheduler.intelligence', null) ?? null) as SchedulingIntelligence | null;
       this.dataSharingPreferences = state.storage?.loadCustomSetting('advancedScheduler.dataSharing', this.dataSharingPreferences) || this.dataSharingPreferences;
     } catch (error) {
       console.error('Failed to load advanced scheduler data:', error);
@@ -690,7 +701,7 @@ export class AdvancedSchedulerService {
     completedTasks: number;
     averageCompletionTime: number;
     scheduleAdherence: number;
-    energyInsights: any;
+    energyInsights: EnergyPattern[];
   } {
     const completedTasks = this.taskSchedules.filter(t => t.completed);
     const totalEstimated = this.taskSchedules.reduce((sum, t) => sum + t.estimatedDuration, 0);

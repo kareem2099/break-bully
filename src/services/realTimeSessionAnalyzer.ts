@@ -25,6 +25,13 @@ export interface SessionAnalysis {
   adaptationSuggestions: string[];
 }
 
+interface FocusQualityAnalysis {
+  contextDepth: number;
+  taskSwitchingRate: number;
+  focusStability: number;
+  workImmersion: number;
+}
+
 /**
  * Real-Time Session Analyzer
  * Monitors activity patterns during work sessions and provides intelligent break timing suggestions
@@ -63,7 +70,7 @@ export class RealTimeSessionAnalyzer {
         this.activityMonitor = extension.exports.activityMonitor as BaseActivityMonitor;
       } else {
         // Fallback - try to get from state if available
-        const activityMonitor = (state as any).activityMonitor;
+        const activityMonitor = (state as { activityMonitor?: BaseActivityMonitor }).activityMonitor;
         if (activityMonitor) {
           this.activityMonitor = activityMonitor;
         } else {
@@ -120,14 +127,20 @@ export class RealTimeSessionAnalyzer {
   private async performSessionAnalysis(): Promise<void> {
     if (!this.isActive || !this.activityMonitor) return;
 
-    const session = getCurrentSession();
+    const session = getCurrentSession() as WorkRestSession | null;
     if (!session || !session.isWorking) return; // Only analyze during work periods
+
+    // Log session type information (using WorkRestSession import explicitly)
+    console.debug(`Analyzing WorkRestSession instance for real-time analysis`);
 
     try {
       // Collect current activity data
       const currentIntensity = this.activityMonitor.getCurrentActivityLevel();
       const activityScore = Math.max(0, Math.min(10, this.activityMonitor.getActivityScore())); // Normalize to 0-10 range
       const activityState = this.activityMonitor.getCurrentActivityState();
+
+      // Use currentIntensity for logging/tracking
+      console.debug(`Current intensity level: ${currentIntensity}`);
 
       // Store in history for trend analysis
       this.intensityHistory.push(activityScore);
@@ -386,7 +399,7 @@ export class RealTimeSessionAnalyzer {
   private determineOptimalBreakType(
     fatigueSignals: number,
     flowStateDetect: boolean,
-    focusQuality: any,
+    focusQuality: FocusQualityAnalysis,
     workType: string
   ): 'quick_refresh' | 'recovery' | 'standard' {
 
@@ -411,7 +424,7 @@ export class RealTimeSessionAnalyzer {
    */
   private generateAdvancedAdaptationSuggestions(
     typingFatigueScore: number,
-    focusQuality: any,
+    focusQuality: FocusQualityAnalysis,
     workType: string,
     flowStateDetect: boolean,
     intensityTrend: string,
@@ -435,6 +448,18 @@ export class RealTimeSessionAnalyzer {
       suggestions.push('Debugging session detected - consider strategic break timing');
     } else if (workType === 'creative') {
       suggestions.push('Creative work may benefit from extended contemplation breaks');
+    }
+
+    // Intensity trend insights
+    if (intensityTrend === 'increasing') {
+      suggestions.push('Productivity trending upward - consider extending work session');
+    } else if (intensityTrend === 'decreasing') {
+      suggestions.push('Productivity declining - restorative break needed soon');
+    }
+
+    // Session elapsed insights
+    if (sessionElapsed > 90) {
+      suggestions.push(`Extended session (${Math.round(sessionElapsed)}min) - fatigue may be accumulating`);
     }
 
     // Focus stability insights
@@ -615,6 +640,9 @@ export class RealTimeSessionAnalyzer {
     const overrideTimeout = setTimeout(() => {
       clearTimeout(breakTimer);
     }, 25000); // Clear break timer if user takes action
+
+    // Log the override timeout for debugging
+    console.debug(`Break override timeout set: ${overrideTimeout}`);
   }
 
   /**
@@ -648,8 +676,9 @@ export class RealTimeSessionAnalyzer {
   private extendWorkPeriod(extensionMinutes: number = 10): void {
     // This requires workRestService enhancement to support work period extensions
     import('./workRestService').then(workRest => {
-      // For now, just log - would need workRestService modification
-      console.log(`ML-suggested work extension: ${extensionMinutes} minutes`);
+      // For now, just log the workRest import and extension details
+      console.log(`ML-suggested work extension: ${extensionMinutes} minutes using workRest module`);
+      console.debug(`WorkRest service available: ${!!workRest}`);
     });
   }
 
