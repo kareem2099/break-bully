@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { BreakStats, WellnessGoal, WellnessChallenge, CustomExercise, SmartNotificationsData, ScreenTimeStats, Achievement, DailyWellnessData } from '../types';
 import { ActivityEvent, ActivityContext, ActivityType } from '../services/activityIntegration/activityTypes';
+import { Logger } from './logger';
 
 export interface BackupData {
   breakStats: BreakStats;
@@ -122,7 +123,16 @@ export class ExtensionStorage {
       longCodingSessionDetected: false
     };
 
-    return this.context.globalState.get('screenTimeStats', defaultStats);
+    const loadedStats = this.context.globalState.get('screenTimeStats', defaultStats);
+
+    // Convert date strings back to Date objects after loading from storage
+    return {
+      ...loadedStats,
+      sessionStartTime: loadedStats.sessionStartTime ? new Date(loadedStats.sessionStartTime) : null,
+      lastBreakTime: loadedStats.lastBreakTime ? new Date(loadedStats.lastBreakTime) : null,
+      lastActivityTime: loadedStats.lastActivityTime ? new Date(loadedStats.lastActivityTime) : loadedStats.lastActivityTime,
+      codingSessionStart: loadedStats.codingSessionStart ? new Date(loadedStats.codingSessionStart) : null
+    };
   }
 
   // Achievements
@@ -172,7 +182,7 @@ export class ExtensionStorage {
 
       return true;
     } catch (error) {
-      console.error('Failed to import data:', error);
+      Logger.error('Failed to import data:', error);
       return false;
     }
   }
@@ -237,7 +247,7 @@ export class ExtensionStorage {
       // Decompress data
       return this.decompressActivityData(compressedData);
     } catch (error) {
-      console.error('Failed to load activity events:', error);
+      Logger.error('Failed to load activity events:', error);
       return [];
     }
   }

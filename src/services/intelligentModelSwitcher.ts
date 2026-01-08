@@ -4,6 +4,7 @@ import { getCurrentSession, switchToWorkRestModel, getAvailableModels } from './
 import { WorkRestModel } from '../types';
 import { realTimeSessionAnalyzer, SessionAnalysis } from './realTimeSessionAnalyzer';
 import { usageAnalytics } from './usageAnalyticsService';
+import { Logger } from '../utils/logger';
 
 export interface ModelPerformanceData {
   modelId: string;
@@ -91,7 +92,7 @@ export class IntelligentModelSwitcher {
       }
     }, 5 * 60 * 1000);
 
-    console.log('Intelligent model switching system activated');
+    Logger.log('Intelligent model switching system activated');
   }
 
   /**
@@ -100,7 +101,7 @@ export class IntelligentModelSwitcher {
   stopIntelligentSwitching(): void {
     this.isActive = false;
     this.savePerformanceData();
-    console.log('Intelligent model switching stopped');
+    Logger.log('Intelligent model switching stopped');
   }
 
   /**
@@ -134,7 +135,7 @@ export class IntelligentModelSwitcher {
     const ninetyDaysAgo = Date.now() - (90 * 24 * 60 * 60 * 1000);
     this.performanceHistory = this.performanceHistory.filter(p => p.timestamp > ninetyDaysAgo);
 
-    console.log(`Recorded model performance: ${modelId} (${completionRate.toFixed(1)}% completion, context: ${context.timeOfDay}/${context.energyLevel})`);
+    Logger.log(`Recorded model performance: ${modelId} (${completionRate.toFixed(1)}% completion, context: ${context.timeOfDay}/${context.energyLevel})`);
   }
 
   /**
@@ -144,7 +145,7 @@ export class IntelligentModelSwitcher {
     const context = this.analyzeCurrentContext();
 
     // Store context for learning purposes (can be used to improve recommendations)
-    console.log(`Model selected: ${modelId} for ${reason}, context: ${context.timeOfDay}/${context.energyLevel}/${context.workType}`);
+    Logger.log(`Model selected: ${modelId} for ${reason}, context: ${context.timeOfDay}/${context.energyLevel}/${context.workType}`);
 
     // Could track selections in a separate history if needed for future enhancement
   }
@@ -177,7 +178,7 @@ export class IntelligentModelSwitcher {
     if (!session) return;
 
     // Use currentContext for future enhancement tracking
-    console.debug(`Real-time switching context: ${currentContext.timeOfDay} ${currentContext.energyLevel} energy, work type: ${currentContext.workType}`);
+    Logger.debug(`Real-time switching context: ${currentContext.timeOfDay} ${currentContext.energyLevel} energy, work type: ${currentContext.workType}`);
 
     // Time-based switching (morning → afternoon → evening)
     const hour = new Date().getHours();
@@ -349,7 +350,7 @@ This switch was made based on your activity patterns and performance data. Overr
       }
     });
 
-    console.log(`Intelligent model switch: ${currentModel.name} → ${decision.targetModel.name} (${decision.reason})`);
+    Logger.log(`Intelligent model switch: ${currentModel.name} → ${decision.targetModel.name} (${decision.reason})`);
   }
 
   /**
@@ -679,7 +680,7 @@ This model is better suited for your current work type.`,
         this.isActive = savedData.isActive !== undefined ? savedData.isActive : true;
       }
     } catch (error) {
-      console.warn('Failed to load performance data:', error);
+      Logger.warn('Failed to load performance data:', error);
       // Initialize with defaults
       this.performanceHistory = [];
       this.lastSwitchTime = 0;

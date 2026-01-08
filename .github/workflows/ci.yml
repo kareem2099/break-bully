@@ -1,4 +1,4 @@
-name: Break Bully CI
+name: DotSense CI
 
 on:
   push:
@@ -61,7 +61,7 @@ jobs:
     - name: Upload package artifact
       uses: actions/upload-artifact@v3
       with:
-        name: break-bully-vsix
+        name: dotsense-vsix
         path: "*.vsix"
 
   publish:

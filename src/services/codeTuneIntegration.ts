@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { getConfiguration } from '../core/configuration';
+import { Logger } from '../utils/logger';
 
 /**
  * Integration service for CodeTune extension
@@ -34,7 +35,7 @@ export class CodeTuneIntegration {
         try {
           await codeTuneExt.activate();
         } catch (error) {
-          console.warn('Could not activate CodeTune extension:', error);
+          Logger.warn('Could not activate CodeTune extension:', error);
           return false;
         }
       }
@@ -44,7 +45,7 @@ export class CodeTuneIntegration {
         await vscode.commands.executeCommand('codetune.playQuran');
         return true;
       } catch (error) {
-        console.warn('Could not execute codetune.playQuran command:', error);
+        Logger.warn('Could not execute codetune.playQuran command:', error);
       }
 
       // Fallback: try to open settings
@@ -52,12 +53,12 @@ export class CodeTuneIntegration {
         await vscode.commands.executeCommand('codetune.openSettings');
         return true;
       } catch (error) {
-        console.warn('Could not execute codetune.openSettings command:', error);
+        Logger.warn('Could not execute codetune.openSettings command:', error);
       }
 
       return false;
     } catch (error) {
-      console.error('Error opening CodeTune:', error);
+      Logger.error('Error opening CodeTune:', error);
       return false;
     }
   }
@@ -99,7 +100,7 @@ export class CodeTuneIntegration {
    * Sets the permanent ignore flag for CodeTune suggestions
    */
   public static async setCodeTunePermanentlyIgnored(ignored: boolean): Promise<void> {
-    const config = vscode.workspace.getConfiguration('breakBully');
+    const config = vscode.workspace.getConfiguration('dotsense');
     await config.update('codeTunePermanentlyIgnored', ignored, vscode.ConfigurationTarget.Global);
   }
 

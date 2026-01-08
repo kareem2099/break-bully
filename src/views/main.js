@@ -1,4 +1,4 @@
-// ===== BREAK BULLY MAIN JAVASCRIPT =====
+// ===== DotSense MAIN JAVASCRIPT =====
 
 (function() {
     'use strict';
@@ -15,7 +15,7 @@
 
     // ===== INITIALIZATION =====
     function initialize() {
-        console.log('Break Bully webview initialized - HTML loaded successfully!');
+        Logger.log('DotSense webview initialized - HTML loaded successfully!');
 
         // Set up message listener
         window.addEventListener('message', handleMessage);
@@ -44,7 +44,7 @@
     // ===== MESSAGE HANDLING =====
     function handleMessage(event) {
         const message = event.data;
-        console.log('Received message from extension:', message.command, message.data);
+        Logger.log('Received message from extension:', message.command, message.data);
 
         switch (message.command) {
             case 'updateStats':
@@ -140,9 +140,21 @@
             case 'aiActivityLog':
                 addAILogEntry(message.data);
                 break;
-        case 'aiStatusUpdate':
-            updateAIStatus(message.data);
-            break;
+            case 'aiStatusUpdate':
+                updateAIStatus(message.data);
+                break;
+            case 'currentMood':
+                updateCurrentMood(message.data);
+                break;
+            case 'moodInterventions':
+                updateMoodInterventions(message.data);
+                break;
+            case 'moodAnalytics':
+                displayMoodAnalytics(message.data);
+                break;
+            case 'showSettingsModal':
+                showSettingsModal();
+                break;
         }
     }
 
@@ -265,15 +277,15 @@
         const timerDisplay = document.getElementById('timerDisplay');
         const timerLabel = document.getElementById('timerLabel');
         const takeBreakBtn = document.getElementById('takeBreakBtn');
-        console.log('updateTimerDisplay called with data:', data, 'takeBreakBtn:', takeBreakBtn);
+        Logger.log('updateTimerDisplay called with data:', data, 'takeBreakBtn:', takeBreakBtn);
         if (!timerDisplay) {
-            console.log('timerDisplay not found');
+            Logger.log('timerDisplay not found');
             return;
         }
         if (!takeBreakBtn) {
-            console.log('takeBreakBtn not found, trying querySelector');
+            Logger.log('takeBreakBtn not found, trying querySelector');
             const btn = document.querySelector('#takeBreakBtn');
-            console.log('querySelector result:', btn);
+            Logger.log('querySelector result:', btn);
         }
 
         if (data && data.nextReminder) {
@@ -294,10 +306,10 @@
                 } else if (data.phase === 'rest') {
                     timerLabel.textContent = 'Rest Time Left';
                     if (takeBreakBtn) {
-                        console.log('Updating takeBreakBtn to Complete Break');
+                        Logger.log('Updating takeBreakBtn to Complete Break');
                         takeBreakBtn.innerHTML = '<span class="btn-icon">🔄</span>Complete Break';
                     } else {
-                        console.log('takeBreakBtn not found for rest phase');
+                        Logger.log('takeBreakBtn not found for rest phase');
                     }
                 }
             }
@@ -517,7 +529,7 @@
             // Onboarding completed, save to webview state for future reference
             onboardingCompleted = true;
             currentOnboardingStep = 100; // Mark as fully complete
-            console.log('Onboarding completed at step', currentOnboardingStep, 'last update:', lastUpdateTime, 'status:', onboardingCompleted);
+            Logger.log('Onboarding completed at step', currentOnboardingStep, 'last update:', lastUpdateTime, 'status:', onboardingCompleted);
             const state = vscode.getState() || {};
             state.onboardingCompleted = true;
             vscode.setState(state);
@@ -754,6 +766,196 @@
         }
     });
 
+    // ===== MOOD DETECTION FUNCTIONS =====
+    function updateCurrentMood(data) {
+        const moodEmoji = document.getElementById('moodEmoji');
+        const moodState = document.getElementById('moodState');
+        const moodConfidence = document.getElementById('moodConfidence');
+        const moodIntensity = document.getElementById('moodIntensity');
+        const moodTriggers = document.getElementById('moodTriggers');
+        const moodTrend = document.getElementById('moodTrend');
+
+        if (!data) {
+            // Check if Advanced Analytics is enabled to show appropriate message
+            const activityIntegrationLevel = localStorage.getItem('dotsense.activityIntegrationLevel') || 'none';
+
+            if (activityIntegrationLevel === 'advanced') {
+                // Advanced Analytics enabled but no data yet
+                if (moodEmoji) moodEmoji.textContent = '🤔';
+                if (moodState) moodState.textContent = 'Analyzing patterns...';
+                if (moodConfidence) moodConfidence.textContent = 'Learning...';
+                if (moodIntensity) moodIntensity.textContent = 'Need 10-15 min typing';
+                if (moodTriggers) moodTriggers.textContent = 'Building your profile';
+                if (moodTrend) moodTrend.textContent = 'Please keep typing!';
+            } else {
+                // Advanced Analytics not enabled
+                if (moodEmoji) moodEmoji.textContent = '⚙️';
+                if (moodState) moodState.textContent = 'Enable in Settings';
+                if (moodConfidence) moodConfidence.textContent = 'Setup needed';
+                if (moodIntensity) moodIntensity.textContent = 'Tap Settings button →';
+                if (moodTriggers) moodTriggers.textContent = 'Activity Integration →';
+                if (moodTrend) moodTrend.textContent = 'Advanced Analytics';
+            }
+            return;
+        }
+
+        // Update mood emoji based on state
+        if (moodEmoji) {
+            switch (data.mood) {
+                case 'FRUSTRATED':
+                    moodEmoji.textContent = '😠';
+                    break;
+                case 'STRESSED':
+                    moodEmoji.textContent = '😰';
+                    break;
+                case 'FATIGUED':
+                    moodEmoji.textContent = '😴';
+                    break;
+                case 'FOCUSED':
+                    moodEmoji.textContent = '🎯';
+                    break;
+                case 'ANXIOUS':
+                    moodEmoji.textContent = '😬';
+                    break;
+                case 'CALM':
+                    moodEmoji.textContent = '😌';
+                    break;
+                default:
+                    moodEmoji.textContent = '🤔';
+            }
+        }
+
+        // Update mood state and details
+        if (moodState) moodState.textContent = data.mood.charAt(0).toUpperCase() + data.mood.slice(1).toLowerCase();
+        if (moodConfidence) moodConfidence.textContent = data.confidence + '%';
+        if (moodIntensity) moodIntensity.textContent = `Intensity: ${data.intensity}/10`;
+        if (moodTriggers) moodTriggers.textContent = `Triggers: ${data.triggers.join(', ') || 'None'}`;
+        if (moodTrend) moodTrend.textContent = `Trend: ${data.trend.charAt(0).toUpperCase() + data.trend.slice(1)}`;
+
+        // Request interventions for this mood
+        vscode.postMessage({
+            command: 'getMoodInterventions',
+            data: { mood: data.mood, intensity: data.intensity }
+        });
+    }
+
+    function updateMoodInterventions(interventions) {
+        const interventionButtons = document.getElementById('interventionButtons');
+        if (!interventionButtons) return;
+
+        if (!interventions || interventions.length === 0) {
+            interventionButtons.innerHTML = '<p style="font-size: 12px; color: var(--vscode-descriptionForeground, #cccccc99);">No interventions available</p>';
+            return;
+        }
+
+        // Create intervention buttons
+        const buttonsHtml = interventions.slice(0, 3).map(intervention => `
+            <button class="action-btn tertiary" onclick="applyMoodIntervention('${intervention.type}')" title="${intervention.reason}">
+                <span class="btn-icon">${getInterventionIcon(intervention.type)}</span>
+                ${intervention.type.charAt(0).toUpperCase() + intervention.type.slice(1)}
+                <small style="display: block; font-size: 10px; opacity: 0.8;">${intervention.expectedEffectiveness}% effective</small>
+            </button>
+        `).join('');
+
+        interventionButtons.innerHTML = buttonsHtml;
+    }
+
+    function applyMoodIntervention(type) {
+        vscode.postMessage({
+            command: 'applyMoodIntervention',
+            data: { type: type }
+        });
+    }
+
+    function displayMoodAnalytics(analytics) {
+        if (!analytics) {
+            vscode.postMessage({
+                command: 'showInfoMessage',
+                data: { message: 'No mood analytics available yet. Continue coding to build mood patterns!' }
+            });
+            return;
+        }
+
+        // Create analytics message
+        const dominantMoods = Object.entries(analytics.dominantMoods || {})
+            .sort(([,a], [,b]) => b - a)
+            .slice(0, 3)
+            .map(([mood, count]) => `${mood}: ${count}`)
+            .join(', ');
+
+        const analyticsMessage = `
+🧠 Mood Analytics
+
+🎯 Dominant Moods: ${dominantMoods || 'None yet'}
+
+📈 Mood Transitions: ${Object.keys(analytics.moodTransitions || {}).length} patterns detected
+
+⏰ Peak Stress Times: ${analytics.peakStressTimes?.join(', ') || 'None identified'}
+
+💡 Intervention Success Rates:
+${Object.entries(analytics.interventionEffectiveness || {})
+    .map(([type, rate]) => `• ${type}: ${Math.round(rate * 100)}%`)
+    .join('\n') || 'No interventions tracked yet'}
+        `.trim();
+
+        vscode.postMessage({
+            command: 'showInfoMessage',
+            data: { message: analyticsMessage }
+        });
+    }
+
+    function getInterventionIcon(type) {
+        switch (type) {
+            case 'breathing': return '🫁';
+            case 'stretch': return '🤸';
+            case 'break': return '⏸️';
+            case 'meditation': return '🧘';
+            case 'walk': return '🚶';
+            default: return '💡';
+        }
+    }
+
+    function showMoodAnalytics() {
+        vscode.postMessage({
+            command: 'getMoodAnalytics',
+            data: { timeRange: 'week' }
+        });
+    }
+
+    function showSettingsModal() {
+        const modal = document.getElementById('settingsModalOverlay');
+        if (modal) {
+            modal.classList.remove('hidden');
+            modal.style.animation = 'fadeIn 0.3s ease-out';
+        }
+    }
+
+    function closeSettingsModal() {
+        const modal = document.getElementById('settingsModalOverlay');
+        if (modal) {
+            modal.classList.add('hidden');
+        }
+    }
+
+    // ===== EXERCISE FUNCTIONS =====
+    function showStretch() {
+        vscode.postMessage({
+            command: 'showStretch'
+        });
+    }
+
+    function breathingExercise() {
+        vscode.postMessage({
+            command: 'breathingExercise'
+        });
+    }
+
+    function showEyeExercise() {
+        vscode.postMessage({
+            command: 'showEyeExercise'
+        });
+    }
+
     // Make functions globally available
     window.changeWorkRestModel = changeWorkRestModel;
     window.loadActivityIntegrationSettings = loadActivityIntegrationSettings;
@@ -769,6 +971,12 @@
     window.neverShowCodeTune = neverShowCodeTune;
     window.openDonationModal = openDonationModal;
     window.closeDonationModal = closeDonationModal;
+    window.showMoodAnalytics = showMoodAnalytics;
+    window.applyMoodIntervention = applyMoodIntervention;
+    window.closeSettingsModal = closeSettingsModal;
+    window.showStretch = showStretch;
+    window.breathingExercise = breathingExercise;
+    window.showEyeExercise = showEyeExercise;
 
     // ===== EVENT HANDLERS =====
     function handleVisibilityChange() {

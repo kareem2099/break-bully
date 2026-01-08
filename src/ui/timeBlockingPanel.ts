@@ -6,6 +6,7 @@ import {
   SchedulingModelType
 } from '../types';
 import { advancedScheduler } from '../services/activityIntegration/advancedSchedulerService';
+import { Logger } from '../utils/logger';
 
 export class TimeBlockingPanel {
   public static currentPanel: TimeBlockingPanel | undefined;
@@ -98,7 +99,7 @@ export class TimeBlockingPanel {
             break;
 
           default:
-            console.log('Unknown command:', message.command);
+            Logger.log('Unknown command:', message.command);
         }
       },
       null,
@@ -113,7 +114,7 @@ export class TimeBlockingPanel {
       this.timeBlocks = allBlocks[this.currentDay] || [];
       this.sendTimeBlocks();
     } catch (error) {
-      console.error('Failed to load time blocks:', error);
+      Logger.error('Failed to load time blocks:', error);
       this.timeBlocks = [];
     }
   }
@@ -216,7 +217,7 @@ export class TimeBlockingPanel {
       allBlocks[this.currentDay] = this.timeBlocks;
       state.storage?.saveCustomSetting('timeBlocking.blocks', allBlocks);
     } catch (error) {
-      console.error('Failed to save time blocks:', error);
+      Logger.error('Failed to save time blocks:', error);
     }
   }
 
@@ -361,7 +362,7 @@ export class TimeBlockingPanel {
       <html lang="en">
       <head>
         <meta charset="UTF-8">
-        <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource}; script-src 'nonce-${nonce}';">
+        <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'self' 'unsafe-inline' vscode-resource: https:; script-src 'self' 'unsafe-inline' vscode-resource: https:; font-src 'self' vscode-resource: https:; img-src 'self' vscode-resource: https: data:; connect-src 'self' vscode-resource: https:;">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <link href="${styleUri}" rel="stylesheet">
         <title>Time Blocking</title>
@@ -437,7 +438,7 @@ export class TimeBlockingPanel {
           </div>
         </div>
 
-        <script nonce="${nonce}" src="${scriptUri}"></script>
+        <script src="${scriptUri}"></script>
       </body>
       </html>`;
   }

@@ -6,6 +6,7 @@ import { state } from '../models/state';
 import { usageAnalytics } from '../services/usageAnalyticsService';
 import { realTimeSessionAnalyzer } from '../services/realTimeSessionAnalyzer';
 import { IntelligentModelSwitcher } from '../services/intelligentModelSwitcher';
+import { Logger } from '../utils/logger';
 
 export class ChangeWorkoutPanel {
   public static currentPanel: ChangeWorkoutPanel | undefined;
@@ -46,7 +47,7 @@ export class ChangeWorkoutPanel {
 
     // Normalize the extension URI path using path module
     const normalizedPath = path.posix.normalize(this._extensionUri.path);
-    console.debug('Extension path:', normalizedPath);
+    Logger.debug('Extension path:', normalizedPath);
 
     // Set the webview's initial html content
     this._update();
@@ -71,9 +72,9 @@ export class ChangeWorkoutPanel {
           }
           case 'changeWorkRestModel':
             try {
-              console.log('Attempting to switch to model:', message.data.modelId);
+              Logger.log('Attempting to switch to model:', message.data.modelId);
               const model = workRestModels.find(m => m.id === message.data.modelId);
-              console.log('Found model:', model);
+              Logger.log('Found model:', model);
 
               if (!model) {
                 throw new Error(`Model with ID '${message.data.modelId}' not found`);
@@ -90,9 +91,9 @@ export class ChangeWorkoutPanel {
               vscode.window.showInformationMessage('Work-rest model changed successfully! Timer updated.');
 
               // Notify the main webview to update its timer display
-              vscode.commands.executeCommand('breakBully.refreshTimer');
+              vscode.commands.executeCommand('dotsense.refreshTimer');
             } catch (error) {
-              console.error('Failed to change work-rest model:', error);
+              Logger.error('Failed to change work-rest model:', error);
               this._panel.webview.postMessage({
                 command: 'workRestModelChanged',
                 data: { success: false, error: (error as Error).message }
@@ -102,7 +103,7 @@ export class ChangeWorkoutPanel {
             break;
           case 'startMLAssessment':
             // Send command to extension to open ML assessment panel
-            vscode.commands.executeCommand('breakBully.startMLAssessment');
+            vscode.commands.executeCommand('dotsense.startMLAssessment');
             break;
           case 'closePanel':
             this._panel.dispose();
@@ -124,7 +125,7 @@ export class ChangeWorkoutPanel {
                 });
               }
             } catch (error) {
-              console.error('Failed to load personal models:', error);
+              Logger.error('Failed to load personal models:', error);
               this._panel.webview.postMessage({
                 command: 'personalModelsData',
                 data: null
@@ -134,7 +135,7 @@ export class ChangeWorkoutPanel {
           case 'usePersonalModel':
             try {
               const { model } = message.data;
-              console.log('Using personal model:', model);
+              Logger.log('Using personal model:', model);
 
               // Convert personal model to work-rest model format
               const workRestModel = {
@@ -165,9 +166,9 @@ export class ChangeWorkoutPanel {
               );
 
               // Notify the main webview to update its timer display
-              vscode.commands.executeCommand('breakBully.refreshTimer');
+              vscode.commands.executeCommand('dotsense.refreshTimer');
             } catch (error) {
-              console.error('Failed to activate personal model:', error);
+              Logger.error('Failed to activate personal model:', error);
               this._panel.webview.postMessage({
                 command: 'personalModelChanged',
                 data: { success: false, error: (error as Error).message }
@@ -184,7 +185,7 @@ export class ChangeWorkoutPanel {
                 data: activePersonalModel || null
               });
             } catch (error) {
-              console.error('Failed to load current personal model:', error);
+              Logger.error('Failed to load current personal model:', error);
               this._panel.webview.postMessage({
                 command: 'currentPersonalModel',
                 data: null
@@ -218,7 +219,7 @@ export class ChangeWorkoutPanel {
                 });
               }
             } catch (error) {
-              console.error('Failed to load current session:', error);
+              Logger.error('Failed to load current session:', error);
               this._panel.webview.postMessage({
                 command: 'currentSession',
                 data: null
@@ -264,7 +265,7 @@ export class ChangeWorkoutPanel {
       <html lang="en">
       <head>
         <meta charset="UTF-8">
-        <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource}; script-src 'nonce-${nonce}';">
+        <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'self' 'unsafe-inline' vscode-resource: https:; script-src 'self' 'unsafe-inline' vscode-resource: https:; font-src 'self' vscode-resource: https:; img-src 'self' vscode-resource: https: data:; connect-src 'self' vscode-resource: https:;">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <link href="${styleUri}" rel="stylesheet">
         <title>Change Workout Model</title>
@@ -289,7 +290,7 @@ export class ChangeWorkoutPanel {
           </div>
         </div>
 
-        <script nonce="${nonce}" src="${scriptUri}"></script>
+        <script src="${scriptUri}"></script>
       </body>
       </html>`;
   }

@@ -269,7 +269,7 @@ export function switchWorkRestModel(modelId: string): void {
     startWorkRestSession(model);
 
     // Save preference
-    const config = vscode.workspace.getConfiguration('breakBully');
+    const config = vscode.workspace.getConfiguration('dotsense');
     config.update('workRestModel', modelId, vscode.ConfigurationTarget.Global);
   }
 }
@@ -279,7 +279,7 @@ export function switchToWorkRestModel(model: WorkRestModel): void {
   startWorkRestSession(model);
 
   // Save preference for AI models
-  const config = vscode.workspace.getConfiguration('breakBully');
+  const config = vscode.workspace.getConfiguration('dotsense');
   config.update('workRestModel', model.id, vscode.ConfigurationTarget.Global);
 }
 

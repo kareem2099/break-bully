@@ -244,7 +244,7 @@ function handleNotificationResponse(selection: string | undefined, context: Cont
       vscode.window.showInformationMessage(`Snoozed... but I'm watching you 👁️`);
     }
   } else if (selection && selection.includes('Settings')) {
-    vscode.commands.executeCommand('breakBully.openSettings');
+    vscode.commands.executeCommand('dotsense.openSettings');
   }
 
   // Update response time tracking
@@ -414,12 +414,12 @@ function updateStatusBar(): void {
 }
 
 export function toggleReminders(): void {
-  const config = vscode.workspace.getConfiguration('breakBully');
+  const config = vscode.workspace.getConfiguration('dotsense');
   const currentlyEnabled = config.get('enabled', true);
 
   config.update('enabled', !currentlyEnabled, vscode.ConfigurationTarget.Global).then(() => {
     const status = !currentlyEnabled ? 'unleashed' : 'tamed';
-    vscode.window.showInformationMessage(`Break Bully has been ${status}!`);
+    vscode.window.showInformationMessage(`DotSense has been ${status}!`);
     restartReminderSystem();
   });
 }

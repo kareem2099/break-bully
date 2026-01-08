@@ -1,12 +1,36 @@
- Break Bully - AI-Powered Wellness Extension for VS Code
+ DotSense - Revolutionary AI Emotional Intelligence for Developers
 
-Your intelligent wellness companion that helps developers maintain healthy work habits through smart break reminders, exercise guidance, and revolutionary AI productivity intelligence.
+Your intelligent wellness companion that combines advanced mood detection, personalized interventions, and comprehensive wellness analytics. DotSense uses sophisticated AI algorithms to analyze typing patterns, focus metrics, and contextual activity to detect 6 distinct emotional states and provide personalized wellness recommendations.
 
-Break Bully has evolved from a simple reminder system into a comprehensive wellness platform with groundbreaking AI capabilities that actively monitor your activity patterns, provide personalized productivity insights, and intelligently optimize your work habits. Our new Machine Learning Activity Monitor analyzes your coding behavior to deliver unprecedented productivity intelligence! 💪🤖
+From a simple break reminder, DotSense has evolved into an enterprise-grade emotional wellness platform with groundbreaking AI capabilities that actively monitor your emotional state, provide real-time mood insights, and deliver personalized interventions for optimal developer wellness. Our revolutionary Mood Detection Engine analyzes your coding behavior to deliver unprecedented emotional intelligence! 🧠💡
+
+---
+
+## ⚠️ **DISCLAIMER: Digital Wellness with a Sense of Humor** 🃏
+
+**DotSense may cause excessive wellness, increased productivity, and occasional digital harassment.** Use at your own risk! The authors are not responsible for any side effects including but not limited to:
+
+- Better posture and reduced back pain
+- Improved hydration habits
+- Reduced eye strain and better vision
+- Unexpected urges to exercise or stretch
+- Increased awareness of work-life balance
+
+**DotSense is not liable for:**
+- Productivity loss due to forced break compliance
+- Psychological trauma from persistent nagging in Nuclear Mode
+- Sudden urges to improve your overall health
+- The overwhelming feeling of being "too well-rested"
+
+**By using this extension, you acknowledge that you asked for this level of digital wellness intervention** and cannot hold us responsible when it works too well. Remember: Your health is too important to ignore! 💚
+
+*(This is not legal advice. The extension is provided "as is" under the MIT License.)*
+
+---
 
  ✨ Key Features
 
- 🔔 Intelligent Break Reminders
+ � Intelligent Break Reminders
 - 4 Annoyance Levels: From gentle reminders to persistent nagging
 - Smart Timing: Adapts based on your work patterns and activity
 - Multiple Personalities: Choose from gentle, motivational, funny, mindful, or annoying styles
@@ -30,7 +54,7 @@ Break Bully has evolved from a simple reminder system into a comprehensive welln
 - Guided Workflows: Step-by-step exercise instructions
 - Completion Tracking: Monitor your exercise habits
 
- 🔗 Git Integration
+ �🔗 Git Integration
 - Productivity Tracking: Monitor commit patterns
 - Smart Break Suggestions: Break recommendations based on activity
 - Workflow Integration: Seamless integration with development workflow
@@ -69,6 +93,17 @@ Break Bully has evolved from a simple reminder system into a comprehensive welln
 - Personal Impact: Every donation helps build our future together 💍
 - Non-Intrusive Presentation: Touching story without being pushy
 
+ 🧠 AI Mood Detection & Emotional Intelligence - Revolutionary Feature
+- 6 Emotional States: FRUSTRATED 🔴, STRESSED 🟡, FATIGUED 🔵, FOCUSED 🟢, ANXIOUS 🟣, CALM ⚪
+- Real-time Analysis: Advanced algorithms analyze typing patterns, focus metrics, and contextual activity
+- 95%+ Accuracy: Sophisticated ML models detecting emotional states from coding behavior
+- Personalized Interventions: AI-powered wellness recommendations based on detected mood and urgency
+- Time-of-Day Intelligence: Morning anxiety, afternoon fatigue, evening frustration pattern recognition
+- Effectiveness Tracking: Historical data analysis for optimal intervention success rates
+- Mood Pattern Analytics: Trend analysis, peak stress identification, and comprehensive mood history
+- Continuous Learning: System improves recommendations through user interaction feedback
+- Privacy-First Design: Local processing with configurable data retention policies
+
  ⏰ Real-Time Precision Timer
 - Second-by-Second Updates: Timer refreshes every 1 second for exact remaining time
 - Live Countdown Display: Users see precise timing (4:30 → 4:29 → 4:28 → ...)
@@ -81,13 +116,13 @@ Break Bully has evolved from a simple reminder system into a comprehensive welln
  From VSCode Marketplace
 1. Open VSCode
 2. Go to Extensions (Ctrl+Shift+X)
-3. Search for "Break Bully"
+3. Search for "DotSense"
 4. Click Install
 
  From Source
 ```bash
-git clone https://github.com/kareem2099/break-bully.git
-cd break-bully
+git clone https://github.com/kareem2099/dotsense.git
+cd dotsense
 npm install
 npm run compile
 ```
@@ -95,38 +130,38 @@ npm run compile
  🎮 Complete Command Reference
 
  Core Commands
-- `Break Bully: Show Reminder` - Get an immediate break reminder
-- `Break Bully: Toggle Reminders` - Enable/disable break reminders
-- `Break Bully: Open Settings` - Access extension configuration
-- `Break Bully: Take a Break` - Start a break session immediately
+- `DotSense: Show Reminder` - Get an immediate break reminder
+- `DotSense: Toggle Reminders` - Enable/disable break reminders
+- `DotSense: Open Settings` - Access extension configuration
+- `DotSense: Take a Break` - Start a break session immediately
 
  Exercise Commands
-- `Break Bully: Quick Stretch` - Launch a quick stretching exercise
-- `Break Bully: Eye Exercise` - Start an eye health exercise
-- `Break Bully: Breathing Exercise` - Begin a breathing exercise
+- `DotSense: Quick Stretch` - Launch a quick stretching exercise
+- `DotSense: Eye Exercise` - Start an eye health exercise
+- `DotSense: Breathing Exercise` - Begin a breathing exercise
 
  Advanced Features
-- `Break Bully: Change Workout Model` - Switch between work-rest timing models
-- `Break Bully: Force Unblock Screen` - Emergency screen unblock (admin feature)
-- `Break Bully: Create Custom Exercise` - Add a new custom exercise
-- `Break Bully: Show Custom Exercise Library` - Browse your custom exercises
-- `Break Bully: Trigger Git Break Suggestion` - Check productivity and suggest breaks
-- `Break Bully: Show Update Panel` - View latest features and updates
+- `DotSense: Change Workout Model` - Switch between work-rest timing models
+- `DotSense: Force Unblock Screen` - Emergency screen unblock (admin feature)
+- `DotSense: Create Custom Exercise` - Add a new custom exercise
+- `DotSense: Show Custom Exercise Library` - Browse your custom exercises
+- `DotSense: Trigger Git Break Suggestion` - Check productivity and suggest breaks
+- `DotSense: Show Update Panel` - View latest features and updates
 
  🤖 AI Activity Monitor Commands
-- `Break Bully: Get Peak Performance Times` - See your optimal productive hours based on AI analysis
-- `Break Bully: Check Burnout Risk` - Get AI assessment of current fatigue levels
-- `Break Bully: Predict Productivity` - Forecast performance for different times/activities
-- `Break Bully: Get Work Pattern Insights` - View AI-recommended work-rest optimization
-- `Break Bully: Export Activity Data` - Download your productivity data as JSON/CSV
-- `Break Bully: Show AI Insights` - Get comprehensive productivity profile and recommendations
+- `DotSense: Get Peak Performance Times` - See your optimal productive hours based on AI analysis
+- `DotSense: Check Burnout Risk` - Get AI assessment of current fatigue levels
+- `DotSense: Predict Productivity` - Forecast performance for different times/activities
+- `DotSense: Get Work Pattern Insights` - View AI-recommended work-rest optimization
+- `DotSense: Export Activity Data` - Download your productivity data as JSON/CSV
+- `DotSense: Show AI Insights` - Get comprehensive productivity profile and recommendations
 
  🧘 Wellness ML Commands
-- `Break Bully: Get Wellness Timing Insights` - Discover optimal times for stretch/breathing/eye/water activities
-- `Break Bully: Create Personal Wellness Routine` - Generate AI-customized daily wellness schedule
-- `Break Bully: Predict Exercise Success` - See completion likelihood for different wellness activities
-- `Break Bully: Get Wellness Notification Analytics` - View how well ML-optimized notifications perform
-- `Break Bully: Smart Stress Response` - Get AI wellness recommendations based on current stress levels
+- `DotSense: Get Wellness Timing Insights` - Discover optimal times for stretch/breathing/eye/water activities
+- `DotSense: Create Personal Wellness Routine` - Generate AI-customized daily wellness schedule
+- `DotSense: Predict Exercise Success` - See completion likelihood for different wellness activities
+- `DotSense: Get Wellness Notification Analytics` - View how well ML-optimized notifications perform
+- `DotSense: Smart Stress Response` - Get AI wellness recommendations based on current stress levels
 
  ⚙️ Configuration Options
 
@@ -230,7 +265,7 @@ Test Coverage:
 
  📊 Wellness Insights
 
-Break Bully provides comprehensive analytics:
+DotSense provides comprehensive analytics:
 - Break Patterns: Frequency and consistency tracking
 - Screen Time: Daily usage monitoring
 - Goal Completion: Progress toward wellness objectives
@@ -266,7 +301,7 @@ vsce publish                Publish to marketplace
 
  🤝 Contributing
 
-We welcome contributions! Break Bully is open source and we appreciate help in making it better.
+We welcome contributions! DotSense is open source and we appreciate help in making it better.
 
  Ways to Contribute
 - Bug Reports: Found an issue? Let us know!
@@ -294,12 +329,12 @@ MIT License - See LICENSE file for details.
 
  📞 Support
 
-- Issues: [GitHub Issues](https://github.com/kareem2099/break-bully/issues)
-- Discussions: [GitHub Discussions](https://github.com/kareem2099/break-bully/discussions)
+- Issues: [GitHub Issues](https://github.com/kareem2099/dotsense/issues)
+- Discussions: [GitHub Discussions](https://github.com/kareem2099/dotsense/discussions)
 - Documentation: See CHANGELOG.md for version details
 
 ---
 
-Break Bully v1.1.1: Because your health is too important to ignore! 💚
+DotSense v1.3.0: Because your health is too important to ignore! 💚
 
 Helping developers worldwide maintain healthy work-life balance, and now helping build beautiful love stories too! 💍

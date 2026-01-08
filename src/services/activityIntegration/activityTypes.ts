@@ -64,6 +64,7 @@ export interface ActivityContext {
   typingMetrics?: AdvancedTypingMetrics;
   focusQuality?: FocusQualityMetrics;
   contextSwitch?: ContextSwitchMetrics;
+  moodAnalysis?: MoodAnalysis;
 }
 
 export interface ActivityMetrics {
@@ -234,6 +235,47 @@ export interface WellnessNotification {
   successful: boolean;
   responseTime: number;
   userAccepted: boolean;
+}
+
+// Mood Detection Interfaces
+export enum MoodState {
+  FOCUSED = 'focused',
+  FRUSTRATED = 'frustrated',
+  STRESSED = 'stressed',
+  FATIGUED = 'fatigued',
+  ANXIOUS = 'anxious',
+  CALM = 'calm'
+}
+
+export interface MoodAnalysis {
+  currentMood: MoodState;
+  confidence: number; // 0-1
+  intensity: number; // 1-10
+  triggers: string[];
+  duration: number; // minutes in current mood
+  trend: 'improving' | 'stable' | 'worsening';
+  timestamp: number;
+}
+
+export interface MoodPattern {
+  pattern: string;
+  frequency: number;
+  typicalTriggers: string[];
+  effectiveness: number; // How well interventions work for this pattern
+}
+
+export interface MoodIntervention {
+  type: 'breathing' | 'stretch' | 'break' | 'walk' | 'music' | 'meditation';
+  urgency: 'low' | 'medium' | 'high';
+  reason: string;
+  expectedEffectiveness: number; // 0-1
+  duration: number; // minutes
+}
+
+export interface MoodHistory {
+  moodStates: MoodAnalysis[];
+  patterns: MoodPattern[];
+  interventionSuccess: Record<string, number>; // intervention type -> success rate
 }
 
 export { WellnessExercise, WellnessPattern, WaterScheduleItem };

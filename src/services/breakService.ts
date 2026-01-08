@@ -3,52 +3,53 @@ import { state } from '../models/state';
 import { checkAchievements } from './achievementService';
 import { getCurrentSession, takeManualBreak, endRestEarly, getTimeRemaining } from './workRestService';
 import { getConfiguration } from '../core/configuration';
+import { incrementBreakProgress, updateGoalsProgress, checkGoalAchievements } from './goalService';
+import { pauseReminders } from './annoyanceService';
+import { Logger } from '../utils/logger';
 
-export function takeBreak(): void {
+export async function takeBreak(): Promise<void> {
   // Check if there's an active work-rest session
   const currentSession = getCurrentSession();
   if (currentSession) {
     if (currentSession.isWorking) {
       // User is in a work period - ask for confirmation before starting rest
-      vscode.window.showInformationMessage(
+      const selection = await vscode.window.showInformationMessage(
         `Ready to take a break?\n\nThis will start your ${currentSession.model.restDuration} minute rest period with screen monitoring.`,
         'Start Rest Now',
         'Cancel'
-      ).then(selection => {
-        if (selection === 'Start Rest Now') {
-          const success = takeManualBreak();
-          if (success) {
-            // Update break statistics when manually starting rest
-            updateBreakStatistics();
-            vscode.window.showInformationMessage('🛋️ Rest period started! Screen will be monitored for coding activity.');
+      );
+      if (selection === 'Start Rest Now') {
+        const success = takeManualBreak();
+        if (success) {
+          // Update break statistics when manually starting rest
+          updateBreakStatistics();
+          vscode.window.showInformationMessage('🛋️ Rest period started! Screen will be monitored for coding activity.');
 
-            // Show CodeTune suggestion in webview
-            showCodeTuneSuggestionInWebview();
-            return;
-          }
+          // Show CodeTune suggestion in webview
+          showCodeTuneSuggestionInWebview();
+          return;
         }
-      });
+      }
       return;
     } else {
       // User is in a rest period - ask for confirmation before ending rest early
       const timeRemaining = getTimeRemaining();
       const remainingTime = timeRemaining ? `${timeRemaining.minutes}:${timeRemaining.seconds.toString().padStart(2, '0')}` : 'unknown';
 
-      vscode.window.showInformationMessage(
+      const selection = await vscode.window.showInformationMessage(
         `End rest early?\n\nYou have ${remainingTime} remaining in your rest period. This will start your next work period immediately.`,
         'End Rest Early',
         'Continue Resting'
-      ).then(selection => {
-        if (selection === 'End Rest Early') {
-          const success = endRestEarly();
-          if (success) {
-            // Update break statistics when ending rest early
-            updateBreakStatistics();
-            vscode.window.showInformationMessage('🔄 Rest ended early! Starting next work period.');
-            return;
-          }
+      );
+      if (selection === 'End Rest Early') {
+        const success = endRestEarly();
+        if (success) {
+          // Update break statistics when ending rest early
+          updateBreakStatistics();
+          vscode.window.showInformationMessage('🔄 Rest ended early! Starting next work period.');
+          return;
         }
-      });
+      }
       return;
     }
   }
@@ -61,9 +62,9 @@ export function takeBreak(): void {
   showCodeTuneSuggestionInWebview();
 }
 
-function updateBreakStatistics(): void {
+export function updateBreakStatistics(): void {
   if (!state.storage) {
-    console.error('Storage not initialized');
+    Logger.error('Storage not initialized');
     return;
   }
 
@@ -73,14 +74,17 @@ function updateBreakStatistics(): void {
   const now = new Date();
   const today = now.toDateString();
 
+  // Save original last break date for streak calculation
+  const originalLastBreakDate = currentStats.lastBreakDate;
+
   // Update stats
   currentStats.breaksTaken++;
   currentStats.timeSaved += 5; // Assume 5 minutes saved per break
   currentStats.lastBreakDate = now;
 
   // Update streak - only reset if more than 1 day has passed
-  if (currentStats.lastBreakDate) {
-    const lastBreakDay = new Date(currentStats.lastBreakDate).toDateString();
+  if (originalLastBreakDate) {
+    const lastBreakDay = new Date(originalLastBreakDate).toDateString();
     if (lastBreakDay !== today) {
       const yesterday = new Date();
       yesterday.setDate(yesterday.getDate() - 1);
@@ -113,11 +117,9 @@ function updateBreakStatistics(): void {
   resetScreenTimeOnBreak();
 
   // Update break progress
-  import('./goalService').then(goalService => {
-    goalService.incrementBreakProgress();
-    goalService.updateGoalsProgress();
-    goalService.checkGoalAchievements();
-  });
+  incrementBreakProgress();
+  updateGoalsProgress();
+  checkGoalAchievements();
 
   // Check for new achievements
   checkAchievements();
@@ -128,9 +130,7 @@ function updateBreakStatistics(): void {
   }
 
   // Pause reminders for 5 minutes
-  import('./annoyanceService').then(annoyanceService => {
-    annoyanceService.pauseReminders(5);
-  });
+  pauseReminders(5);
 }
 
 function resetScreenTimeOnBreak(): void {
@@ -175,6 +175,6 @@ function showCodeTuneSuggestionInWebview(): void {
       });
     }
   }).catch(error => {
-    console.debug('CodeTune integration not available:', error);
+    Logger.debug('CodeTune integration not available:', error);
   });
 }

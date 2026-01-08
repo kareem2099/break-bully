@@ -1,9 +1,10 @@
 /**
- * Cryptographic utilities for secure data handling in Break Bully
+ * Cryptographic utilities for secure data handling in DotSense
  * Focus: Privacy-preserving data collective with zero-trust architecture
  */
 
 import * as crypto from 'crypto';
+import { Logger } from './logger';
 
 // Type definitions for cryptographic utilities
 interface ValidityProofData {
@@ -47,7 +48,7 @@ function encryptWithKey(data: string, key: Buffer): string {
     const iv = crypto.randomBytes(IV_LENGTH);
 
     const cipher = crypto.createCipheriv(ALGORITHM, key, iv);
-    const dataWithAuth = 'breakBullyContribution' + data;
+    const dataWithAuth = 'dotsenseContribution' + data;
 
     let encrypted = cipher.update(dataWithAuth, 'utf8', 'base64');
     encrypted += cipher.final('base64');
@@ -60,7 +61,7 @@ function encryptWithKey(data: string, key: Buffer): string {
 
     return Buffer.from(encryptedWithTag).toString('base64');
   } catch (error) {
-    console.error('Encryption with key failed:', error);
+    Logger.error('Encryption with key failed:', error);
     throw new Error('Failed to encrypt data with key');
   }
 }
@@ -68,7 +69,7 @@ function encryptWithKey(data: string, key: Buffer): string {
 // Derive a key from user-specific data (deterministic but unique per user/installation)
 function deriveKey(salt: string, userId: string, length = KEY_LENGTH): Buffer {
   const input = `${userId}.${salt}`;
-  return crypto.scryptSync(input, 'breakBullySalt2024', length);
+  return crypto.scryptSync(input, 'dotsenseSalt2024', length);
 }
 
 /**
@@ -83,7 +84,7 @@ export function encryptData(data: string, userId: string): string {
     const iv = crypto.randomBytes(IV_LENGTH);
 
     const cipher = crypto.createCipheriv(ALGORITHM, key, iv);
-    const dataWithAuth = 'breakBullyContribution' + data;
+    const dataWithAuth = 'dotsenseContribution' + data;
 
     let encrypted = cipher.update(dataWithAuth, 'utf8', 'base64');
     encrypted += cipher.final('base64');
@@ -104,7 +105,7 @@ export function encryptData(data: string, userId: string): string {
 
     return Buffer.from(combined).toString('base64');
   } catch (error) {
-    console.error('Encryption failed:', error);
+    Logger.error('Encryption failed:', error);
     throw new Error('Failed to encrypt data');
   }
 }
@@ -151,13 +152,13 @@ export function decryptData(encryptedData: string, userId: string): string {
     decrypted += decipher.final('utf8');
 
     // Remove auth prefix
-    if (decrypted.startsWith('breakBullyContribution')) {
-      decrypted = decrypted.slice('breakBullyContribution'.length);
+    if (decrypted.startsWith('dotsenseContribution')) {
+      decrypted = decrypted.slice('dotsenseContribution'.length);
     }
 
     return decrypted;
   } catch (error) {
-    console.error('Decryption failed:', error);
+    Logger.error('Decryption failed:', error);
     throw new Error('Failed to decrypt data');
   }
 }
@@ -204,7 +205,7 @@ export function createValidityProof(data: unknown, userId: string): string {
     dataHash,
     timestamp,
     nonce,
-    format: 'breakBully_v1'
+    format: 'dotsense_v1'
   };
 
   return encryptData(JSON.stringify(proofData), `proof_${userId}`);
@@ -218,7 +219,7 @@ export function verifyValidityProof(proof: string, userId: string): boolean {
     const proofData = JSON.parse(decryptData(proof, `proof_${userId}`));
 
     // Verify format and reasonable timestamp
-    if (proofData.format !== 'breakBully_v1') return false;
+    if (proofData.format !== 'dotsense_v1') return false;
 
     const now = Date.now();
     const proofAge = now - proofData.timestamp;
@@ -228,7 +229,7 @@ export function verifyValidityProof(proof: string, userId: string): boolean {
 
     return true;
   } catch (error) {
-    console.error('Proof verification failed:', error);
+    Logger.error('Proof verification failed:', error);
     return false;
   }
 }
@@ -294,7 +295,7 @@ export function encryptForCommunity(data: CommunityData, userId: string): Encryp
   const jsonData = JSON.stringify(sanitizedData);
 
   // Community key derived from constant (transparent)
-  const communityKey = deriveKey('breakBullyCommunity2024', 'community_shared');
+  const communityKey = deriveKey('dotsenseCommunity2024', 'community_shared');
 
   // Encrypt with community key
   const encrypted = encryptWithKey(jsonData, communityKey);
@@ -322,7 +323,7 @@ export function decryptCommunityData(encryptedData: string, encryptedKey: string
     // For now, return placeholder - full implementation would use proper federated learning
     return { status: 'placeholder', userKey: userKeyHex, userId, userKeyLength: userKey.length };
   } catch (error) {
-    console.error('Community data decryption failed:', error);
+    Logger.error('Community data decryption failed:', error);
     throw new Error('Failed to decrypt community data');
   }
 }

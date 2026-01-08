@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
+import { Logger } from '../utils/logger';
 
 export class UpdatePanel {
   public static currentPanel: UpdatePanel | undefined;
@@ -23,7 +24,7 @@ export class UpdatePanel {
     // Otherwise, create a new panel.
     const panel = vscode.window.createWebviewPanel(
       UpdatePanel.viewType,
-      'What\'s New in Break Bully',
+      'What\'s New in DotSense',
       column || vscode.ViewColumn.One,
       {
         enableScripts: true,
@@ -75,12 +76,13 @@ export class UpdatePanel {
 
   private _update() {
     const webview = this._panel.webview;
-    this._panel.title = 'What\'s New in Break Bully';
+    this._panel.title = 'What\'s New in DotSense';
     this._panel.webview.html = this._getHtmlForWebview(webview);
   }
 
   private _getHtmlForWebview(webview: vscode.Webview) {
     // Get the local path to main script run in the webview, then convert it to a uri we can use in the webview.
+    const loggerUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'out', 'src', 'views', 'logger.js'));
     const scriptUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'out', 'src', 'views', 'updatePanel.js'));
     const styleUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'out', 'src', 'views', 'updatePanel.css'));
 
@@ -90,7 +92,7 @@ export class UpdatePanel {
     try {
       featuresContent = fs.readFileSync(featuresUpdatePath.fsPath, 'utf8');
     } catch (error) {
-      console.error('Failed to read features update:', error);
+      Logger.error('Failed to read features update:', error);
       featuresContent = '# Features Update\n\nUnable to load features update content.';
     }
 
@@ -101,10 +103,10 @@ export class UpdatePanel {
       <html lang="en">
       <head>
         <meta charset="UTF-8">
-        <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource}; script-src 'nonce-${nonce}';">
+        <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'self' 'unsafe-inline' vscode-resource: https:; script-src 'self' 'unsafe-inline' vscode-resource: https:; font-src 'self' vscode-resource: https:; img-src 'self' vscode-resource: https: data:; connect-src 'self' vscode-resource: https:;">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <link href="${styleUri}" rel="stylesheet">
-        <title>What's New in Break Bully</title>
+        <title>What's New in DotSense</title>
       </head>
       <body>
         <div class="container">
@@ -112,7 +114,7 @@ export class UpdatePanel {
             <div class="logo">
               <span class="emoji">🔄</span>
             </div>
-            <h1>What's New in Break Bully</h1>
+            <h1>What's New in DotSense</h1>
             <p>Discover the latest features and improvements</p>
           </div>
 
@@ -125,8 +127,9 @@ export class UpdatePanel {
           </div>
         </div>
 
-        <script nonce="${nonce}" src="${scriptUri}"></script>
-        <script nonce="${nonce}">
+        <script src="${loggerUri}"></script>
+        <script src="${scriptUri}"></script>
+        <script>
           // Pass features content to the script
           window.changelogContent = ${JSON.stringify(featuresContent)};
         </script>

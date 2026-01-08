@@ -1460,3 +1460,251 @@
         transform: translateY(0);
     }
 }
+
+/* ===== MOOD DETECTION SECTION ===== */
+.mood-section {
+    padding: 16px;
+    background: linear-gradient(135deg,
+        var(--vscode-editorWidget-background, #252526) 0%,
+        rgba(37, 37, 38, 0.9) 100%);
+    border-radius: 12px;
+    border: 1px solid var(--vscode-panel-border, #3e3e42);
+    position: relative;
+    overflow: hidden;
+}
+
+.mood-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg,
+        var(--vscode-charts-purple, #c586c0) 0%,
+        var(--vscode-charts-blue, #4f8bd6) 50%,
+        var(--vscode-charts-green, #89d185) 100%);
+    opacity: 0.8;
+}
+
+.mood-section h3 {
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0 0 16px 0;
+    color: var(--vscode-foreground, #d4d4d4);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.mood-section h3::before {
+    content: '🧠';
+    font-size: 18px;
+    opacity: 0.8;
+    animation: brain-pulse 2s ease-in-out infinite;
+}
+
+@keyframes brain-pulse {
+    0%, 100% { opacity: 0.8; }
+    50% { opacity: 1; transform: scale(1.1); }
+}
+
+.mood-status {
+    margin-bottom: 16px;
+}
+
+.current-mood {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    background: linear-gradient(135deg,
+        var(--vscode-editorWidget-background, #252526) 0%,
+        rgba(37, 37, 38, 0.8) 100%);
+    border-radius: 10px;
+    border: 1px solid var(--vscode-panel-border, #3e3e42);
+    position: relative;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.current-mood:hover {
+    background: linear-gradient(135deg,
+        var(--vscode-toolbar-hoverBackground, #37373d) 0%,
+        rgba(55, 55, 61, 0.9) 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+    border-color: var(--vscode-focusBorder, #0078d4);
+}
+
+.mood-emoji {
+    font-size: 32px;
+    flex-shrink: 0;
+    animation: mood-float 3s ease-in-out infinite;
+}
+
+@keyframes mood-float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-5px); }
+}
+
+.mood-info {
+    flex: 1;
+}
+
+.mood-state {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--vscode-foreground, #d4d4d4);
+    margin: 0 0 4px 0;
+    background: linear-gradient(135deg,
+        var(--vscode-charts-blue, #4f8bd6) 0%,
+        var(--vscode-charts-purple, #c586c0) 50%,
+        var(--vscode-charts-green, #89d185) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: mood-shine 4s ease-in-out infinite;
+}
+
+@keyframes mood-shine {
+    0%, 100% { filter: brightness(1); }
+    50% { filter: brightness(1.2); }
+}
+
+.mood-confidence {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--vscode-descriptionForeground, #cccccc99);
+    background: var(--vscode-badge-background, #4f8bd6);
+    padding: 2px 8px;
+    border-radius: 12px;
+    display: inline-block;
+}
+
+.mood-details {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.mood-intensity,
+.mood-triggers,
+.mood-trend {
+    font-size: 11px;
+    color: var(--vscode-descriptionForeground, #cccccc99);
+    padding: 6px 10px;
+    background: var(--vscode-editorWidget-background, #252526);
+    border-radius: 6px;
+    border: 1px solid var(--vscode-panel-border, #3e3e42);
+    text-align: center;
+}
+
+.mood-interventions h4 {
+    font-size: 14px;
+    font-weight: 600;
+    margin: 0 0 12px 0;
+    color: var(--vscode-foreground, #d4d4d4);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.mood-interventions h4::before {
+    content: '💡';
+    font-size: 16px;
+    opacity: 0.8;
+}
+
+.intervention-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+}
+
+.intervention-buttons .action-btn {
+    padding: 8px 6px;
+    font-size: 11px;
+    min-height: 48px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    text-align: center;
+    line-height: 1.2;
+}
+
+.intervention-buttons .action-btn .btn-icon {
+    font-size: 16px;
+    margin: 0;
+}
+
+.intervention-buttons .action-btn small {
+    font-size: 9px;
+    opacity: 0.8;
+    line-height: 1.1;
+    margin-top: 2px;
+}
+
+.mood-analytics-link {
+    margin-top: 16px;
+    text-align: center;
+}
+
+.mood-analytics-link .action-btn {
+    background: linear-gradient(135deg,
+        var(--vscode-charts-purple, #c586c0) 0%,
+        var(--vscode-charts-blue, #4f8bd6) 100%);
+    color: white;
+    border: none;
+    transition: all 0.3s ease;
+}
+
+.mood-analytics-link .action-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(197, 134, 192, 0.4);
+}
+
+/* Mood-specific state colors */
+.mood-state[data-mood="FRUSTRATED"] {
+    background: linear-gradient(135deg, #f44747, #d12626);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.mood-state[data-mood="STRESSED"] {
+    background: linear-gradient(135deg, #ff6b6b, #e74c3c);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.mood-state[data-mood="FATIGUED"] {
+    background: linear-gradient(135deg, #d18616, #f39c12);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.mood-state[data-mood="FOCUSED"] {
+    background: linear-gradient(135deg, #4f8bd6, #3498db);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.mood-state[data-mood="ANXIOUS"] {
+    background: linear-gradient(135deg, #c586c0, #9b59b6);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.mood-state[data-mood="CALM"] {
+    background: linear-gradient(135deg, #89d185, #27ae60);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}

@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { getConfiguration } from '../core/configuration';
+import { Logger } from './logger';
 
 export interface EnhancedNotificationOptions {
   message: string;
@@ -131,7 +132,7 @@ function playCompletionSound(): void {
     process.stdout.write('\x07'); // ASCII bell character
   } catch (error) {
     // Silently fail if beep doesn't work on this system
-    console.debug('Could not play completion sound:', error);
+    Logger.debug('Could not play completion sound:', error);
   }
 }
 

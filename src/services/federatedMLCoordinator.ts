@@ -14,6 +14,7 @@ import {
   ModelUsageRecord
 } from '../types/mlWorkRestTypes';
 import { state } from '../models/state';
+import { Logger } from '../utils/logger';
 
 /**
  * Federated ML Coordinator Service
@@ -74,7 +75,7 @@ export class FederatedMLCoordinator {
   ): Promise<boolean> {
 
     if (!privacyConsent) {
-      console.log('Federated learning contribution skipped - no privacy consent');
+      Logger.log('Federated learning contribution skipped - no privacy consent');
       return false;
     }
 
@@ -90,11 +91,11 @@ export class FederatedMLCoordinator {
         await this.processContributionBatch();
       }
 
-      console.log('✅ Federated learning contribution submitted successfully');
+      Logger.log('✅ Federated learning contribution submitted successfully');
       return true;
 
     } catch (error) {
-      console.error('❌ Failed to submit federated contribution:', error);
+      Logger.error('❌ Failed to submit federated contribution:', error);
       return false;
     }
   }
@@ -209,7 +210,7 @@ export class FederatedMLCoordinator {
       const validContributions = await this.verifyContributions(this.contributionQueue);
 
       if (validContributions.length < 3) {
-        console.log('Not enough valid contributions for aggregation');
+        Logger.log('Not enough valid contributions for aggregation');
         return;
       }
 
@@ -222,10 +223,10 @@ export class FederatedMLCoordinator {
       // Clear processed contributions
       this.contributionQueue = [];
 
-      console.log(`🔄 Global model updated with ${validContributions.length} contributions`);
+      Logger.log(`🔄 Global model updated with ${validContributions.length} contributions`);
 
     } catch (error) {
-      console.error('Failed to process contribution batch:', error);
+      Logger.error('Failed to process contribution batch:', error);
     }
   }
 
@@ -241,7 +242,7 @@ export class FederatedMLCoordinator {
           validContributions.push(contribution);
         }
       } catch (error) {
-        console.warn('Contribution verification failed:', error);
+        Logger.warn('Contribution verification failed:', error);
       }
     }
 
@@ -494,7 +495,7 @@ export class FederatedMLCoordinator {
         this.privacyConfig = storedConfig as DifferentialPrivacyConfig;
       }
     } catch (error) {
-      console.warn('Failed to load federated ML data:', error);
+      Logger.warn('Failed to load federated ML data:', error);
     }
   }
 

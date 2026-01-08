@@ -60,7 +60,7 @@ export class ActivitySettingsManager {
   }
 
   private loadSettings(): ActivitySettings {
-    const config = vscode.workspace.getConfiguration('breakBully');
+    const config = vscode.workspace.getConfiguration('dotsense');
 
     return {
       integrationLevel: config.get('activityIntegrationLevel', ActivityIntegrationLevel.NONE),
@@ -96,7 +96,7 @@ export class ActivitySettingsManager {
   }
 
   private saveSettings(): void {
-    const config = vscode.workspace.getConfiguration('breakBully');
+    const config = vscode.workspace.getConfiguration('dotsense');
 
     // Save integration level
     config.update('activityIntegrationLevel', this.settings.integrationLevel, vscode.ConfigurationTarget.Global);
@@ -128,7 +128,7 @@ export class ActivitySettingsManager {
 
   private notifySettingsChanged(): void {
     // Emit event for other components to react to settings changes
-    vscode.commands.executeCommand('breakBully.activitySettingsChanged', this.settings);
+    vscode.commands.executeCommand('dotsense.activitySettingsChanged', this.settings);
   }
 
   // Default settings for reset functionality

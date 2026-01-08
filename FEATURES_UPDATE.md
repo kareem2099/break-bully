@@ -1,4 +1,4 @@
-# Break Bully Extension - Version 1.0.3 Update
+# DotSense Extension - Version 1.0.3 Update
 
 ## 🎨 Major UI Modernization & Code Architecture Overhaul
 
@@ -146,8 +146,8 @@
 ## 🔄 Configuration Options
 
 ### New Settings Added
-- `breakBully.enableEyeExercises`: Enable/disable eye exercise features
-- `breakBully.screenBreakInterval`: Set screen break reminder interval
+- `dotsense.enableEyeExercises`: Enable/disable eye exercise features
+- `dotsense.screenBreakInterval`: Set screen break reminder interval
 - Activity monitoring sensitivity settings
 
 ### Enhanced Existing Settings
@@ -203,8 +203,8 @@
 
 ### **Configuration Settings**
 ```
-breakBully.suggestCodeTuneDuringBreaks: true/false (default: true)
-breakBully.codeTunePermanentlyIgnored: true/false (user-settable)
+dotsense.suggestCodeTuneDuringBreaks: true/false (default: true)
+dotsense.codeTunePermanentlyIgnored: true/false (user-settable)
 ```
 
 ### **Wellness Philosophy**
@@ -217,7 +217,7 @@ breakBully.codeTunePermanentlyIgnored: true/false (user-settable)
 
 ## 🎉 Summary
 
-This update transforms Break Bully from a simple reminder system into a comprehensive wellness companion that actively monitors user activity, provides intelligent break suggestions, and offers a rich set of exercise and health tracking features. The extension now provides real-time insights into user behavior and offers personalized wellness recommendations to improve productivity and health.
+This update transforms DotSense from a simple reminder system into a comprehensive wellness companion that actively monitors user activity, provides intelligent break suggestions, and offers a rich set of exercise and health tracking features. The extension now provides real-time insights into user behavior and offers personalized wellness recommendations to improve productivity and health.
 
 **Total Features Implemented**: 4 major feature sets with 11+ sub-features
 **UI Components Added**: 4 new sections with real-time updates

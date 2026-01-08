@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { getConfiguration } from '../core/configuration';
 import { state } from '../models/state';
 import { WellnessGoal, WellnessChallenge, ExerciseCategory, DifficultyLevel, CustomExercise, DailyWellnessData, WellnessInsights, WellnessTrends } from '../types';
+import { Logger } from '../utils/logger';
 
 export function initializeWellnessGoals(): void {
   // Import and call the goal service initialization
@@ -98,7 +99,20 @@ export function startScreenTimeTracking(): void {
 
     // Reset continuous time at midnight
     const today = now.toDateString();
-    const sessionDay = state.screenTimeStats.sessionStartTime?.toDateString();
+    const sessionStartTime = state.screenTimeStats.sessionStartTime;
+    let sessionDay: string | null = null;
+
+    try {
+      // Safely attempt to get session day string
+      if (sessionStartTime instanceof Date) {
+        sessionDay = sessionStartTime.toDateString();
+      } else if (typeof sessionStartTime === 'string') {
+        sessionDay = new Date(sessionStartTime).toDateString();
+      }
+    } catch (error) {
+      sessionDay = null;
+    }
+
     if (sessionDay && today !== sessionDay) {
       state.screenTimeStats.totalScreenTimeToday = 0;
       state.screenTimeStats.sessionStartTime = now;
@@ -174,7 +188,7 @@ export function setupActivityMonitoring(context: vscode.ExtensionContext): void 
           updateActivityTime();
         }
       } catch (error) {
-        console.debug('Error handling window focus change:', error);
+        Logger.debug('Error handling window focus change:', error);
         // Continue without updating activity time if there's an error
       }
     }

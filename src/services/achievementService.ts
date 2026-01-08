@@ -1,6 +1,8 @@
 import * as vscode from 'vscode';
 import { Achievement } from '../types';
 import { state } from '../models/state';
+import { Logger } from '../utils/logger';
+
 
 interface AchievementExport {
   exportDate: string;
@@ -303,7 +305,7 @@ const ACHIEVEMENT_DEFINITIONS: Omit<Achievement, 'unlockedAt' | 'progress'>[] = 
 
 export function initializeAchievements(): void {
   if (!state.storage) {
-    console.error('Storage not initialized');
+    Logger.error('Storage not initialized');
     return;
   }
 
@@ -322,7 +324,7 @@ export function initializeAchievements(): void {
 }
 
 export function checkAchievements(): void {
-  const config = vscode.workspace.getConfiguration('breakBully');
+  const config = vscode.workspace.getConfiguration('dotsense');
   if (!config.get('enableAchievements', true)) return;
 
   let newUnlocks: Achievement[] = [];
@@ -608,7 +610,7 @@ export function generateAchievementShareText(achievement: Achievement): string {
 
   return `🏆 Achievement Unlocked: ${achievement.name} ${rarityEmoji[achievement.rarity]}\n` +
          `${achievement.description}\n` +
-         `#BreakBully #Wellness #Achievement`;
+         `#DotSense #Wellness #Achievement`;
 }
 
 export function getRecentAchievements(days: number = 7): Achievement[] {
@@ -625,12 +627,12 @@ export function showAchievementsReport(): void {
 
   // Create and show achievements webview panel
   const panel = vscode.window.createWebviewPanel(
-    'breakBullyAchievements',
-    'Break Bully Achievements',
+    'dotsenseAchievements',
+    'DotSense Achievements',
     vscode.ViewColumn.One,
     {
       enableScripts: true,
-      localResourceRoots: [vscode.Uri.file(vscode.extensions.getExtension('publisher.breakbully')?.extensionPath || '')]
+      localResourceRoots: [vscode.Uri.file(vscode.extensions.getExtension('FreeRave.dotsense')?.extensionPath || '')]
     }
   );
 
@@ -643,7 +645,7 @@ export function showAchievementsReport(): void {
     message => {
       switch (message.command) {
         case 'exportAchievements':
-          vscode.commands.executeCommand('breakBully.exportAchievements');
+          vscode.commands.executeCommand('dotsense.exportAchievements');
           break;
         case 'refreshData':
           { const updatedReport = generateAchievementReport();
@@ -700,7 +702,7 @@ function generateAchievementsHtml(report: AchievementReport): string {
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Break Bully Achievements</title>
+        <title>DotSense Achievements</title>
         <style>
             body {
                 font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
@@ -1004,7 +1006,7 @@ function generateAchievementsHtml(report: AchievementReport): string {
                 const message = event.data;
                 if (message.command === 'updateReport') {
                     // Could refresh the display with new data
-                    console.log('Achievements updated:', message.data);
+                    Logger.log('Achievements updated:', message.data);
                 }
             });
         </script>

@@ -5,6 +5,7 @@ import { getConfiguration } from '../core/configuration';
 import { state } from '../models/state';
 import { ExtensionStorage } from '../utils/storage';
 import { showExerciseCompletionNotification, showExerciseProgressNotification, showExerciseStartNotification } from '../utils/notifications';
+import { Logger } from '../utils/logger';
 
 // ===== GIT INTEGRATION SERVICE =====
 
@@ -68,10 +69,10 @@ class GitIntegrationService {
       if (gitExtension) {
         await gitExtension.activate();
         this.gitExtension = gitExtension.exports.getAPI(1);
-        console.log('Git extension initialized successfully');
+        Logger.log('Git extension initialized successfully');
       }
     } catch (error) {
-      console.warn('Failed to initialize Git extension:', error);
+      Logger.warn('Failed to initialize Git extension:', error);
     }
   }
 
@@ -101,7 +102,7 @@ class GitIntegrationService {
         deletions: 0
       }));
     } catch (error) {
-      console.warn('Failed to get recent commits:', error);
+      Logger.warn('Failed to get recent commits:', error);
       return [];
     }
   }
@@ -231,7 +232,7 @@ export function resetGitSession(): void {
 
 export function showGitProductivityDashboard(): void {
   const panel = vscode.window.createWebviewPanel(
-    'breakBullyGitProductivity',
+    'dotsenseGitProductivity',
     'Git Productivity Dashboard',
     vscode.ViewColumn.One,
     {
@@ -247,11 +248,11 @@ export function showGitProductivityDashboard(): void {
     Promise.all([stats, recentCommits]).then(([stats, commits]) => {
       panel.webview.html = generateGitDashboardHtml(stats, commits);
     }).catch(error => {
-      console.error('Failed to load Git stats:', error);
+      Logger.error('Failed to load Git stats:', error);
       panel.webview.html = generateGitDashboardHtml(stats, []);
     });
   }).catch(error => {
-    console.error('Failed to get Git stats:', error);
+    Logger.error('Failed to get Git stats:', error);
     panel.webview.html = generateGitDashboardHtml({
       commitsToday: 0,
       commitsThisSession: 0,
@@ -647,7 +648,7 @@ export function initializeExerciseStorage(context: vscode.ExtensionContext): voi
   storage = new ExtensionStorage(context);
 }
 
-export function showStretchExercise(): void {
+export function showStretchExercise(extensionUri?: vscode.Uri): void {
   const stretches: StretchExercise[] = [
     {
       name: "Neck Rolls",
@@ -672,7 +673,7 @@ export function showStretchExercise(): void {
   ];
 
   const randomStretch = stretches[Math.floor(Math.random() * stretches.length)];
-  showExerciseModal('Quick Stretch', randomStretch);
+  showExerciseModal('Quick Stretch', randomStretch, extensionUri);
 }
 
 export function showBreathingExercise(): void {
@@ -740,7 +741,18 @@ export function showEyeExercise(): void {
   showExerciseModal('Eye Exercise', randomEyeExercise);
 }
 
-export function showWaterReminder(): void {
+// ===== HELPER FUNCTIONS =====
+
+function getNonce() {
+    let text = '';
+    const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    for (let i = 0; i < 32; i++) {
+        text += possible.charAt(Math.floor(Math.random() * possible.length));
+    }
+    return text;
+}
+
+export function showWaterReminder(extensionUri?: vscode.Uri): void {
   const waterTips = [
     {
       title: "💧 Hydration Break",
@@ -802,22 +814,33 @@ export function showWaterReminder(): void {
   ];
 
   const randomTip = waterTips[Math.floor(Math.random() * waterTips.length)];
-  showWaterModal(randomTip);
+  showWaterModal(randomTip, extensionUri);
 }
 
-function showExerciseModal(title: string, exercise: Exercise): void {
+function showExerciseModal(title: string, exercise: Exercise, extensionUri?: vscode.Uri): void {
   const panel = vscode.window.createWebviewPanel(
-    'breakBullyExercise',
+    'dotsenseExercise',
     title,
-    vscode.ViewColumn.One,
+    { viewColumn: vscode.ViewColumn.Active, preserveFocus: true },
     {
       enableScripts: true,
-      localResourceRoots: [vscode.Uri.file(path.join(__dirname, '..', 'views'))]
+      localResourceRoots: extensionUri ? [vscode.Uri.joinPath(extensionUri, 'out', 'src', 'views')] : [vscode.Uri.file(path.join(__dirname, '..', 'views'))]
     }
   );
 
-  const cssPath = vscode.Uri.file(path.join(__dirname, '..', 'views', 'styles.css'));
-  const cssUri = panel.webview.asWebviewUri(cssPath);
+  // Use extensionUri for resource loading if provided, otherwise fallback to __dirname
+  let loggerUri: vscode.Uri;
+  let cssUri: vscode.Uri;
+
+  if (extensionUri) {
+    loggerUri = panel.webview.asWebviewUri(vscode.Uri.joinPath(extensionUri, 'out', 'src', 'views', 'logger.js'));
+    cssUri = panel.webview.asWebviewUri(vscode.Uri.joinPath(extensionUri, 'out', 'src', 'views', 'base.css'));
+  } else {
+    const loggerPath = vscode.Uri.file(path.join(__dirname, '..', 'views', 'logger.js'));
+    const cssPath = vscode.Uri.file(path.join(__dirname, '..', 'views', 'base.css'));
+    loggerUri = panel.webview.asWebviewUri(loggerPath);
+    cssUri = panel.webview.asWebviewUri(cssPath);
+  }
 
   // Parse duration to seconds
   const durationText = exercise.duration;
@@ -827,6 +850,9 @@ function showExerciseModal(title: string, exercise: Exercise): void {
   } else if (durationText.includes('seconds')) {
     durationSeconds = parseInt(durationText.split(' ')[0]);
   }
+
+  // Use a nonce to only allow specific scripts to be run
+  const nonce = getNonce();
 
   panel.webview.html = `
     <!DOCTYPE html>
@@ -964,7 +990,7 @@ function showExerciseModal(title: string, exercise: Exercise): void {
             .timer-active .timer-display {
                 animation: pulse 1s infinite;
             }
-        </link>
+        </style>
     </head>
     <body>
         <div class="exercise-container">
@@ -1280,7 +1306,7 @@ function generateExerciseId(): string {
 
 export function showCustomExerciseCreator(): void {
   const panel = vscode.window.createWebviewPanel(
-    'breakBullyCustomExerciseCreator',
+    'dotsenseCustomExerciseCreator',
     'Create Custom Exercise',
     vscode.ViewColumn.One,
     {
@@ -1823,7 +1849,7 @@ export function showCustomExerciseCreator(): void {
 
 export function showCustomExerciseLibrary(): void {
   const panel = vscode.window.createWebviewPanel(
-    'breakBullyCustomExerciseLibrary',
+    'dotsenseCustomExerciseLibrary',
     'Custom Exercise Library',
     vscode.ViewColumn.One,
     {
@@ -2212,19 +2238,26 @@ export function showCustomExerciseLibrary(): void {
   );
 }
 
-function showWaterModal(waterTip: WaterTip): void {
+function showWaterModal(waterTip: WaterTip, extensionUri?: vscode.Uri): void {
   const panel = vscode.window.createWebviewPanel(
-    'breakBullyWater',
+    'dotsenseWater',
     waterTip.title,
-    vscode.ViewColumn.One,
+    { viewColumn: vscode.ViewColumn.Active, preserveFocus: false },
     {
       enableScripts: true,
-      localResourceRoots: [vscode.Uri.file(path.join(__dirname, '..', 'views'))]
+      localResourceRoots: extensionUri ? [vscode.Uri.joinPath(extensionUri, 'out', 'src', 'views')] : [vscode.Uri.file(path.join(__dirname, '..', 'views'))]
     }
   );
 
-  const cssPath = vscode.Uri.file(path.join(__dirname, '..', 'views', 'styles.css'));
-  const cssUri = panel.webview.asWebviewUri(cssPath);
+  // Use extensionUri for resource loading if provided, otherwise fallback to __dirname
+  let cssUri: vscode.Uri;
+
+  if (extensionUri) {
+    cssUri = panel.webview.asWebviewUri(vscode.Uri.joinPath(extensionUri, 'out', 'src', 'views', 'base.css'));
+  } else {
+    const cssPath = vscode.Uri.file(path.join(__dirname, '..', 'views', 'base.css'));
+    cssUri = panel.webview.asWebviewUri(cssPath);
+  }
 
   // Parse duration to seconds
   const durationText = waterTip.duration;
@@ -2565,3 +2598,5 @@ function showWaterModal(waterTip: WaterTip): void {
     []
   );
 }
+
+

@@ -80,10 +80,11 @@
         }
     }
 
+
     function showOnboarding() {
         // Use onboardingCompleted to check if onboarding was already finished
         if (onboardingCompleted) {
-            console.log('Onboarding already completed, skipping show');
+            Logger.log('Onboarding already completed, skipping show');
             return;
         }
 
@@ -154,7 +155,7 @@
 
         // Show welcome celebration
         setTimeout(() => {
-            showGoalCelebration('Welcome to Break Bully! 🎉\nLet\'s start building healthy coding habits together.');
+            showGoalCelebration('Welcome to DotSense! 🎉\nLet\'s start building healthy coding habits together.');
             createConfetti();
         }, 500);
 

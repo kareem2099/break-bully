@@ -232,7 +232,7 @@ function showBlockEditor(blockData) {
   selectedBlock = blockData.id || null; // Track currently selected block for editing
   // Use selectedBlock to determine if we are editing an existing block
   if (selectedBlock) {
-    console.log('Currently editing block:', selectedBlock);
+    Logger.log('Currently editing block:', selectedBlock);
   }
   const isNew = !blockData.id;
 
@@ -400,7 +400,7 @@ function handleDrop(e) {
 
   if (draggedBlockId && targetBlockId && draggedBlockId !== targetBlockId) {
     // For now, just swap positions - could be enhanced to reorder
-    console.log('Dropped', draggedBlockId, 'on', targetBlockId);
+    Logger.log('Dropped', draggedBlockId, 'on', targetBlockId);
   }
 
   document.querySelectorAll('.dragging').forEach(el => el.classList.remove('dragging'));

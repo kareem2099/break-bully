@@ -50,7 +50,7 @@
 
     // ===== STATS & STATUS UPDATES =====
     function updateStats(stats) {
-        console.log('Updating stats:', stats);
+        Logger.log('Updating stats:', stats);
 
         // Update stat values with animation
         updateStatValue('breaksTaken', stats.breaksTaken);
@@ -61,7 +61,7 @@
         if (stats.lastBreakDate) {
             const lastBreak = new Date(stats.lastBreakDate);
             const timeAgo = getTimeAgo(lastBreak);
-            console.log('Last break:', timeAgo);
+            Logger.log('Last break:', timeAgo);
         }
 
         lastUpdateTime = Date.now();
@@ -92,7 +92,7 @@
     }
 
     function updateStatus(data) {
-        console.log('Updating status:', data);
+        Logger.log('Updating status:', data);
 
         const statusIndicator = document.getElementById('statusIndicator');
         const timerSection = document.getElementById('timerSection');
@@ -102,31 +102,37 @@
         const achievementsSection = document.getElementById('achievementsSection');
 
         if (data.isEnabled) {
-            statusIndicator.classList.remove('disabled');
-            timerSection.style.display = 'block';
+            if (statusIndicator) statusIndicator.classList.remove('disabled');
+            if (timerSection) timerSection.style.display = 'block';
         } else {
-            statusIndicator.classList.add('disabled');
-            timerSection.style.display = 'none';
-            timerDisplay.textContent = 'DISABLED';
+            if (statusIndicator) statusIndicator.classList.add('disabled');
+            if (timerSection) timerSection.style.display = 'none';
+            if (timerDisplay) timerDisplay.textContent = 'DISABLED';
         }
 
         // Show/hide sections based on configuration
-        if (data.enableEyeExercises) {
-            screenTimeSection.style.display = 'block';
-        } else {
-            screenTimeSection.style.display = 'none';
+        if (screenTimeSection) {
+            if (data.enableEyeExercises) {
+                screenTimeSection.style.display = 'block';
+            } else {
+                screenTimeSection.style.display = 'none';
+            }
         }
 
-        if (data.enableGoals) {
-            goalsSection.style.display = 'block';
-        } else {
-            goalsSection.style.display = 'none';
+        if (goalsSection) {
+            if (data.enableGoals) {
+                goalsSection.style.display = 'block';
+            } else {
+                goalsSection.style.display = 'none';
+            }
         }
 
-        if (data.enableAchievements) {
-            achievementsSection.style.display = 'block';
-        } else {
-            achievementsSection.style.display = 'none';
+        if (achievementsSection) {
+            if (data.enableAchievements) {
+                achievementsSection.style.display = 'block';
+            } else {
+                achievementsSection.style.display = 'none';
+            }
         }
 
         // Always show work-rest section for now (can be made configurable later)
@@ -300,12 +306,12 @@
     // Stub functions for achievements (now opened in a full webview)
     function updateAchievements(data) {
         // Achievements are now handled in a separate webview
-        console.log('Achievements update received:', data);
+        Logger.log('Achievements update received:', data);
     }
 
     function switchAchievementTab(tabId) {
         // Achievement tabs are now handled in a separate webview
-        console.log('Switch achievement tab:', tabId);
+        Logger.log('Switch achievement tab:', tabId);
     }
 
     function updateAchievementStats(stats) {

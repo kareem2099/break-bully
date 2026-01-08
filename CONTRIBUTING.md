@@ -1,6 +1,6 @@
-# Contributing to Break Bully
+# Contributing to DotSense
 
-Want to help make Break Bully even more annoyingly effective? We welcome contributions! 🎉
+Want to help make DotSense even more annoyingly effective? We welcome contributions! 🎉
 
 ## How to Contribute
 
@@ -13,13 +13,13 @@ Found a bug that makes the bully less annoying? Please report it!
 
 **Include:**
 - VS Code version
-- Break Bully version
+- DotSense version
 - Steps to reproduce
 - Expected vs actual behavior
 - Screenshots if applicable
 
 ### ✨ Feature Requests
-Got ideas to make Break Bully more effective? We want to hear them!
+Got ideas to make DotSense more effective? We want to hear them!
 
 **Popular requests:**
 - More aggressive harassment methods
@@ -33,7 +33,7 @@ Got ideas to make Break Bully more effective? We want to hear them!
 
 #### Getting Started
 1. Fork the repository
-2. Clone your fork: `git clone https://github.com/yourusername/break-bully.git`
+2. Clone your fork: `git clone https://github.com/kareem2099/dotsense.git`
 3. Install dependencies: `npm install`
 4. Create a branch: `git checkout -b feature/your-feature-name`
 
@@ -130,7 +130,7 @@ function doStuff() {
 - **Sound Effects**: Audio harassment for maximum annoyance
 - **Screen Dimming**: Visual break enforcement
 - **Break Streak Tracking**: Shame users for missed breaks
-- **Team Features**: Synchronized break bullying
+- **Team Features**: Synchronized DotSenseing
 
 ### 🎯 Medium Priority
 - **More Personalities**: Additional bully types

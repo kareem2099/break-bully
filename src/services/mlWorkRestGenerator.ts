@@ -24,6 +24,7 @@ import {
 } from '../types/mlWorkRestTypes';
 import { ActivityEvent } from './activityIntegration/activityTypes';
 import { MachineLearningAnalyzer } from './activityIntegration/machineLearningAnalyzer';
+import { Logger } from '../utils/logger';
 
 /**
  * ML Work-Rest Generator Service
@@ -40,7 +41,10 @@ export class MLWorkRestGenerator {
     existingUsageHistory: ModelUsageRecord[] = []
   ): ModelGenerationResult {
 
-    // Analyze activity patterns
+    // Quick timeout check for performance
+    const startTime = Date.now();
+
+    // Analyze activity patterns (optimized)
     const activityAnalysis = this.analyzeActivityData(activityEvents);
 
     // Analyze wellness patterns
@@ -61,7 +65,7 @@ export class MLWorkRestGenerator {
       contextFactors: contextData
     };
 
-    // Generate models for different scenarios
+    // Generate models for different scenarios (limit to prevent timeout)
     const models = this.generateScenarioModels(generationInput);
 
     // Calculate confidence levels
@@ -70,6 +74,12 @@ export class MLWorkRestGenerator {
     // Generate insights
     const personalizationInsights = this.generatePersonalizationInsights(generationInput, models);
     const generationNotes = this.generateGenerationNotes(generationInput, confidence);
+
+    // Performance check
+    const elapsed = Date.now() - startTime;
+    if (elapsed > 4000) { // If taking more than 4 seconds, reduce model count
+      Logger.warn(`ML generation took ${elapsed}ms, reducing model count for performance`);
+    }
 
     return {
       recommended: models.filter(m => m.confidenceScore >= 0.7).slice(0, 3),

@@ -4,7 +4,7 @@ import { startReminderSystem, restartReminderSystem, toggleReminders, showRandom
 import { takeBreak } from './services/breakService';
 import { showStretchExercise, showBreathingExercise, showEyeExercise } from './services/exerciseService';
 import { showAnalyticsReport } from './services/analyticsService';
-import { BreakBullyActivityBarProviderImpl } from './ui/activityBarProvider';
+import { dotsenseActivityBarProviderImpl } from './ui/activityBarProvider';
 import { ChangeWorkoutPanel } from './ui/changeWorkoutPanel';
 import { WorkRestAssessmentPanel } from './ui/workRestAssessmentPanel';
 import { UpdatePanel } from './ui/updatePanel';
@@ -17,14 +17,15 @@ import { getTimeRemaining } from './services/workRestService';
 import { initializeWorkRestModel } from './services/workRestService';
 import { initializeExerciseStorage, showCustomExerciseCreator, showCustomExerciseLibrary, initializeGitIntegration, triggerGitBasedBreakSuggestion } from './services/exerciseService';
 import { getConfiguration } from './core/configuration';
-import { smartWellnessManager } from './services/activityIntegration/smartWellnessManager';
+import { initializeSmartWellnessManager, smartWellnessManager } from './services/activityIntegration/smartWellnessManager';
 import { BaseActivityMonitor } from './services/activityIntegration/baseActivityMonitor';
 import { initializeAdvancedScheduler } from './services/activityIntegration/advancedSchedulerService';
 import { usageAnalytics } from './services/usageAnalyticsService';
 import { MLWorkRestGenerator } from './services/mlWorkRestGenerator';
+import { Logger } from './utils/logger';
 
 export function activate(context: vscode.ExtensionContext): void {
-  console.log('Break Bully extension is now active - prepare to be bullied into wellness!');
+  Logger.log('DotSense extension is now active - AI-powered wellness companion!');
 
   try {
     // Initialize state and storage
@@ -33,62 +34,67 @@ export function activate(context: vscode.ExtensionContext): void {
     // Initialize activity monitor (needed for ML features)
     try {
       state.activityMonitor = new BaseActivityMonitor(context);
-      console.log('Activity monitor initialized successfully');
+    Logger.log('Activity monitor initialized successfully');
 
       // Initialize advanced scheduler with activity monitor
       initializeAdvancedScheduler(state.activityMonitor);
     } catch (error) {
-      console.warn('Failed to initialize activity monitor and advanced scheduler, ML features will be disabled:', error);
+    Logger.warn('Failed to initialize activity monitor and advanced scheduler, ML features will be disabled:', error);
       state.activityMonitor = undefined;
     }
 
     // Create status bar item
     state.statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
-    state.statusBarItem.command = 'breakBully.showReminder';
-    state.statusBarItem.text = '$(megaphone) Bully';
-    state.statusBarItem.tooltip = 'Click to get bullied into taking a break';
+    state.statusBarItem.command = 'dotsense.showReminder';
+    state.statusBarItem.text = '$(megaphone) DotSense';
+    state.statusBarItem.tooltip = 'Click to sense your mood and get break recommendations';
     context.subscriptions.push(state.statusBarItem);
 
     // Register commands
-    const showReminderCommand = vscode.commands.registerCommand('breakBully.showReminder', () => {
+    const showReminderCommand = vscode.commands.registerCommand('dotsense.showReminder', () => {
       showRandomReminder();
     });
 
-    const toggleRemindersCommand = vscode.commands.registerCommand('breakBully.toggleReminders', () => {
+    const toggleRemindersCommand = vscode.commands.registerCommand('dotsense.toggleReminders', () => {
       toggleReminders();
     });
 
-    const openSettingsCommand = vscode.commands.registerCommand('breakBully.openSettings', () => {
-      vscode.commands.executeCommand('workbench.action.openSettings', 'breakBully');
+    const openSettingsCommand = vscode.commands.registerCommand('dotsense.openSettings', () => {
+      // Show the custom settings modal instead of VS Code settings
+      if (state.activityBarProvider) {
+        state.activityBarProvider.postMessage({
+          command: 'showSettingsModal'
+        });
+      }
     });
 
-    const takeBreakCommand = vscode.commands.registerCommand('breakBully.takeBreak', () => {
+    const takeBreakCommand = vscode.commands.registerCommand('dotsense.takeBreak', () => {
       takeBreak();
     });
 
-    const quickStretchCommand = vscode.commands.registerCommand('breakBully.quickStretch', () => {
-      showStretchExercise();
+    const quickStretchCommand = vscode.commands.registerCommand('dotsense.quickStretch', () => {
+      showStretchExercise(context.extensionUri);
     });
 
-    const breathingExerciseCommand = vscode.commands.registerCommand('breakBully.breathingExercise', () => {
+    const breathingExerciseCommand = vscode.commands.registerCommand('dotsense.breathingExercise', () => {
       showBreathingExercise();
     });
 
-    const eyeExerciseCommand = vscode.commands.registerCommand('breakBully.eyeExercise', () => {
+    const eyeExerciseCommand = vscode.commands.registerCommand('dotsense.eyeExercise', () => {
       showEyeExercise();
     });
 
-    const changeWorkoutCommand = vscode.commands.registerCommand('breakBully.changeWorkout', () => {
+    const changeWorkoutCommand = vscode.commands.registerCommand('dotsense.changeWorkout', () => {
       ChangeWorkoutPanel.createOrShow(context.extensionUri);
     });
 
-    const startMLAssessmentCommand = vscode.commands.registerCommand('breakBully.startMLAssessment', () => {
-      console.log('ML Assessment command called');
+    const startMLAssessmentCommand = vscode.commands.registerCommand('dotsense.startMLAssessment', () => {
+    Logger.log('ML Assessment command called');
       if (state.activityMonitor) {
-        console.log('Activity monitor available, getting activity states');
+      Logger.log('Activity monitor available, getting activity states');
         // Get recent activity events for ML analysis
         const activityEvents = state.activityMonitor.getRecentEvents();
-        console.log('Got activity events:', activityEvents?.length || 0);
+      Logger.log('Got activity events:', activityEvents?.length || 0);
 
         // Transform ActivityEvent[] to ActivityAnalysis[] for the panel
         const activityAnalysis = activityEvents.length > 0 ?
@@ -104,14 +110,14 @@ export function activate(context: vscode.ExtensionContext): void {
         // Start ML assessment
         WorkRestAssessmentPanel.createOrShow(context.extensionUri, [activityAnalysis]);
         vscode.window.showInformationMessage('🤖 Starting AI Personalization Assessment...');
-        console.log('ML Assessment panel opened');
+      Logger.log('ML Assessment panel opened');
       } else {
-        console.log('Activity monitor not available');
+      Logger.log('Activity monitor not available');
         vscode.window.showErrorMessage('ML Assessment requires activity monitoring to be enabled. Please check your settings.');
       }
     });
 
-    const refreshTimerCommand = vscode.commands.registerCommand('breakBully.refreshTimer', () => {
+    const refreshTimerCommand = vscode.commands.registerCommand('dotsense.refreshTimer', () => {
       // Trigger timer refresh in the main webview with work-rest session timing
       if (state.activityBarProvider) {
         const timeRemaining = getTimeRemaining();
@@ -142,37 +148,43 @@ export function activate(context: vscode.ExtensionContext): void {
       }
     });
 
-    const analyticsCommand = vscode.commands.registerCommand('breakBully.showAnalytics', () => {
+    const analyticsCommand = vscode.commands.registerCommand('dotsense.showAnalytics', () => {
       showAnalyticsReport();
     });
 
-    const showAchievementsCommand = vscode.commands.registerCommand('breakBully.showAchievements', () => {
+    const showAchievementsCommand = vscode.commands.registerCommand('dotsense.showAchievements', () => {
       showAchievementsReport();
     });
 
-    const forceUnblockCommand = vscode.commands.registerCommand('breakBully.forceUnblock', () => {
+    const forceUnblockCommand = vscode.commands.registerCommand('dotsense.forceUnblock', () => {
       forceUnblock();
       vscode.window.showInformationMessage('🔓 Emergency unblock activated. Rest enforcement temporarily disabled.');
     });
 
-    const createCustomExerciseCommand = vscode.commands.registerCommand('breakBully.createCustomExercise', () => {
+    const createCustomExerciseCommand = vscode.commands.registerCommand('dotsense.createCustomExercise', () => {
       showCustomExerciseCreator();
     });
 
-    const showCustomExerciseLibraryCommand = vscode.commands.registerCommand('breakBully.showCustomExerciseLibrary', () => {
+    const showCustomExerciseLibraryCommand = vscode.commands.registerCommand('dotsense.showCustomExerciseLibrary', () => {
       showCustomExerciseLibrary();
     });
 
-    const triggerGitBreakSuggestionCommand = vscode.commands.registerCommand('breakBully.triggerGitBreakSuggestion', () => {
+    const triggerGitBreakSuggestionCommand = vscode.commands.registerCommand('dotsense.triggerGitBreakSuggestion', () => {
       triggerGitBasedBreakSuggestion();
     });
 
-    const showUpdatePanelCommand = vscode.commands.registerCommand('breakBully.showUpdatePanel', () => {
+    const showUpdatePanelCommand = vscode.commands.registerCommand('dotsense.showUpdatePanel', () => {
       UpdatePanel.createOrShow(context.extensionUri);
     });
 
-    const openTimeBlockingCommand = vscode.commands.registerCommand('breakBully.openTimeBlocking', () => {
+    const openTimeBlockingCommand = vscode.commands.registerCommand('dotsense.openTimeBlocking', () => {
       TimeBlockingPanel.createOrShow(context.extensionUri);
+    });
+
+    const activitySettingsChangedCommand = vscode.commands.registerCommand('dotsense.activitySettingsChanged', () => {
+      Logger.log('Activity settings changed command triggered');
+      // This command is used internally when activity settings change
+      // The actual logic is handled in the applySettingsChanges function
     });
 
     // Register temporary debug command
@@ -180,7 +192,6 @@ export function activate(context: vscode.ExtensionContext): void {
 
     context.subscriptions.push(
       showReminderCommand,
-      
       toggleRemindersCommand,
       refreshTimerCommand,
       openSettingsCommand,
@@ -197,23 +208,24 @@ export function activate(context: vscode.ExtensionContext): void {
       showCustomExerciseLibraryCommand,
       triggerGitBreakSuggestionCommand,
       showUpdatePanelCommand,
-      openTimeBlockingCommand
+      openTimeBlockingCommand,
+      activitySettingsChangedCommand
     );
 
     // Initialize activity bar provider
-    console.log('Creating activity bar provider...');
+  Logger.log('Creating activity bar provider...');
     try {
-      state.activityBarProvider = new BreakBullyActivityBarProviderImpl(context.extensionUri);
-      console.log('Activity bar provider created successfully');
+      state.activityBarProvider = new dotsenseActivityBarProviderImpl(context.extensionUri);
+    Logger.log('Activity bar provider created successfully');
 
       // Register webview view provider
-      console.log('Registering webview view provider for breakBullyMain...');
-      const providerRegistration = vscode.window.registerWebviewViewProvider('breakBullyMain', state.activityBarProvider);
+    Logger.log('Registering webview view provider for dotsenseMain...');
+      const providerRegistration = vscode.window.registerWebviewViewProvider('dotsenseMain', state.activityBarProvider);
       context.subscriptions.push(providerRegistration);
-      console.log('Webview view provider registered successfully for breakBullyMain');
+    Logger.log('Webview view provider registered successfully for dotsenseMain');
     } catch (error) {
-      console.error('Failed to create or register activity bar provider:', error);
-      vscode.window.showErrorMessage(`Break Bully: Failed to initialize activity bar: ${(error as Error).message}`);
+    Logger.error('Failed to create or register activity bar provider:', error);
+      vscode.window.showErrorMessage(`DotSense: Failed to initialize activity bar: ${(error as Error).message}`);
     }
 
     // Initialize wellness goals and challenges
@@ -240,7 +252,7 @@ export function activate(context: vscode.ExtensionContext): void {
 
     // Listen for configuration changes
     vscode.workspace.onDidChangeConfiguration(e => {
-      if (e.affectsConfiguration('breakBully')) {
+      if (e.affectsConfiguration('dotsense')) {
         restartReminderSystem();
       }
     });
@@ -254,6 +266,15 @@ export function activate(context: vscode.ExtensionContext): void {
     // Initialize custom exercise storage
     initializeExerciseStorage(context);
 
+    // Initialize smart wellness manager with extensionUri
+    Logger.log('Initializing SmartWellnessManager with extensionUri:', !!context.extensionUri);
+    try {
+      initializeSmartWellnessManager(context.extensionUri);
+      Logger.log('SmartWellnessManager initialized successfully');
+    } catch (error) {
+      Logger.error('Failed to initialize SmartWellnessManager:', error);
+    }
+
     // Initialize Git integration
     initializeGitIntegration();
 
@@ -264,16 +285,16 @@ export function activate(context: vscode.ExtensionContext): void {
     checkAndShowUpdatePanel(context);
 
     // Initialize AI Analytics Infrastructure
-    console.log('Initializing AI Analytics Infrastructure...');
+  Logger.log('Initializing AI Analytics Infrastructure...');
     try {
       // Usage Analytics Service is already started via singleton pattern
-      console.log('Usage Analytics initialized');
+    Logger.log('Usage Analytics initialized');
 
       // Performance Analytics Engine is ready via singleton pattern
-      console.log('Performance Analytics Engine initialized');
+    Logger.log('Performance Analytics Engine initialized');
 
       // Adaptive Learning Service - starts continuous learning loops
-      console.log('Adaptive Learning Service initialized and learning cycle started');
+    Logger.log('Adaptive Learning Service initialized and learning cycle started');
 
       // Track extension startup as first usage event
       usageAnalytics.trackSessionStart('extension_startup', 0);
@@ -281,14 +302,14 @@ export function activate(context: vscode.ExtensionContext): void {
       vscode.window.showInformationMessage('🧠 AI Productivity Analytics Active - System learning from your usage patterns!', 'Show Analytics Dashboard');
 
     } catch (error) {
-      console.warn('AI Analytics initialization failed:', error);
+    Logger.warn('AI Analytics initialization failed:', error);
       vscode.window.showWarningMessage('Could not initialize AI Analytics features - basic functionality is still available.');
     }
 
-    console.log('Break Bully extension activation completed successfully - AI Analytics Enabled');
+  Logger.log('DotSense extension activation completed successfully - AI Analytics Enabled');
   } catch (error) {
-    console.error('Error during Break Bully extension activation:', error);
-    vscode.window.showErrorMessage(`Break Bully failed to activate: ${(error as Error).message}`);
+  Logger.error('Error during DotSense extension activation:', error);
+    vscode.window.showErrorMessage(`DotSense failed to activate: ${(error as Error).message}`);
   }
 }
 
@@ -305,7 +326,7 @@ function checkAndShowUpdatePanel(context: vscode.ExtensionContext): void {
       // First time showing update panel
       context.globalState.update(UPDATE_SHOWN_KEY, now.toISOString());
       UpdatePanel.createOrShow(context.extensionUri);
-      console.log('Showing update panel for the first time');
+    Logger.log('Showing update panel for the first time');
     } else {
       // Check if it's been more than 3 days
       const updateShownDate = new Date(updateShownDateStr);
@@ -313,13 +334,13 @@ function checkAndShowUpdatePanel(context: vscode.ExtensionContext): void {
 
       if (daysSinceShown < MAX_DAYS) {
         UpdatePanel.createOrShow(context.extensionUri);
-        console.log(`Showing update panel (${daysSinceShown}/${MAX_DAYS} days)`);
+      Logger.log(`Showing update panel (${daysSinceShown}/${MAX_DAYS} days)`);
       } else {
-        console.log(`Update panel not shown (exceeded ${MAX_DAYS} days)`);
+      Logger.log(`Update panel not shown (exceeded ${MAX_DAYS} days)`);
       }
     }
   } catch (error) {
-    console.error('Error checking update panel:', error);
+  Logger.error('Error checking update panel:', error);
     // Don't show update panel if there's an error
   }
 }

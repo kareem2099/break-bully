@@ -10,6 +10,7 @@ import {
 } from '../types/mlWorkRestTypes';
 import { performanceAnalytics, PerformanceAnalyticsEngine } from './performanceAnalyticsEngine';
 import { usageAnalytics, UsageAnalyticsService } from './usageAnalyticsService';
+import { Logger } from '../utils/logger';
 
 /**
  * Adaptive Learning Service
@@ -29,7 +30,7 @@ export class AdaptiveLearningService {
       this.analyticsEngine = performanceAnalytics;
       this.usageService = usageAnalytics;
     } catch (error) {
-      console.warn('Failed to initialize analytics dependencies:', error);
+      Logger.warn('Failed to initialize analytics dependencies:', error);
       this.analyticsEngine = null;
       this.usageService = null;
     }
@@ -52,7 +53,7 @@ export class AdaptiveLearningService {
 
     // Listen for configuration changes that might affect learning
     vscode.workspace.onDidChangeConfiguration(config => {
-      if (config.affectsConfiguration('breakBully.adaptiveLearning')) {
+      if (config.affectsConfiguration('dotsense.adaptiveLearning')) {
         this.handleConfigUpdate();
       }
     });
@@ -65,7 +66,7 @@ export class AdaptiveLearningService {
     try {
       // Check if dependencies are available
       if (!this.analyticsEngine) {
-        console.warn('Analytics engine not available - skipping adaptive learning cycle');
+        Logger.warn('Analytics engine not available - skipping adaptive learning cycle');
         return;
       }
 
@@ -84,10 +85,10 @@ export class AdaptiveLearningService {
       // Monitor impact of recent adaptations
       this.monitorAdaptationImpact();
 
-      console.log(`Adaptive learning cycle completed. ${adaptationOpportunities.length} potential improvements identified.`);
+      Logger.log(`Adaptive learning cycle completed. ${adaptationOpportunities.length} potential improvements identified.`);
 
     } catch (error) {
-      console.error('Adaptive learning loop error:', error);
+      Logger.error('Adaptive learning loop error:', error);
     }
   }
 
@@ -104,7 +105,7 @@ export class AdaptiveLearningService {
     // 1. Analyze model effectiveness and suggest switches
     if (performanceReport.modelPerformance.models && performanceReport.summary.mostEffectiveModel) {
       const mostEffective = performanceReport.summary.mostEffectiveModel;
-      const currentConfig = vscode.workspace.getConfiguration('breakBully');
+      const currentConfig = vscode.workspace.getConfiguration('dotsense');
       const currentModel = currentConfig.get('workRestModel') as string;
 
       if (currentModel !== mostEffective) {
@@ -210,14 +211,14 @@ export class AdaptiveLearningService {
 
     // Log performance insights for tracking adaptation effectiveness
     const productivityScore = performanceReport?.summary?.overallProductivityScore || 0;
-    console.log(`Starting adaptation execution with performance baseline: ${productivityScore}% productivity score`);
+    Logger.log(`Starting adaptation execution with performance baseline: ${productivityScore}% productivity score`);
 
     for (const opportunity of opportunities) {
       try {
         // Use performance report to prioritize adaptations based on current metrics
         const completionRate = performanceReport?.summary?.averageCompletionRate || 0;
         if (opportunity.priority === 'high' && completionRate < 70) {
-          console.log(`Prioritizing ${opportunity.type} due to low completion rate: ${completionRate}%`);
+          Logger.log(`Prioritizing ${opportunity.type} due to low completion rate: ${completionRate}%`);
         }
 
         // Create adaptation record
@@ -250,10 +251,10 @@ export class AdaptiveLearningService {
           );
         }
 
-        console.log(`Adaptive improvement executed: ${opportunity.description}`);
+        Logger.log(`Adaptive improvement executed: ${opportunity.description}`);
 
       } catch (error) {
-        console.error(`Failed to execute adaptation ${opportunity.type}:`, error);
+        Logger.error(`Failed to execute adaptation ${opportunity.type}:`, error);
       }
     }
   }
@@ -285,7 +286,7 @@ export class AdaptiveLearningService {
    * Execute different types of adaptations
    */
   private async executeModelSwitch(data: ModelSwitchData): Promise<void> {
-    const config = vscode.workspace.getConfiguration('breakBully');
+    const config = vscode.workspace.getConfiguration('dotsense');
     await config.update('workRestModel', data.targetModel, vscode.ConfigurationTarget.Global);
 
     // Notify user about the change
@@ -306,7 +307,7 @@ export class AdaptiveLearningService {
 
     state.storage?.saveCustomSetting('contextualPreferences', preferences);
 
-    console.log(`Context optimization stored: ${data.timeSlot} -> ${data.recommendedModel}`);
+    Logger.log(`Context optimization stored: ${data.timeSlot} -> ${data.recommendedModel}`);
   }
 
   private async executeEnergyAdaptation(data: EnergyAdaptationData): Promise<void> {
@@ -319,7 +320,7 @@ export class AdaptiveLearningService {
 
     state.storage?.saveCustomSetting('energyAdaptations', energySettings);
 
-    console.log(`Energy adaptation activated: ${data.energyLevel} energy periods`);
+    Logger.log(`Energy adaptation activated: ${data.energyLevel} energy periods`);
   }
 
   private async executeTrendResponse(data: TrendResponseData): Promise<void> {
@@ -346,7 +347,7 @@ export class AdaptiveLearningService {
       try {
         await this.executeSpecificAdaptation(opportunity.type, opportunity.data);
       } catch (error) {
-        console.error(`Failed to execute trend response adaptation: ${error}`);
+        Logger.error(`Failed to execute trend response adaptation: ${error}`);
       }
     }
 
@@ -367,7 +368,7 @@ export class AdaptiveLearningService {
 
     state.storage?.saveCustomSetting('behavioralAdaptations', behaviorSettings);
 
-    console.log(`Behavioral adaptation: ${data.shift}`);
+    Logger.log(`Behavioral adaptation: ${data.shift}`);
   }
 
   /**
@@ -405,7 +406,7 @@ export class AdaptiveLearningService {
       if (impact.overallImprovement > 0) {
         // Successful adaptation - maintain it
         adaptation.status = 'successful';
-        console.log(`Adaptation successful: ${adaptation.opportunity.description} (+${impact.overallImprovement.toFixed(1)}%)`);
+        Logger.log(`Adaptation successful: ${adaptation.opportunity.description} (+${impact.overallImprovement.toFixed(1)}%)`);
       } else {
         // Unsuccessful - consider rollback
         adaptation.status = 'needs_rollback';
@@ -448,7 +449,7 @@ export class AdaptiveLearningService {
     };
 
     // Log rollback details for tracking
-    console.log(`Scheduling rollback for adaptation ${adaptation.id}: ${rollbackOpportunity.description} with ${rollbackOpportunity.confidence}% confidence`);
+    Logger.log(`Scheduling rollback for adaptation ${adaptation.id}: ${rollbackOpportunity.description} with ${rollbackOpportunity.confidence}% confidence`);
 
     // Schedule immediate rollback
     setTimeout(() => this.rollbackAdaptation(adaptation), 1000);
@@ -470,10 +471,10 @@ export class AdaptiveLearningService {
         `Returning to previous settings.`
       );
 
-      console.log(`Adaptation rolled back: ${adaptation.opportunity.description}`);
+      Logger.log(`Adaptation rolled back: ${adaptation.opportunity.description}`);
 
     } catch (error) {
-      console.error('Failed to rollback adaptation:', error);
+      Logger.error('Failed to rollback adaptation:', error);
     }
   }
 
@@ -487,7 +488,7 @@ export class AdaptiveLearningService {
       case 'model_switch': {
         // Revert to previous model
         const modelData = adaptation.opportunity.data as ModelSwitchData;
-        const config = vscode.workspace.getConfiguration('breakBully');
+        const config = vscode.workspace.getConfiguration('dotsense');
         await config.update('workRestModel', modelData.currentModel, vscode.ConfigurationTarget.Global);
         break;
       }
@@ -506,7 +507,7 @@ export class AdaptiveLearningService {
 
       case 'trend_response': {
         // Rollback all trend-related changes (complex - simplified for now)
-        console.log('Complex trend response rollback - manual intervention may be needed');
+        Logger.log('Complex trend response rollback - manual intervention may be needed');
         break;
       }
 
@@ -532,7 +533,7 @@ export class AdaptiveLearningService {
     adaptationInsights: string[];
   }> {
     if (!this.analyticsEngine) {
-      console.warn('Analytics engine not available for personalized recommendations');
+      Logger.warn('Analytics engine not available for personalized recommendations');
       return {
         primaryRecommendation: 'pomodoro-classic',
         confidence: 0.5,
@@ -575,7 +576,7 @@ export class AdaptiveLearningService {
    */
   generatePersonalizedInsights(userId: string): PersonalizedInsights[] {
     if (!this.analyticsEngine) {
-      console.warn('Analytics engine not available for personalized insights');
+      Logger.warn('Analytics engine not available for personalized insights');
       return [{
         userId,
         insightType: 'optimization_opportunity',
@@ -630,7 +631,7 @@ export class AdaptiveLearningService {
       });
     }
 
-    console.log(`Generated ${insights.length} personalized insights for user ${userId}`);
+    Logger.log(`Generated ${insights.length} personalized insights for user ${userId}`);
     return insights;
   }
 
@@ -638,7 +639,7 @@ export class AdaptiveLearningService {
    * Handle configuration updates that affect learning
    */
   private handleConfigUpdate(): void {
-    const config = vscode.workspace.getConfiguration('breakBully.adaptiveLearning');
+    const config = vscode.workspace.getConfiguration('dotsense.adaptiveLearning');
 
     if (config.get('enabled') === false) {
       // Disable adaptive learning
@@ -699,7 +700,7 @@ export class AdaptiveLearningService {
 
   private captureCurrentMetrics(): PerformanceMetrics {
     if (!this.analyticsEngine) {
-      console.warn('Analytics engine not available for metrics capture');
+      Logger.warn('Analytics engine not available for metrics capture');
       return {
         productivityScore: 75, // Default value
         averageSatisfaction: 4.0,
@@ -766,7 +767,7 @@ export class AdaptiveLearningService {
       });
     }
 
-    console.log(`Generated ${solutions.length} trend solutions based on analysis of ${Object.keys(trends).length} trend metrics`);
+    Logger.log(`Generated ${solutions.length} trend solutions based on analysis of ${Object.keys(trends).length} trend metrics`);
 
     return solutions;
   }
@@ -799,7 +800,7 @@ export class AdaptiveLearningService {
     }
 
     // Log context usage for debugging
-    console.log(`Generated ${insights.length} adaptation insights using ${Object.keys(context || {}).length} context parameters`);
+    Logger.log(`Generated ${insights.length} adaptation insights using ${Object.keys(context || {}).length} context parameters`);
 
     insights.push(`AI has identified ${performanceReport.recommendations.immediateActions.length} immediate optimization opportunities`);
 

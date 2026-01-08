@@ -17,7 +17,7 @@ export class FlowStateDetector {
 
     const settings = activitySettings.getSettings();
     const now = Date.now();
-    const flowDetectionWindow = vscode.workspace.getConfiguration('breakBully').get('flowDetectionWindow', 20);
+    const flowDetectionWindow = vscode.workspace.getConfiguration('dotsense').get('flowDetectionWindow', 20);
     const twentyMinutesAgo = now - (flowDetectionWindow * 60 * 1000);
 
     // Get events from last N minutes

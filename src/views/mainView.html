@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Break Bully</title>
+    <title>DotSense</title>
     <link rel="stylesheet" href="base.css">
     <link rel="stylesheet" href="components.css">
     <link rel="stylesheet" href="features.css">
@@ -14,7 +14,7 @@
     <div class="onboarding-overlay hidden" id="onboardingOverlay">
         <div class="onboarding-modal">
             <div class="onboarding-header">
-                <h2>Welcome to Break Bully! 🎉</h2>
+                <h2>Welcome to DotSense! 🎉</h2>
                 <p>Your personal wellness companion for healthier coding habits</p>
             </div>
 
@@ -22,7 +22,7 @@
                 <div class="onboarding-step active" data-step="1">
                     <div class="step-icon">🎯</div>
                     <h3>Choose Your Work-Rest Model</h3>
-                    <p><strong>This is the core of Break Bully!</strong> Select a scientifically-backed work-rest model that fits your needs. You'll follow structured cycles with mandatory rest periods.</p>
+                    <p><strong>This is the core of DotSense!</strong> Select a scientifically-backed work-rest model that fits your needs. You'll follow structured cycles with mandatory rest periods.</p>
                     <div class="work-rest-onboarding">
                         <select id="onboardingWorkRestSelect" style="width: 100%; padding: 8px; margin: 10px 0; border-radius: 4px;">
                             <option value="">Select your preferred model...</option>
@@ -37,7 +37,7 @@
                 <div class="onboarding-step" data-step="2">
                     <div class="step-icon">🛡️</div>
                     <h3>Strict Enforcement System</h3>
-                    <p>Break Bully will <strong>strictly enforce</strong> your chosen work-rest cycles. During rest periods, coding activity is monitored and blocked based on your annoyance level settings.</p>
+                    <p>DotSense will <strong>strictly enforce</strong> your chosen work-rest cycles. During rest periods, coding activity is monitored and blocked based on your annoyance level settings.</p>
                     <div class="feature-preview">
                         <div class="enforcement-preview">
                             <div style="background: #ff6b6b20; padding: 10px; border-radius: 4px; margin: 5px 0;">
@@ -86,7 +86,7 @@
                 <div class="onboarding-step" data-step="5">
                     <div class="step-icon">🚀</div>
                     <h3>You're All Set!</h3>
-                    <p>Break Bully will now enforce healthy work-rest cycles. Your chosen model will guide structured breaks for optimal health and productivity.</p>
+                    <p>DotSense will now enforce healthy work-rest cycles. Your chosen model will guide structured breaks for optimal health and productivity.</p>
                     <div class="feature-preview">
                         <div class="final-preview">
                             <div class="final-item">🎯 Work-Rest cycles enforced</div>
@@ -114,7 +114,7 @@
 
     <div class="container">
         <div class="header">
-            <h1 class="title">Break Bully</h1>
+            <h1 class="title">DotSense</h1>
             <div class="status-indicator" id="statusIndicator"></div>
             <div class="current-time" id="currentTime">
                 <div class="time-display" id="timeDisplay">--:--:--</div>
@@ -279,9 +279,23 @@
                                 <span class="option-content">
                                     <strong>○ Advanced Analytics</strong><br>
                                     <small>📈 AI-powered insights & personalized recommendations</small><br>
+                                    <small>🧠 Includes mood detection from typing patterns</small><br>
                                     <small class="performance-note">⚙️ Higher performance impact</small>
                                 </span>
                             </label>
+                        </div>
+
+                        <div class="mood-detection-setup" style="background: var(--vscode-textBlockQuote-background, #f0f0f0); border: 1px solid var(--vscode-textBlockQuote-border, #c8c8c8); border-radius: 6px; padding: 12px; margin-top: 12px;">
+                            <h4 style="margin: 0 0 8px 0; color: var(--vscode-textLink-foreground, #3794ff);">💡 Mood Detection Setup</h4>
+                            <p style="margin: 0 0 6px 0; font-size: 12px; color: var(--vscode-descriptionForeground, #cccccc99);">
+                                <strong>To enable mood detection:</strong>
+                            </p>
+                            <ol style="margin: 0; padding-left: 16px; font-size: 11px; color: var(--vscode-descriptionForeground, #cccccc99);">
+                                <li>Select "○ Advanced Analytics" above</li>
+                                <li>Click "💾 Save Settings"</li>
+                                <li>Type code for 10-15 minutes</li>
+                                <li>Mood detection will activate automatically</li>
+                            </ol>
                         </div>
                     </div>
 
@@ -312,7 +326,7 @@
                             <em>"Hello beautiful souls! 🙏</em>
                         </p>
                         <p>
-                            I'm Kareem, the creator of Break Bully, and this extension represents my passion for building AI that genuinely helps people. But today, I need to share something even more important from my heart...
+                            I'm Kareem, the creator of DotSense, and this extension represents my passion for building AI that genuinely helps people. But today, I need to share something even more important from my heart...
                         </p>
                         <p>
                             I've found the love of my life - an amazing woman who has captured my heart completely. Every great love story deserves a beautiful beginning, and I need your help to make our wedding dreams come true! 💒💍
@@ -413,6 +427,37 @@
                     <span class="session-time" id="sessionTime">--:--</span>
                     <span class="session-label">Current session</span>
                 </div>
+            </div>
+        </div>
+
+        <!-- Mood Detection Section -->
+        <div class="mood-section" id="moodSection" title="💡 Mood Detection Setup: 1. Click Settings → 2. Activity Integration → 3. Advanced Analytics → 4. Type 10-15 min">
+            <h3>🧠 Mood Detection</h3>
+            <div class="mood-status" id="moodStatus">
+                <div class="current-mood" id="currentMoodDisplay" title="AI analyzes your typing patterns to detect emotional state">
+                    <div class="mood-emoji" id="moodEmoji">🤔</div>
+                    <div class="mood-info">
+                        <div class="mood-state" id="moodState">Analyzing...</div>
+                        <div class="mood-confidence" id="moodConfidence">--%</div>
+                    </div>
+                </div>
+                <div class="mood-details" id="moodDetails">
+                    <div class="mood-intensity" id="moodIntensity" title="Emotional intensity level (1-10)">Intensity: --</div>
+                    <div class="mood-triggers" id="moodTriggers" title="What triggered this emotional state">Triggers: --</div>
+                    <div class="mood-trend" id="moodTrend" title="Emotional trend over time">Trend: --</div>
+                </div>
+            </div>
+            <div class="mood-interventions" id="moodInterventions">
+                <h4>💡 Suggested Interventions</h4>
+                <div class="intervention-buttons" id="interventionButtons">
+                    <!-- Interventions will be populated dynamically -->
+                </div>
+            </div>
+            <div class="mood-analytics-link">
+                <button class="action-btn secondary" onclick="showMoodAnalytics()" title="View detailed mood analytics and patterns"></button>
+                    <span class="btn-icon">📊</span>
+                    Mood Analytics
+                </button>
             </div>
         </div>
 
@@ -701,9 +746,38 @@
     <!-- Celebration Elements -->
     <div class="confetti-container" id="confettiContainer"></div>
 
+    <script src="logger.js"></script>
     <script src="ui.js"></script>
     <script src="onboarding.js"></script>
     <script src="animations.js"></script>
     <script src="main.js"></script>
+    <!-- <script>
+        // Debug: Check if scripts are loading
+        console.log('DotSense HTML loaded successfully');
+        console.log('Scripts loaded:', typeof Logger, typeof window.vscode);
+
+        // Add visible debug indicator
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOMContentLoaded fired');
+            const debugDiv = document.createElement('div');
+            debugDiv.id = 'debug-indicator';
+            debugDiv.style.position = 'fixed';
+            debugDiv.style.top = '10px';
+            debugDiv.style.right = '10px';
+            debugDiv.style.background = 'red';
+            debugDiv.style.color = 'white';
+            debugDiv.style.padding = '5px';
+            debugDiv.style.fontSize = '12px';
+            debugDiv.style.zIndex = '9999';
+            debugDiv.textContent = 'DEBUG: HTML Loaded';
+            document.body.appendChild(debugDiv);
+
+            setTimeout(() => {
+                debugDiv.style.background = 'green';
+                debugDiv.textContent = 'DEBUG: Scripts Running';
+            }, 1000);
+        });
+    </script> -->
 </body>
 </html>
+        });

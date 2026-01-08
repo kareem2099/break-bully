@@ -4,6 +4,7 @@ import { AdvancedNotificationManager, advancedNotificationManager } from './adva
 import { showStretchExercise, showBreathingExercise, showEyeExercise, showWaterReminder } from '../exerciseService';
 import { state } from '../../models/state';
 import { getConfiguration } from '../../core/configuration';
+import { Logger } from '../../utils/logger';
 
 /**
  * Smart Wellness Manager - Integrates ML-driven notifications with exercise triggering
@@ -12,8 +13,11 @@ export class SmartWellnessManager {
 
   private isInitialized = false;
   private activityMonitoringInterval?: ReturnType<typeof setInterval>;
+  private extensionUri: vscode.Uri | undefined;
 
-  constructor() {
+  constructor(extensionUri?: vscode.Uri) {
+    this.extensionUri = extensionUri;
+    Logger.log('SmartWellnessManager initialized with extensionUri:', !!extensionUri);
     this.initializeSmartWellness();
   }
 
@@ -27,7 +31,7 @@ export class SmartWellnessManager {
     this.startSmartWellnessMonitoring();
 
     this.isInitialized = true;
-    console.log('Smart Wellness Manager initialized');
+    Logger.log('Smart Wellness Manager initialized');
   }
 
   /**
@@ -185,7 +189,7 @@ export class SmartWellnessManager {
       }
 
     } catch (error) {
-      console.error(`Failed to trigger ${activityType} activity:`, error);
+      Logger.error(`Failed to trigger ${activityType} activity:`, error);
     }
   }
 
@@ -225,7 +229,7 @@ export class SmartWellnessManager {
   private triggerWellnessExercise(activityType: 'stretch' | 'breathing' | 'eye' | 'water'): void {
     switch (activityType) {
       case 'stretch':
-        showStretchExercise();
+        showStretchExercise(this.extensionUri);
         break;
       case 'breathing':
         showBreathingExercise();
@@ -234,7 +238,7 @@ export class SmartWellnessManager {
         showEyeExercise();
         break;
       case 'water':
-        showWaterReminder();
+        showWaterReminder(this.extensionUri);
         break;
     }
   }
@@ -251,12 +255,12 @@ export class SmartWellnessManager {
 
     // Validate that managerInstance has the expected type and interface methods
     if (typeof managerInstance.getOptimalWellnessNotification === 'function') {
-      console.log('AdvancedNotificationManager interface validation passed');
+      Logger.log('AdvancedNotificationManager interface validation passed');
     }
 
     // In a real implementation, you'd filter events by cutoffTime
     // For example: const events = this.activityLog.filter(event => event.timestamp > cutoffTime);
-    console.log('Recent activity cutoff time:', cutoffTime);
+    Logger.log('Recent activity cutoff time:', cutoffTime);
 
     // For now, return empty array - the ML system handles fallbacks gracefully
     return [];
@@ -302,5 +306,15 @@ export class SmartWellnessManager {
   }
 }
 
-// Export singleton instance
-export const smartWellnessManager = new SmartWellnessManager();
+// Export singleton instance - will be initialized later with extensionUri
+let _smartWellnessManager: SmartWellnessManager | null = null;
+
+export function initializeSmartWellnessManager(extensionUri: vscode.Uri): void {
+  if (!_smartWellnessManager) {
+    _smartWellnessManager = new SmartWellnessManager(extensionUri);
+  }
+}
+
+export const smartWellnessManager = {
+  stopMonitoring: () => _smartWellnessManager?.stopMonitoring()
+};

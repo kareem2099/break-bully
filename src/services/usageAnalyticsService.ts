@@ -9,6 +9,7 @@ import {
   AdaptationTrigger,
   EnhancedModelUsageRecord
 } from '../types/mlWorkRestTypes';
+import { Logger } from '../utils/logger';
 
 /**
  * Advanced Usage Analytics Service
@@ -48,7 +49,7 @@ export class UsageAnalyticsService {
 
     // Listen for extension deactivation
     vscode.workspace.onDidChangeConfiguration(config => {
-      if (config.affectsConfiguration('breakBully')) {
+      if (config.affectsConfiguration('dotsense')) {
         this.onConfigurationChanged();
       }
     });
@@ -56,7 +57,7 @@ export class UsageAnalyticsService {
 
   private onConfigurationChanged(): void {
     // Handle configuration changes - could trigger new learning insights
-    console.log('Break Bully configuration changed - usage analytics updated');
+    Logger.log('DotSense configuration changed - usage analytics updated');
   }
 
   /**
@@ -444,7 +445,7 @@ export class UsageAnalyticsService {
 
   private triggerModelAdaptation(triggers: AdaptationTrigger[]): void {
     // This would integrate with the ML generator to trigger model adaptation
-    console.log('Adaptive triggers detected:', triggers);
+    Logger.log('Adaptive triggers detected:', triggers);
     // TODO: Integrate with model adaptation logic
   }
 
@@ -502,7 +503,7 @@ export class UsageAnalyticsService {
       // Save back to storage
       state.storage?.saveCustomSetting('usageAnalyticsData', existingData);
     } catch (error) {
-      console.error('Failed to save usage event:', error);
+      Logger.error('Failed to save usage event:', error);
     }
   }
 

@@ -5,6 +5,7 @@ import { state } from '../models/state';
 import { getCurrentSession } from './workRestService';
 import { WorkRestSession } from './workRestService';
 import { usageAnalytics } from './usageAnalyticsService';
+import { Logger } from '../utils/logger';
 
 export interface BreakSuggestion {
   suggested: boolean;
@@ -64,7 +65,7 @@ export class RealTimeSessionAnalyzer {
   private initializeActivityMonitor(): void {
     try {
       // Get the existing activity monitor instance
-      const extension = vscode.extensions.getExtension('kareem2099.break-bully');
+      const extension = vscode.extensions.getExtension('kareem2099.dotsense');
 
       if (extension?.exports?.activityMonitor) {
         this.activityMonitor = extension.exports.activityMonitor as BaseActivityMonitor;
@@ -74,11 +75,11 @@ export class RealTimeSessionAnalyzer {
         if (activityMonitor) {
           this.activityMonitor = activityMonitor;
         } else {
-          console.warn('Activity monitor not available for real-time analysis');
+          Logger.warn('Activity monitor not available for real-time analysis');
         }
       }
     } catch (error) {
-      console.warn('Failed to initialize activity monitor for real-time analysis:', error);
+      Logger.warn('Failed to initialize activity monitor for real-time analysis:', error);
     }
   }
 
@@ -86,7 +87,7 @@ export class RealTimeSessionAnalyzer {
    * Start analyzing a work session
    */
   startSessionAnalysis(): void {
-    console.log('Starting real-time session analysis');
+    Logger.log('Starting real-time session analysis');
 
     this.sessionStartTime = Date.now();
     this.intensityHistory = [];
@@ -103,7 +104,7 @@ export class RealTimeSessionAnalyzer {
       this.performSessionAnalysis();
     }, 2 * 60 * 1000);
 
-    console.log('Real-time session analyzer activated');
+    Logger.log('Real-time session analyzer activated');
   }
 
   /**
@@ -118,7 +119,7 @@ export class RealTimeSessionAnalyzer {
       this.analysisInterval = null;
     }
 
-    console.log('Real-time session analyzer deactivated');
+    Logger.log('Real-time session analyzer deactivated');
   }
 
   /**
@@ -131,7 +132,7 @@ export class RealTimeSessionAnalyzer {
     if (!session || !session.isWorking) return; // Only analyze during work periods
 
     // Log session type information (using WorkRestSession import explicitly)
-    console.debug(`Analyzing WorkRestSession instance for real-time analysis`);
+    Logger.debug(`Analyzing WorkRestSession instance for real-time analysis`);
 
     try {
       // Collect current activity data
@@ -140,7 +141,7 @@ export class RealTimeSessionAnalyzer {
       const activityState = this.activityMonitor.getCurrentActivityState();
 
       // Use currentIntensity for logging/tracking
-      console.debug(`Current intensity level: ${currentIntensity}`);
+      Logger.debug(`Current intensity level: ${currentIntensity}`);
 
       // Store in history for trend analysis
       this.intensityHistory.push(activityScore);
@@ -158,10 +159,10 @@ export class RealTimeSessionAnalyzer {
       }
 
       // Track analytics (simplified logging)
-      console.debug(`Real-time analysis: intensity=${activityScore.toFixed(1)}, trends=${this.currentAnalysis?.intensityTrend}, fatigue=${this.currentAnalysis?.fatigueSignals}`);
+      Logger.debug(`Real-time analysis: intensity=${activityScore.toFixed(1)}, trends=${this.currentAnalysis?.intensityTrend}, fatigue=${this.currentAnalysis?.fatigueSignals}`);
 
     } catch (error) {
-      console.error('Error during real-time session analysis:', error);
+      Logger.error('Error during real-time session analysis:', error);
     }
   }
 
@@ -249,7 +250,7 @@ export class RealTimeSessionAnalyzer {
         .filter(metrics => metrics !== undefined);
 
     } catch (error) {
-      console.warn('Failed to get recent typing patterns:', error);
+      Logger.warn('Failed to get recent typing patterns:', error);
       return [];
     }
   }
@@ -642,7 +643,7 @@ export class RealTimeSessionAnalyzer {
     }, 25000); // Clear break timer if user takes action
 
     // Log the override timeout for debugging
-    console.debug(`Break override timeout set: ${overrideTimeout}`);
+    Logger.debug(`Break override timeout set: ${overrideTimeout}`);
   }
 
   /**
@@ -656,7 +657,7 @@ export class RealTimeSessionAnalyzer {
       // Track ML-driven break
       usageAnalytics.trackBreakTaken('current_model', 'manual', suggestion.recommendedDuration);
 
-      console.log(`ML-driven break initiated: ${suggestion.reason} (${suggestion.recommendedDuration}min, ${Math.round(suggestion.confidence * 100)}% confidence)`);
+      Logger.log(`ML-driven break initiated: ${suggestion.reason} (${suggestion.recommendedDuration}min, ${Math.round(suggestion.confidence * 100)}% confidence)`);
     });
   }
 
@@ -666,7 +667,7 @@ export class RealTimeSessionAnalyzer {
   private forceEarlyBreak(suggestion: BreakSuggestion): void {
     import('./workRestService').then(workRest => {
       workRest.endRestEarly();
-      console.log(`ML-forced early break: ${suggestion.reason}`);
+      Logger.log(`ML-forced early break: ${suggestion.reason}`);
     });
   }
 
@@ -677,8 +678,8 @@ export class RealTimeSessionAnalyzer {
     // This requires workRestService enhancement to support work period extensions
     import('./workRestService').then(workRest => {
       // For now, just log the workRest import and extension details
-      console.log(`ML-suggested work extension: ${extensionMinutes} minutes using workRest module`);
-      console.debug(`WorkRest service available: ${!!workRest}`);
+      Logger.log(`ML-suggested work extension: ${extensionMinutes} minutes using workRest module`);
+      Logger.debug(`WorkRest service available: ${!!workRest}`);
     });
   }
 
@@ -736,7 +737,7 @@ export class RealTimeSessionAnalyzer {
 
       return peakInsights.peakHours.some(peak => Math.abs(peak.hour - currentHour) <= 1);
     } catch (error) {
-      console.warn('Failed to check peak productivity window:', error);
+      Logger.warn('Failed to check peak productivity window:', error);
       return false;
     }
   }

@@ -21,6 +21,7 @@ import {
 } from '../../types';
 import { state } from '../../models/state';
 import { BaseActivityMonitor } from './baseActivityMonitor';
+import { Logger } from '../../utils/logger';
 
 /**
  * Advanced Scheduler Service - Core intelligent scheduling with ML capabilities
@@ -635,7 +636,7 @@ export class AdvancedSchedulerService {
 
   private updateLearningData(_completedTask: TaskSchedule): void {
     // TODO: Update adaptation rules based on task completion
-    console.log('Completed task for learning:', _completedTask.id, _completedTask.name);
+    Logger.log(`Completed task for learning: ${_completedTask.id} - ${_completedTask.name}`);
   }
 
   /**
@@ -649,7 +650,7 @@ export class AdvancedSchedulerService {
       this.schedulingIntelligence = (state.storage?.loadCustomSetting('advancedScheduler.intelligence', null) ?? null) as SchedulingIntelligence | null;
       this.dataSharingPreferences = state.storage?.loadCustomSetting('advancedScheduler.dataSharing', this.dataSharingPreferences) || this.dataSharingPreferences;
     } catch (error) {
-      console.error('Failed to load advanced scheduler data:', error);
+      Logger.error('Failed to load advanced scheduler data:', error);
     }
   }
 
@@ -670,7 +671,7 @@ export class AdvancedSchedulerService {
   }
 
   private notifyModelChange(): void {
-    vscode.commands.executeCommand('breakBully.refreshTimer');
+    vscode.commands.executeCommand('dotsense.refreshTimer');
   }
 
   /**
@@ -727,5 +728,5 @@ export let advancedScheduler: AdvancedSchedulerService | undefined;
  */
 export function initializeAdvancedScheduler(baseMonitor: BaseActivityMonitor): void {
   advancedScheduler = new AdvancedSchedulerService(baseMonitor);
-  console.log('Advanced Scheduler Service initialized');
+  Logger.log('Advanced Scheduler Service initialized');
 }

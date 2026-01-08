@@ -53,7 +53,7 @@
     function showWelcomeScreen(message) {
         const welcomeScreen = document.createElement('div');
         welcomeScreen.className = 'welcome-screen-overlay';
-        const displayMessage = message || 'Welcome to Break Bully!';
+        const displayMessage = message || 'Welcome to DotSense!';
         welcomeScreen.innerHTML = `
             <div class="welcome-screen">
                 <div class="welcome-header">

@@ -7,12 +7,16 @@ import {
   ActivityContext,
   AdvancedTypingMetrics,
   FocusQualityMetrics,
-  ContextSwitchMetrics
+  ContextSwitchMetrics,
+  MoodAnalysis
 } from './activityTypes';
 import { activitySettings } from './activitySettings';
 import { ExtensionStorage } from '../../utils/storage';
 import { getConfiguration } from '../../core/configuration';
 import { MachineLearningAnalyzer } from './machineLearningAnalyzer';
+import { MoodDetectionAnalyzer } from './moodDetectionAnalyzer';
+import { MoodState } from './activityTypes';
+import { Logger } from '../../utils/logger';
 
 // Type definitions for Git API to avoid 'any' type usage
 interface GitCommit {
@@ -161,7 +165,7 @@ export class BaseActivityMonitor {
 
     // Advanced typing pattern tracking
     let typingAnalysisTimeout: ReturnType<typeof setTimeout> | null = null;
-    console.debug('Advanced typing tracking initialized with timeout:', typingAnalysisTimeout); // Use the variable to indicate initialization complete
+    Logger.debug('Advanced typing tracking initialized with timeout:', typingAnalysisTimeout); // Use the variable to indicate initialization complete
 
     const typingDisposable = vscode.workspace.onDidChangeTextDocument(event => {
       if (event.contentChanges.length > 0) {
@@ -199,7 +203,7 @@ export class BaseActivityMonitor {
         git.onDidChangeState(() => {
           // Check for new commits when git state changes
           this.trackGitCommits(git);
-          console.debug('Git repository state change detected'); // Use event implicitly by logging state change
+          Logger.debug('Git repository state change detected'); // Use event implicitly by logging state change
         });
 
         // Also check periodically for commits (as backup)
@@ -208,7 +212,7 @@ export class BaseActivityMonitor {
         }, 5 * 60 * 1000); // Check every 5 minutes
       }
     } catch (error) {
-      console.warn('Git tracking not available:', error);
+      Logger.warn('Git tracking not available:', error);
     }
   }
 
@@ -227,7 +231,7 @@ export class BaseActivityMonitor {
     // Track debug breakpoint changes
     let lastBreakpointCount = 0;
     const breakpointDisposable = vscode.debug.onDidChangeBreakpoints(event => {
-      console.debug('Breakpoint change event received, breakpoints touched:', event.added.length + event.removed.length + event.changed.length); // Use event properties
+      Logger.debug('Breakpoint change event received, breakpoints touched:', event.added.length + event.removed.length + event.changed.length); // Use event properties
       const currentBreakpointCount = vscode.debug.breakpoints.length;
       if (currentBreakpointCount !== lastBreakpointCount) {
         // Breakpoints changed during active debugging
@@ -257,7 +261,7 @@ export class BaseActivityMonitor {
           // Add test explorar handlers here if needed
         }
       } catch (error) {
-        console.warn('Extension not available:', error); // Log the error to use the variable and provide more info
+        Logger.warn('Extension not available:', error); // Log the error to use the variable and provide more info
       }
     });
   }
@@ -301,7 +305,7 @@ export class BaseActivityMonitor {
         });
         this.disposables.push(disposable);
       } catch (error) {
-        console.warn('Refactor command not available:', error); // Log the error to use the variable and provide more info
+        Logger.warn('Refactor command not available:', error); // Log the error to use the variable and provide more info
       }
     });
 
@@ -406,7 +410,7 @@ export class BaseActivityMonitor {
         if (head && head.commit && head.upstream) {
           const commit = head.commit;
           const upstream = head.upstream;
-          console.debug('Processing git repo commit, upstream:', upstream); // Use upstream variable to avoid warning
+          Logger.debug('Processing git repo commit, upstream:', upstream); // Use upstream variable to avoid warning
 
           // Check if this is a new commit by comparing with previous known commit
           const lastKnownCommit = this.getLastKnownGitCommit(repo.rootUri.toString());
@@ -419,7 +423,7 @@ export class BaseActivityMonitor {
       });
     } catch (error) {
       // Git API may not be fully available
-      console.debug('Git commit tracking debug:', error);
+      Logger.debug('Git commit tracking debug:', error);
     }
   }
 
@@ -557,7 +561,7 @@ export class BaseActivityMonitor {
 
     // Apply data retention policy (default 30 days)
     const config = getConfiguration();
-    console.debug('Flush config loaded:', config); // Use config to avoid warning
+    Logger.debug('Flush config loaded:', config); // Use config to avoid warning
     const retentionDays = 30; // TODO: Add retention setting to config
     this.saveActivityEventsWithRetention(this.activityEvents, retentionDays);
 
@@ -668,14 +672,14 @@ export class BaseActivityMonitor {
 
   // Helper methods for Git tracking
   private getLastKnownGitCommit(repoUri: string): string | null {
-    console.debug(`Checking last known commit for repo: ${repoUri}`); // Use repoUri parameter
+    Logger.debug(`Checking last known commit for repo: ${repoUri}`); // Use repoUri parameter
     // In a real implementation, this would be stored persistently
     // For now, return null to always track new commits on startup
     return null;
   }
 
   private setLastKnownGitCommit(repoUri: string, commitHash: string): void {
-    console.debug(`Setting last known commit for repo: ${repoUri}, hash: ${commitHash}`); // Use both parameters
+    Logger.debug(`Setting last known commit for repo: ${repoUri}, hash: ${commitHash}`); // Use both parameters
     // In a real implementation, this would be stored persistently
     // For now, we'll just track all commits we detect
   }
@@ -726,7 +730,7 @@ export class BaseActivityMonitor {
         this.storage = new ExtensionStorage(this.context);
       } else {
         // Fallback - create temporary storage without context (data won't persist)
-        console.warn('Extension context not available, using temporary storage');
+        Logger.warn('Extension context not available, using temporary storage');
         this.storage = new TemporaryStorage();
       }
     }
@@ -805,7 +809,7 @@ export class BaseActivityMonitor {
       this.activityStateHistory = this.activityStateHistory.slice(-50);
     }
 
-    console.debug(`Activity state changed: ${previousState} → ${newState}`);
+    Logger.debug(`Activity state changed: ${previousState} → ${newState}`);
 
     // Emit state change event for UI updates
     this.emitActivityStateChange(newState, previousState);
@@ -841,7 +845,7 @@ export class BaseActivityMonitor {
         notifications.showProductivityMilestoneNotification('high_productivity', this.currentActivityScore);
       }
     }).catch(error => {
-      console.debug('Activity notifications not available:', error);
+      Logger.debug('Activity notifications not available:', error);
     });
   }
 
@@ -855,7 +859,7 @@ export class BaseActivityMonitor {
     const changes = event.contentChanges;
     const totalTextLength = changes.reduce((sum, change) => sum + change.text.length, 0);
     const totalRemovedLength = changes.reduce((sum, change) => sum + (change.rangeLength || 0), 0);
-    console.debug('Activity inference: total added:', totalTextLength, 'total removed:', totalRemovedLength); // Use totalRemovedLength
+    Logger.debug(`Activity inference: total added: ${totalTextLength}, total removed: ${totalRemovedLength}`);
 
     // High editing activity with many changes = coding
     if (changes.length > 3 || totalTextLength > 100) {
@@ -950,6 +954,24 @@ export class BaseActivityMonitor {
   // Get current activity state for UI
   getCurrentActivityState(): ActivityState {
     return this.currentActivityState;
+  }
+
+  // Get current mood analysis for UI
+  getCurrentMood(): MoodAnalysis | null {
+    if (activitySettings.isAdvancedEnabled()) {
+      try {
+        return MoodDetectionAnalyzer.getInstance().getCurrentMood();
+      } catch (error) {
+        Logger.debug('Mood detection not available:', error);
+      }
+    }
+    return null;
+  }
+
+  // Get current mood state enum value for quick checks
+  getCurrentMoodState(): MoodState | null {
+    const moodAnalysis = this.getCurrentMood();
+    return moodAnalysis ? moodAnalysis.currentMood : null;
   }
 
   // Get activity state history for analytics
@@ -1048,7 +1070,7 @@ export class BaseActivityMonitor {
 
     // Analyze the content changes for typing patterns (null check already handled above)
     const typingMetrics = this.processContentChanges(event.contentChanges);
-    console.debug('Calculated typing metrics:', typingMetrics); // Use typingMetrics
+    Logger.debug('Calculated typing metrics:', typingMetrics); // Use typingMetrics
     if (this.currentTypingSession) {
       this.currentTypingSession.lastKeystrokeTime = now;
     }
@@ -1187,6 +1209,33 @@ export class BaseActivityMonitor {
     const focusMetrics = this.generateFocusQualityMetrics(advancedMetrics);
     const contextMetrics = this.generateContextSwitchMetrics();
 
+    // Analyze mood from typing patterns (if advanced features enabled)
+    let moodAnalysis: MoodAnalysis | undefined;
+    if (activitySettings.isAdvancedEnabled()) {
+      try {
+        const moodAnalyzer = MoodDetectionAnalyzer.getInstance();
+        const recentActivity = this.getRecentEvents(20); // Last 20 minutes for context
+        const currentHour = new Date().getHours();
+
+        moodAnalysis = moodAnalyzer.analyzeTypingMood(
+          advancedMetrics,
+          focusMetrics,
+          recentActivity,
+          currentHour
+        );
+
+        // Log mood detection for debugging
+        Logger.debug('Mood detected:', {
+          mood: moodAnalysis.currentMood,
+          confidence: moodAnalysis.confidence.toFixed(2),
+          intensity: moodAnalysis.intensity,
+          triggers: moodAnalysis.triggers
+        });
+      } catch (error) {
+        Logger.debug('Mood detection failed:', error);
+      }
+    }
+
     // Create enhanced activity event
     const activityEvent: ActivityEvent = {
       id: `typing_session_${Date.now()}_${Math.random()}`,
@@ -1198,7 +1247,8 @@ export class BaseActivityMonitor {
         fileType: vscode.window.activeTextEditor?.document.languageId || 'unknown',
         typingMetrics: advancedMetrics,
         focusQuality: focusMetrics,
-        contextSwitch: contextMetrics
+        contextSwitch: contextMetrics,
+        ...(moodAnalysis && { moodAnalysis }) // Include mood analysis only if available
       }
     };
 
@@ -1207,7 +1257,7 @@ export class BaseActivityMonitor {
     // Reset session
     this.currentTypingSession = null;
 
-    console.debug('Completed typing session analysis:', {
+    Logger.debug('Completed typing session analysis:', {
       duration: Math.round(duration/1000) + 's',
       wpm: advancedMetrics.keystrokeVelocity,
       errors: advancedMetrics.errorRate + '%',
@@ -1259,7 +1309,7 @@ export class BaseActivityMonitor {
     // Fatigue state: low quality, inconsistent, high errors
     else if (metrics.fatigueIndicators.length > 1 || metrics.burstQuality < 0.4) {
       // Don't change state immediately - might just be a rough patch
-      console.debug('Typing fatigue detected, monitoring closely');
+      Logger.debug('Typing fatigue detected, monitoring closely');
     }
 
     // Reading state: slow, inconsistent typing
@@ -1275,7 +1325,7 @@ export class BaseActivityMonitor {
    */
   private generateFocusQualityMetrics(typingMetrics: AdvancedTypingMetrics): FocusQualityMetrics {
     const now = Date.now();
-    console.debug('Calculating focus metrics at:', now); // Use now
+    Logger.debug('Calculating focus metrics at:', now); // Use now
 
     // File immersion: how long current file has been active
     const fileImmersion = this.fileFocusDuration || 0;
@@ -1386,7 +1436,7 @@ export class BaseActivityMonitor {
       };
 
   } catch (error) {
-    console.debug('Error generating AI summary insights:', error); // Use error parameter
+    Logger.debug('Error generating AI summary insights:', error); // Use error parameter
     return {
       peakTimes: 'Gathering your activity data...',
       currentRisk: '🟢 Gathering data',
@@ -1477,7 +1527,7 @@ export class BaseActivityMonitor {
       };
 
     } catch (error) {
-      console.debug('Error generating task recommendations:', error); // Use error parameter
+      Logger.debug('Error generating task recommendations:', error); // Use error parameter
       // Fallback recommendations
       return {
         optimalTimeSlot: '9:00 AM',

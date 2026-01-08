@@ -37,12 +37,12 @@ export function showAnalyticsReport(): void {
 
   // Create and show analytics webview panel
   const panel = vscode.window.createWebviewPanel(
-    'breakBullyAnalytics',
-    'Break Bully Analytics',
+    'dotsenseAnalytics',
+    'DotSense Analytics',
     vscode.ViewColumn.One,
     {
       enableScripts: true,
-      localResourceRoots: [vscode.Uri.file(vscode.extensions.getExtension('publisher.breakbully')?.extensionPath || '')]
+      localResourceRoots: [vscode.Uri.file(vscode.extensions.getExtension('FreeRave.dotsense')?.extensionPath || '')]
     }
   );
 
@@ -82,7 +82,7 @@ function generateAnalyticsHtml(report: AnalyticsReport): string {
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Break Bully Analytics</title>
+        <title>DotSense Analytics</title>
         <style>
             body {
                 font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
@@ -410,7 +410,7 @@ function generateAnalyticsHtml(report: AnalyticsReport): string {
                 const message = event.data;
                 if (message.command === 'updateReport') {
                     // Could refresh the display with new data
-                    console.log('Report updated:', message.data);
+                    Logger.log('Report updated:', message.data);
                 }
             });
         </script>
@@ -424,13 +424,13 @@ function exportAnalyticsReport(report: AnalyticsReport): void {
     generatedAt: new Date().toISOString(),
     report: report,
     metadata: {
-      extension: 'Break Bully',
-      version: '1.0.0'
+      extension: 'DotSense',
+      version: '1.3.0'
     }
   };
 
   const jsonContent = JSON.stringify(exportData, null, 2);
-  const fileName = `break-bully-analytics-${new Date().toISOString().split('T')[0]}.json`;
+  const fileName = `dotsense-analytics-${new Date().toISOString().split('T')[0]}.json`;
 
   vscode.window.showSaveDialog({
     defaultUri: vscode.Uri.file(fileName),

@@ -1,8 +1,8 @@
 {
-  "name": "break-bully",
-  "displayName": "Break Bully",
-  "description": "A gentle reminder extension to help developers take breaks and relax",
-  "version": "1.2.0",
+  "name": "dotsense",
+  "displayName": "DotSense",
+  "description": "AI-powered developer wellness companion with intelligent mood detection and personalized break recommendations",
+  "version": "1.3.0",
   "engines": {
     "vscode": "^1.60.0"
   },
@@ -17,17 +17,19 @@
     "productivity",
     "AI",
     "machine-learning",
+    "mood-detection",
+    "emotional-intelligence",
     "personalization",
     "analytics",
     "smart-productivity",
     "reminder",
-    "annoying",
-    "bully",
-    "persistent",
-    "nagging",
     "intelligent",
     "adaptive",
-    "productivity-coach"
+    "productivity-coach",
+    "developer-wellness",
+    "ai-companion",
+    "typing-analytics",
+    "focus-tracking"
   ],
   "activationEvents": [
     "onStartupFinished"
@@ -36,99 +38,99 @@
   "contributes": {
     "commands": [
       {
-        "command": "breakBully.showReminder",
-        "title": "Bully Me Into a Break"
+        "command": "dotsense.showReminder",
+        "title": "Sense My Mood & Suggest Break"
       },
       {
-        "command": "breakBully.toggleReminders",
-        "title": "Enable/Disable the Bully"
+        "command": "dotsense.toggleReminders",
+        "title": "Enable/Disable DotSense"
       },
       {
-        "command": "breakBully.openSettings",
-        "title": "Tame the Break Bully"
+        "command": "dotsense.openSettings",
+        "title": "Configure DotSense"
       },
       {
-        "command": "breakBully.takeBreak",
+        "command": "dotsense.takeBreak",
         "title": "Take a Break",
         "icon": "$(megaphone)"
       },
       {
-        "command": "breakBully.quickStretch",
+        "command": "dotsense.quickStretch",
         "title": "Quick Stretch",
         "icon": "$(heart)"
       },
       {
-        "command": "breakBully.eyeExercise",
+        "command": "dotsense.eyeExercise",
         "title": "Eye Exercise",
         "icon": "$(flame)"
       },
       {
-        "command": "breakBully.changeWorkout",
+        "command": "dotsense.changeWorkout",
         "title": "Change Workout Model",
         "icon": "$(sync)"
       },
       {
-        "command": "breakBully.forceUnblock",
+        "command": "dotsense.forceUnblock",
         "title": "Force Unblock Screen (Emergency)",
         "icon": "$(unlock)"
       },
       {
-        "command": "breakBully.createCustomExercise",
+        "command": "dotsense.createCustomExercise",
         "title": "Create Custom Exercise",
         "icon": "$(add)"
       },
       {
-        "command": "breakBully.showCustomExerciseLibrary",
+        "command": "dotsense.showCustomExerciseLibrary",
         "title": "Custom Exercise Library",
         "icon": "$(library)"
       },
       {
-        "command": "breakBully.triggerGitBreakSuggestion",
+        "command": "dotsense.triggerGitBreakSuggestion",
         "title": "Check Git Productivity & Suggest Break",
         "icon": "$(git-commit)"
       },
       {
-        "command": "breakBully.showUpdatePanel",
-        "title": "What's New in Break Bully",
+        "command": "dotsense.showUpdatePanel",
+        "title": "What's New in DotSense",
         "icon": "$(info)"
       },
       {
-        "command": "breakBully.openTimeBlocking",
+        "command": "dotsense.openTimeBlocking",
         "title": "Open Time Blocking - Advanced Work Scheduling",
         "icon": "$(calendar)"
       },
       {
-        "command": "breakBully.exportAllStoredData",
+        "command": "dotsense.exportAllStoredData",
         "title": "Export All Stored Data (Temp Debug)",
         "icon": "$(export)"
       }
     ],
     "configuration": {
-      "title": "Break Bully",
+      "title": "DotSense",
       "properties": {
-        "breakBully.enabled": {
+        "dotsense.enabled": {
           "type": "boolean",
           "default": true,
           "description": "Enable break reminders"
         },
-        "breakBully.interval": {
+        "dotsense.interval": {
           "type": "number",
           "default": 30,
           "minimum": 5,
           "maximum": 180,
           "description": "Reminder interval in minutes"
         },
-        "breakBully.showNotification": {
+        "dotsense.showNotification": {
           "type": "boolean",
           "default": true,
           "description": "Show notification popup"
         },
-        "breakBully.playSound": {
+        "dotsense.playSound": {
           "type": "boolean",
           "default": false,
           "description": "Play notification sound"
         },
-        "breakBully.reminderType": {
+        "dotsense.reminderType": {
           "type": "string",
           "enum": [
             "gentle",
@@ -140,7 +142,7 @@
           "default": "gentle",
           "description": "Type of reminder messages"
         },
-        "breakBully.annoyanceLevel": {
+        "dotsense.annoyanceLevel": {
           "type": "string",
           "enum": [
             "mild",
@@ -151,34 +153,34 @@
           "default": "moderate",
           "description": "How annoying should the reminders be?"
         },
-        "breakBully.persistentNagging": {
+        "dotsense.persistentNagging": {
           "type": "boolean",
           "default": false,
           "description": "Keep nagging every 30 seconds until break is taken"
         },
-        "breakBully.enableEyeExercises": {
+        "dotsense.enableEyeExercises": {
           "type": "boolean",
           "default": true,
           "description": "Enable eye exercises and screen break reminders"
         },
-        "breakBully.screenBreakInterval": {
+        "dotsense.screenBreakInterval": {
           "type": "number",
           "default": 45,
           "minimum": 20,
           "maximum": 120,
           "description": "Minutes of continuous screen time before suggesting eye breaks"
         },
-        "breakBully.enableGoals": {
+        "dotsense.enableGoals": {
           "type": "boolean",
           "default": true,
           "description": "Enable wellness goals and challenges"
         },
-        "breakBully.enableAchievements": {
+        "dotsense.enableAchievements": {
           "type": "boolean",
           "default": true,
           "description": "Enable achievement system and badges"
         },
-        "breakBully.workRestModel": {
+        "dotsense.workRestModel": {
           "type": "string",
           "default": "who-45min-work-15min-rest",
           "enum": [
@@ -191,79 +193,101 @@
           ],
           "description": "Current work-rest model for break timing"
         },
-        "breakBully.enableGitIntegration": {
+        "dotsense.enableGitIntegration": {
           "type": "boolean",
           "default": true,
           "description": "Enable Git commit-based break suggestions"
         },
-        "breakBully.gitCommitThreshold": {
+        "dotsense.gitCommitThreshold": {
           "type": "number",
           "default": 3,
           "minimum": 1,
           "maximum": 10,
           "description": "Number of commits before suggesting a break"
         },
-        "breakBully.gitProductivityCheckInterval": {
+        "dotsense.gitProductivityCheckInterval": {
           "type": "number",
           "default": 15,
           "minimum": 5,
           "maximum": 60,
           "description": "Minutes between automatic Git productivity checks"
         },
-        "breakBully.showExerciseCompletionNotification": {
+        "dotsense.showExerciseCompletionNotification": {
           "type": "boolean",
           "default": true,
           "description": "Show notification when exercises are completed"
         },
-        "breakBully.playExerciseCompletionSound": {
+        "dotsense.playExerciseCompletionSound": {
           "type": "boolean",
           "default": true,
           "description": "Play sound when exercises are completed"
         },
-        "breakBully.suggestCodeTuneDuringBreaks": {
+        "dotsense.suggestCodeTuneDuringBreaks": {
           "type": "boolean",
           "default": true,
           "description": "Suggest CodeTune (Quran player) during break times"
         },
-        "breakBully.codeTunePermanentlyIgnored": {
+        "dotsense.codeTunePermanentlyIgnored": {
           "type": "boolean",
           "default": false,
           "description": "Permanently ignore CodeTune suggestions (set when user chooses 'Never Show Again')"
+        },
+        "dotsense.enableDebugLogging": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable debug logging (for developers only - affects performance)"
+        },
+        "dotsense.activityIntegrationLevel": {
+          "type": "string",
+          "default": "none",
+          "enum": [
+            "none",
+            "basic",
+            "smart",
+            "advanced"
+          ],
+          "enumDescriptions": [
+            "Standard work-rest cycles only",
+            "Track coding activity & show basic feedback",
+            "Detect flow states & adjust breaks dynamically",
+            "AI-powered insights & mood detection"
+          ],
+          "description": "Level of activity integration for intelligent break suggestions and mood analysis"
         }
       }
     },
     "menus": {
       "commandPalette": [
         {
-          "command": "breakBully.showReminder"
+          "command": "dotsense.showReminder"
         },
         {
-          "command": "breakBully.toggleReminders"
+          "command": "dotsense.toggleReminders"
         },
         {
-          "command": "breakBully.openSettings"
+          "command": "dotsense.openSettings"
         },
         {
-          "command": "breakBully.openTimeBlocking"
+          "command": "dotsense.openTimeBlocking"
         }
       ]
     },
     "views": {
-      "breakBully": [
+      "dotsense": [
         {
-          "id": "breakBullyMain",
-          "name": "Break Bully",
+          "id": "dotsenseMain",
+          "name": "DotSense",
           "type": "webview",
-          "contextualTitle": "Break Bully"
+          "contextualTitle": "DotSense"
         }
       ]
     },
     "viewsContainers": {
       "activitybar": [
         {
-          "id": "breakBully",
-          "title": "Break Bully",
-          "icon": "$(megaphone)"
+          "id": "dotsense",
+          "title": "DotSense",
+          "icon": "assets/images/icon.png"
         }
       ]
     }
@@ -294,7 +318,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/kareem2099/break-bully"
+    "url": "https://github.com/kareem2099/dotsense.git"
   },
   "author": "FreeRave",
   "license": "MIT",

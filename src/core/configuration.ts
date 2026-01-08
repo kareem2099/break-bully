@@ -1,8 +1,8 @@
 import * as vscode from 'vscode';
-import { BreakBullyConfiguration } from '../types';
+import { DotSenseConfiguration } from '../types';
 
-export function getConfiguration(): BreakBullyConfiguration {
-  const config = vscode.workspace.getConfiguration('breakBully');
+export function getConfiguration(): DotSenseConfiguration {
+  const config = vscode.workspace.getConfiguration('dotsense');
   return {
     enabled: config.get('enabled', true),
     interval: config.get('interval', 30),

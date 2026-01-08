@@ -13,6 +13,7 @@ import {
 import { MLWorkRestGenerator } from '../services/mlWorkRestGenerator';
 import { ActivityEvent } from '../services/activityIntegration/activityTypes';
 import { state } from '../models/state';
+import { Logger } from '../utils/logger';
 
 // Type definitions for the assessment panel
 interface WebviewMessage {
@@ -43,7 +44,7 @@ export class WorkRestAssessmentPanel {
     this._panel = panel;
     this._extensionUri = extensionUri;
 
-    console.log('WorkRestAssessmentPanel constructor called with activityEvents:', activityEvents?.length || 0);
+    Logger.log('WorkRestAssessmentPanel constructor called with activityEvents:', activityEvents?.length || 0);
 
     this.activityEvents = activityEvents || [];
 
@@ -65,19 +66,19 @@ export class WorkRestAssessmentPanel {
       this._panel.reveal(vscode.ViewColumn.Active, true);
     }, 100);
 
-    console.log('Panel revealed, setting up message handlers');
+    Logger.log('Panel revealed, setting up message handlers');
 
     this._panel.webview.onDidReceiveMessage(async (message) => {
-      console.log('Assessment panel received message:', message.type);
+      Logger.log('Assessment panel received message:', message.type);
       await this.handleMessage(message);
     });
 
     this._panel.onDidDispose(() => {
-      console.log('Assessment panel disposed');
+      Logger.log('Assessment panel disposed');
       WorkRestAssessmentPanel.currentPanel = undefined;
     });
 
-    console.log('Starting assessment with first question');
+    Logger.log('Starting assessment with first question');
     this.showQuestion(0);
   }
 
@@ -610,7 +611,7 @@ export class WorkRestAssessmentPanel {
         const vscode = acquireVsCodeApi();
 
         function selectAnswer(answerId) {
-            console.log('JavaScript: selectAnswer called with:', answerId);
+            Logger.log('JavaScript: selectAnswer called with:', answerId);
             // Remove previous selection
             document.querySelectorAll('.answer-card').forEach(card => {
                 card.classList.remove('selected');
@@ -621,26 +622,26 @@ export class WorkRestAssessmentPanel {
             if (selectedCard) {
                 selectedCard.classList.add('selected');
             } else {
-                console.log('JavaScript: Could not find selected card for answerId:', answerId);
+                Logger.log('JavaScript: Could not find selected card for answerId:', answerId);
             }
 
             selectedAnswerId = answerId;
-            console.log('JavaScript: Set selectedAnswerId to:', selectedAnswerId);
+            Logger.log('JavaScript: Set selectedAnswerId to:', selectedAnswerId);
 
             // Enable next button
             const nextButton = document.getElementById('nextButton');
             if (nextButton) {
                 nextButton.disabled = false;
-                console.log('JavaScript: Enabled next button');
+                Logger.log('JavaScript: Enabled next button');
             } else {
-                console.log('JavaScript: Could not find nextButton element');
+                Logger.log('JavaScript: Could not find nextButton element');
             }
         }
 
         function nextQuestion() {
-            console.log('JavaScript: nextQuestion called, selectedAnswerId:', selectedAnswerId);
+            Logger.log('JavaScript: nextQuestion called, selectedAnswerId:', selectedAnswerId);
             if (!selectedAnswerId) {
-                console.log('JavaScript: No answer selected, returning');
+                Logger.log('JavaScript: No answer selected, returning');
                 return;
             }
 
@@ -651,14 +652,14 @@ export class WorkRestAssessmentPanel {
                     answerId: selectedAnswerId
                 }
             };
-            console.log('JavaScript: Sending message to extension:', message);
+            Logger.log('JavaScript: Sending message to extension:', message);
 
             // Send message to extension using VSCode API
             vscode.postMessage(message);
         }
 
         function previousQuestion() {
-            console.log('JavaScript: Moving to previous question');
+            Logger.log('JavaScript: Moving to previous question');
             // Send message to extension using VSCode API
             vscode.postMessage({
                 type: 'previousQuestion'
@@ -667,17 +668,17 @@ export class WorkRestAssessmentPanel {
 
         // Handle keyboard navigation
         document.addEventListener('keydown', (event) => {
-            console.log('JavaScript: Key pressed:', event.key);
+            Logger.log('JavaScript: Key pressed:', event.key);
             if (event.key === 'Enter' && selectedAnswerId && !document.getElementById('nextButton')?.disabled) {
-                console.log('JavaScript: Enter pressed, calling nextQuestion');
+                Logger.log('JavaScript: Enter pressed, calling nextQuestion');
                 nextQuestion();
             } else if (event.key === 'ArrowLeft' && !document.getElementById('backButton')?.disabled) {
-                console.log('JavaScript: ArrowLeft pressed, calling previousQuestion');
+                Logger.log('JavaScript: ArrowLeft pressed, calling previousQuestion');
                 previousQuestion();
             }
         });
 
-        console.log('JavaScript: Assessment panel script loaded for question ${questionIndex + 1}');
+        Logger.log('JavaScript: Assessment panel script loaded for question ${questionIndex + 1}');
     </script>
 </body>
 </html>`;
@@ -689,19 +690,19 @@ export class WorkRestAssessmentPanel {
    * Handle messages from the webview
    */
   private async handleMessage(message: WebviewMessage): Promise<void> {
-    console.log('WorkRestAssessmentPanel handling message:', message);
+    Logger.log('WorkRestAssessmentPanel handling message:', message);
 
     switch (message.type) {
       case 'submitAnswer':
-        console.log('Handling submit answer:', message.data);
+        Logger.log('Handling submit answer:', message.data);
         await this.handleAnswerSubmission(message.data as AnswerSubmissionData);
         break;
       case 'previousQuestion':
-        console.log('Moving to previous question');
+        Logger.log('Moving to previous question');
         this.showQuestion(Math.max(0, this.currentQuestionIndex - 1));
         break;
       default:
-        console.log('Unknown message type:', message.type);
+        Logger.log('Unknown message type:', message.type);
     }
   }
 
@@ -910,7 +911,7 @@ export class WorkRestAssessmentPanel {
         ).then(selection => {
           if (selection === 'View AI Models') {
             // Trigger opening the change workout panel to show the new models
-            vscode.commands.executeCommand('breakBully.changeWorkout');
+            vscode.commands.executeCommand('dotsense.changeWorkout');
           }
         });
       });
@@ -919,7 +920,7 @@ export class WorkRestAssessmentPanel {
       this._panel.dispose();
 
     } catch (error) {
-      console.error('Failed to generate personal models:', error);
+      Logger.error('Failed to generate personal models:', error);
       vscode.window.showErrorMessage('Failed to generate personalized models. Please try again.');
 
       // Allow user to restart assessment

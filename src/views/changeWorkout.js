@@ -7,7 +7,7 @@
 
     // ===== INITIALIZATION =====
     function initialize() {
-        console.log('Change Workout webview initialized');
+        Logger.log('Change Workout webview initialized');
 
         // Set up message listener
         window.addEventListener('message', handleMessage);
@@ -50,7 +50,7 @@
     // ===== MESSAGE HANDLING =====
     function handleMessage(event) {
         const message = event.data;
-        console.log('Received message from extension:', message.command, message.data);
+        Logger.log('Received message from extension:', message.command, message.data);
 
         switch (message.command) {
             case 'workRestModels':

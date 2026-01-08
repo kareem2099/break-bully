@@ -1,7 +1,7 @@
 
 import * as vscode from 'vscode';
-import { BreakBullyActivityBarProvider, BreakStats, WebviewMessage, ExerciseCategory, DifficultyLevel, WorkRestModel, Achievement } from '../types';
-import { ActivityIntegrationLevel } from '../services/activityIntegration/activityTypes';
+import { DotSenseActivityBarProvider, BreakStats, WebviewMessage, ExerciseCategory, DifficultyLevel, WorkRestModel, Achievement } from '../types';
+import { ActivityIntegrationLevel, MoodState, MoodIntervention } from '../services/activityIntegration/activityTypes';
 import { state } from '../models/state';
 import { takeBreak } from '../services/breakService';
 import { showStretchExercise, showBreathingExercise, showEyeExercise, showWaterReminder, showCustomExerciseCreator, showCustomExerciseLibrary, triggerGitBasedBreakSuggestion, showGitProductivityDashboard } from '../services/exerciseService';
@@ -13,8 +13,9 @@ import { SmartScheduler } from '../services/activityIntegration/smartScheduler';
 import * as baseActivityMonitor from '../services/activityIntegration/baseActivityMonitor';
 import { exportAchievements, generateAchievementShareText, getAchievementStats } from '../services/achievementService';
 import { createCustomGoal, createChallenge, getWellnessInsights, createCustomExercise } from '../services/wellnessService';
+import { Logger } from '../utils/logger';
 
-export class BreakBullyActivityBarProviderImpl implements BreakBullyActivityBarProvider {
+export class dotsenseActivityBarProviderImpl implements DotSenseActivityBarProvider {
   private _view?: vscode.WebviewView;
   private _extensionUri: vscode.Uri;
 
@@ -23,9 +24,9 @@ export class BreakBullyActivityBarProviderImpl implements BreakBullyActivityBarP
   }
 
   resolveWebviewView(webviewView: vscode.WebviewView): void | Promise<void> {
-    console.log('resolveWebviewView called - webview provider is working!');
-    console.log('Webview view type:', webviewView.viewType);
-    console.log('Webview view ID:', webviewView.viewType);
+    Logger.log('resolveWebviewView called - webview provider is working!');
+    Logger.log('Webview view type:', webviewView.viewType);
+    Logger.log('Webview view ID:', webviewView.viewType);
 
     try {
       this._view = webviewView;
@@ -38,7 +39,7 @@ export class BreakBullyActivityBarProviderImpl implements BreakBullyActivityBarP
         localResourceRoots: [this._extensionUri]
       };
 
-      console.log('Webview options set successfully');
+      Logger.log('Webview options set successfully');
 
       // Load HTML content from file
       this.loadWebviewContent(webviewView);
@@ -56,10 +57,13 @@ export class BreakBullyActivityBarProviderImpl implements BreakBullyActivityBarP
       this.updateStats(state.breakStats);
       this.updateStatus();
 
-      console.log('resolveWebviewView completed successfully');
+      // Send initial mood data if advanced features are enabled
+      this.sendInitialMoodData();
+
+      Logger.log('resolveWebviewView completed successfully');
     } catch (error) {
-      console.error('Error in resolveWebviewView:', error);
-      vscode.window.showErrorMessage(`Break Bully: Error initializing webview: ${(error as Error).message}`);
+      Logger.error('Error in resolveWebviewView:', error);
+      vscode.window.showErrorMessage(`DotSense: Error initializing webview: ${(error as Error).message}`);
     }
   }
 
@@ -82,11 +86,13 @@ export class BreakBullyActivityBarProviderImpl implements BreakBullyActivityBarP
       const onboardingCssUri = webviewView.webview.asWebviewUri(onboardingCssPath);
 
       // Convert JS file paths to webview URIs
+      const loggerJsPath = vscode.Uri.joinPath(this._extensionUri, 'out', 'src', 'views', 'logger.js');
       const uiJsPath = vscode.Uri.joinPath(this._extensionUri, 'out', 'src', 'views', 'ui.js');
       const onboardingJsPath = vscode.Uri.joinPath(this._extensionUri, 'out', 'src', 'views', 'onboarding.js');
       const animationsJsPath = vscode.Uri.joinPath(this._extensionUri, 'out', 'src', 'views', 'animations.js');
       const mainJsPath = vscode.Uri.joinPath(this._extensionUri, 'out', 'src', 'views', 'main.js');
 
+      const loggerJsUri = webviewView.webview.asWebviewUri(loggerJsPath);
       const uiJsUri = webviewView.webview.asWebviewUri(uiJsPath);
       const onboardingJsUri = webviewView.webview.asWebviewUri(onboardingJsPath);
       const animationsJsUri = webviewView.webview.asWebviewUri(animationsJsPath);
@@ -98,6 +104,7 @@ export class BreakBullyActivityBarProviderImpl implements BreakBullyActivityBarP
       html = html.replace('features.css', featuresCssUri.toString());
       html = html.replace('onboarding.css', onboardingCssUri.toString());
 
+      html = html.replace('logger.js', loggerJsUri.toString());
       html = html.replace('ui.js', uiJsUri.toString());
       html = html.replace('onboarding.js', onboardingJsUri.toString());
       html = html.replace('animations.js', animationsJsUri.toString());
@@ -105,9 +112,9 @@ export class BreakBullyActivityBarProviderImpl implements BreakBullyActivityBarP
 
       // Set the HTML content
       webviewView.webview.html = html;
-      console.log('Webview HTML content loaded successfully from:', htmlPath.fsPath);
+      Logger.log('Webview HTML content loaded successfully from:', htmlPath.fsPath);
     } catch (error) {
-      console.error('Failed to load webview content:', error);
+      Logger.error('Failed to load webview content:', error);
 
       // Fallback to simple HTML if file loading fails
       webviewView.webview.html = this.getFallbackHtml();
@@ -121,7 +128,7 @@ export class BreakBullyActivityBarProviderImpl implements BreakBullyActivityBarP
       <head>
           <meta charset="UTF-8">
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>Break Bully</title>
+          <title>DotSense</title>
           <style>
               body {
                   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
@@ -195,7 +202,7 @@ export class BreakBullyActivityBarProviderImpl implements BreakBullyActivityBarP
       </head>
       <body>
           <div class="header">
-              <h1 class="title">Break Bully</h1>
+              <h1 class="title">DotSense</h1>
               <div class="status"></div>
           </div>
 
@@ -241,14 +248,14 @@ export class BreakBullyActivityBarProviderImpl implements BreakBullyActivityBarP
   }
 
   private handleWebviewMessage(message: WebviewMessage): void {
-    console.log('Received message from webview:', message.command, message.data);
+    Logger.log(`Received message from webview: ${message.command}`, message.data);
 
     switch (message.command) {
       case 'takeBreak':
         takeBreak();
         break;
       case 'openSettings':
-        vscode.commands.executeCommand('breakBully.openSettings');
+        vscode.commands.executeCommand('dotsense.openSettings');
         break;
       case 'showTimer':
         vscode.window.showInformationMessage(`Timer started for ${(message.data as { duration: number })?.duration} seconds`);
@@ -259,19 +266,19 @@ export class BreakBullyActivityBarProviderImpl implements BreakBullyActivityBarP
         }
         break;
       case 'requestInitialData':
-        console.log('Sending initial data to webview...');
+        Logger.log('Sending initial data to webview...');
         this.sendInitialData();
         break;
       case 'requestTimerStatus':
-        console.log('Sending timer status to webview...');
+        Logger.log('Sending timer status to webview...');
         this.sendTimerStatus();
         break;
       case 'requestOnboardingStatus':
-        console.log('Sending onboarding status to webview...');
+        Logger.log('Sending onboarding status to webview...');
         this.sendOnboardingStatus();
         break;
       case 'showStretch':
-        showStretchExercise();
+        showStretchExercise(this._extensionUri);
         break;
       case 'breathingExercise':
         showBreathingExercise();
@@ -280,7 +287,7 @@ export class BreakBullyActivityBarProviderImpl implements BreakBullyActivityBarP
         showEyeExercise();
         break;
       case 'showWaterReminder':
-        showWaterReminder();
+        showWaterReminder(this._extensionUri);
         break;
       case 'getWorkRestModels': {
         const models = workRestModels;
@@ -338,7 +345,7 @@ export class BreakBullyActivityBarProviderImpl implements BreakBullyActivityBarP
       case 'setOnboardingWorkRestModel': {
         const data = message.data as { modelId: string };
         // Save the selected model for onboarding
-        const config = vscode.workspace.getConfiguration('breakBully');
+        const config = vscode.workspace.getConfiguration('dotsense');
         config.update('workRestModel', data.modelId, vscode.ConfigurationTarget.Global).then(() => {
           // Start the work-rest session with the selected model
           const model = getWorkRestModelById(data.modelId);
@@ -361,7 +368,7 @@ export class BreakBullyActivityBarProviderImpl implements BreakBullyActivityBarP
           // Update timer status immediately
           this.sendTimerStatus();
         } catch (error) {
-          console.error('Failed to change work-rest model:', error);
+          Logger.error('Failed to change work-rest model:', error);
           this._view?.webview.postMessage({
             command: 'workRestModelChanged',
             data: { success: false, error: (error as Error).message }
@@ -376,10 +383,10 @@ export class BreakBullyActivityBarProviderImpl implements BreakBullyActivityBarP
         this.exportAchievements();
         break;
       case 'showAchievementStats':
-        vscode.commands.executeCommand('breakBully.showAchievements');
+        vscode.commands.executeCommand('dotsense.showAchievements');
         break;
       case 'showAchievementsGallery':
-        vscode.commands.executeCommand('breakBully.showAchievements');
+        vscode.commands.executeCommand('dotsense.showAchievements');
         break;
       case 'createCustomGoal':
         this.createCustomGoal();
@@ -408,16 +415,16 @@ export class BreakBullyActivityBarProviderImpl implements BreakBullyActivityBarP
         break;
       case 'onboardingCompleted':
         // Mark onboarding as completed in global state
-        { const onboardingConfig = vscode.workspace.getConfiguration('breakBully');
+        { const onboardingConfig = vscode.workspace.getConfiguration('dotsense');
         onboardingConfig.update('onboardingCompleted', true, vscode.ConfigurationTarget.Global).then(() => {
-          console.log('Onboarding marked as completed');
+          Logger.log('Onboarding marked as completed');
         });
         break; }
       case 'openChangeWorkoutPanel':
-        vscode.commands.executeCommand('breakBully.changeWorkout');
+        vscode.commands.executeCommand('dotsense.changeWorkout');
         break;
       case 'openTimeBlocking':
-        vscode.commands.executeCommand('breakBully.openTimeBlocking');
+        vscode.commands.executeCommand('dotsense.openTimeBlocking');
         break;
       case 'getActivityIntegrationSettings':
         this.sendActivityIntegrationSettings();
@@ -446,6 +453,21 @@ export class BreakBullyActivityBarProviderImpl implements BreakBullyActivityBarP
       case 'installCodeTune':
         this.installCodeTune();
         break;
+      case 'getCurrentMood':
+        this.sendCurrentMood();
+        break;
+      case 'getMoodInterventions':
+        this.sendMoodInterventions(message.data as { mood: string; intensity: number });
+        break;
+      case 'applyMoodIntervention':
+        this.applyMoodIntervention(message.data as { type: string });
+        break;
+      case 'getMoodAnalytics':
+        this.sendMoodAnalytics(message.data as { timeRange: string });
+        break;
+      case 'showSettingsModal':
+        this.showSettingsModal();
+        break;
     }
   }
 
@@ -460,7 +482,7 @@ export class BreakBullyActivityBarProviderImpl implements BreakBullyActivityBarP
 
   updateStatus(): void {
     if (this._view) {
-      const config = vscode.workspace.getConfiguration('breakBully');
+      const config = vscode.workspace.getConfiguration('dotsense');
 
       this._view.webview.postMessage({
         command: 'updateStatus',
@@ -477,7 +499,7 @@ export class BreakBullyActivityBarProviderImpl implements BreakBullyActivityBarP
 
   private sendInitialData(): void {
     if (this._view) {
-      const config = vscode.workspace.getConfiguration('breakBully');
+      const config = vscode.workspace.getConfiguration('dotsense');
 
       // Send initial stats
       this._view.webview.postMessage({
@@ -508,9 +530,24 @@ export class BreakBullyActivityBarProviderImpl implements BreakBullyActivityBarP
     }
   }
 
+  private async sendInitialMoodData(): Promise<void> {
+    if (this._view) {
+      try {
+        // Check if advanced features are enabled
+        const activityLevel = activitySettings.getSettings().integrationLevel;
+        if (activityLevel === 'advanced') {
+          // Send initial mood data
+          await this.sendCurrentMood();
+        }
+      } catch (error) {
+        Logger.debug('Advanced mood features not available:', error);
+      }
+    }
+  }
+
   private sendTimerStatus(): void {
     if (this._view) {
-      const config = vscode.workspace.getConfiguration('breakBully');
+      const config = vscode.workspace.getConfiguration('dotsense');
 
       // Check if there's an active work-rest session
       const timeRemaining = workRestService.getTimeRemaining ? workRestService.getTimeRemaining() : null;
@@ -535,21 +572,21 @@ export class BreakBullyActivityBarProviderImpl implements BreakBullyActivityBarP
                   const delayMinutes = smartScheduler.getBreakDelayMinutes ? smartScheduler.getBreakDelayMinutes() : 0;
                   if (delayMinutes > 0) {
                     nextReminder = baseTime + (delayMinutes * 60 * 1000);
-                    console.log(`ML: Delaying break by ${delayMinutes} minutes due to flow state`);
+                    Logger.log(`ML: Delaying break by ${delayMinutes} minutes due to flow state`);
                   }
                 }
               } else if (timeRemaining.phase === 'rest') {
                 // Suggest appropriate break duration
                 const mlBreakDuration = smartScheduler.suggestBreakDuration ? smartScheduler.suggestBreakDuration() : 10;
-                console.log(`ML suggests break duration: ${mlBreakDuration} minutes`);
+                Logger.log(`ML suggests break duration: ${mlBreakDuration} minutes`);
               }
             } catch (schedulerError) {
-              console.debug('SmartScheduler integration failed, using basic timing:', schedulerError);
+              Logger.debug('SmartScheduler integration failed, using basic timing:', schedulerError);
               mlEnhanced = false;
             }
           }
         } catch (error) {
-          console.debug('ML timing integration not available, using basic timing:', (error as Error).message);
+          Logger.debug('ML timing integration not available, using basic timing:', (error as Error).message);
           mlEnhanced = false;
         }
 
@@ -579,19 +616,19 @@ export class BreakBullyActivityBarProviderImpl implements BreakBullyActivityBarP
               // Check if ML wants to suggest a break at this time
               if (smartScheduler.shouldSuggestBreak && smartScheduler.shouldSuggestBreak()) {
                 const suggestion = smartScheduler.getBreakSuggestion ? smartScheduler.getBreakSuggestion() : null;
-                console.log(`ML suggests break: ${suggestion}`);
+                Logger.log(`ML suggests break: ${suggestion}`);
               }
 
               // Get ML break duration suggestion for when break actually starts
               const mlBreakDuration = smartScheduler.suggestBreakDuration ? smartScheduler.suggestBreakDuration() : 10;
-              console.log(`ML plans to suggest break duration: ${mlBreakDuration} minutes`);
+              Logger.log(`ML plans to suggest break duration: ${mlBreakDuration} minutes`);
             } catch (schedulerError) {
-              console.debug('SmartScheduler suggestion failed, using basic timing:', schedulerError);
+              Logger.debug('SmartScheduler suggestion failed, using basic timing:', schedulerError);
               mlEnhanced = false;
             }
           }
         } catch (error) {
-          console.debug('ML suggestion integration not available, using basic timing:', (error as Error).message);
+          Logger.debug('ML suggestion integration not available, using basic timing:', (error as Error).message);
           mlEnhanced = false;
         }
 
@@ -610,7 +647,7 @@ export class BreakBullyActivityBarProviderImpl implements BreakBullyActivityBarP
 
   private sendOnboardingStatus(): void {
     if (this._view) {
-      const config = vscode.workspace.getConfiguration('breakBully');
+      const config = vscode.workspace.getConfiguration('dotsense');
       const onboardingCompleted = config.get('onboardingCompleted', false);
 
       this._view.webview.postMessage({
@@ -693,7 +730,7 @@ export class BreakBullyActivityBarProviderImpl implements BreakBullyActivityBarP
         }
       } catch (error) {
         // If activity monitor is not available, use basic tracking
-        console.debug('Enhanced activity tracking not available, using basic tracking:', error);
+        Logger.debug('Enhanced activity tracking not available, using basic tracking:', error);
         isIdle = state.screenTimeStats.isIdle;
         activityText = isIdle ? '⏱️ Idle' : '🚀 Actively coding';
         enhancedTracking = false;
@@ -769,7 +806,7 @@ export class BreakBullyActivityBarProviderImpl implements BreakBullyActivityBarP
 
     // Create a temporary file with the export data
     const exportContent = JSON.stringify(exportData, null, 2);
-    const fileName = `break-bully-achievements-${new Date().toISOString().split('T')[0]}.json`;
+    const fileName = `dotsense-achievements-${new Date().toISOString().split('T')[0]}.json`;
 
     // Use VSCode's file save dialog
     vscode.window.showSaveDialog({
@@ -1005,7 +1042,7 @@ ${stats.fastestAchievement ? `⚡ Fastest Achievement: ${stats.fastestAchievemen
           // Update timer status immediately
           this.sendTimerStatus();
         } catch (error) {
-          console.error('Failed to change work-rest model:', error);
+          Logger.error('Failed to change work-rest model:', error);
           this._view?.webview.postMessage({
             command: 'workRestModelChanged',
             data: { success: false, error: (error as Error).message }
@@ -1086,7 +1123,7 @@ ${stats.fastestAchievement ? `⚡ Fastest Achievement: ${stats.fastestAchievemen
       }
 
     } catch (error) {
-      console.error('Failed to apply settings:', error);
+      Logger.error('Failed to apply settings:', error);
 
       if (this._view) {
         this._view.webview.postMessage({
@@ -1116,7 +1153,7 @@ ${stats.fastestAchievement ? `⚡ Fastest Achievement: ${stats.fastestAchievemen
       this.sendTimerStatus();
 
     } catch (error) {
-      console.error('Failed to start work-rest session:', error);
+      Logger.error('Failed to start work-rest session:', error);
       vscode.window.showErrorMessage(`Failed to start session: ${(error as Error).message}`);
     }
   }
@@ -1131,7 +1168,7 @@ ${stats.fastestAchievement ? `⚡ Fastest Achievement: ${stats.fastestAchievemen
       this.sendTimerStatus();
 
     } catch (error) {
-      console.error('Failed to stop work-rest session:', error);
+      Logger.error('Failed to stop work-rest session:', error);
       vscode.window.showErrorMessage(`Failed to stop session: ${(error as Error).message}`);
     }
   }
@@ -1160,7 +1197,7 @@ ${stats.fastestAchievement ? `⚡ Fastest Achievement: ${stats.fastestAchievemen
     import('../services/codeTuneIntegration').then(codeTune => {
       codeTune.CodeTuneIntegration.openCodeTune();
     }).catch(error => {
-      console.debug('CodeTune integration not available:', error);
+      Logger.debug('CodeTune integration not available:', error);
     });
   }
 
@@ -1170,12 +1207,141 @@ ${stats.fastestAchievement ? `⚡ Fastest Achievement: ${stats.fastestAchievemen
       vscode.window.showInformationMessage('CodeTune suggestions have been disabled.', 'OK');
       this.hideCodeTuneSuggestion();
     }).catch(error => {
-      console.debug('CodeTune integration not available:', error);
+      Logger.debug('CodeTune integration not available:', error);
     });
   }
 
   private installCodeTune(): void {
     vscode.env.openExternal(vscode.Uri.parse('vscode:extension/FreeRave.codetune'));
     this.hideCodeTuneSuggestion();
+  }
+
+  private async sendCurrentMood(): Promise<void> {
+    if (this._view) {
+      try {
+        const { MoodDetectionAnalyzer } = await import('../services/activityIntegration/moodDetectionAnalyzer');
+        const moodAnalyzer = MoodDetectionAnalyzer.getInstance();
+        const currentMood = moodAnalyzer.getCurrentMood();
+
+        this._view.webview.postMessage({
+          command: 'currentMood',
+          data: currentMood ? {
+            mood: currentMood.currentMood,
+            confidence: Math.round(currentMood.confidence * 100),
+            intensity: currentMood.intensity,
+            triggers: currentMood.triggers,
+            trend: currentMood.trend,
+            duration: Math.round((Date.now() - currentMood.timestamp) / (1000 * 60)) // minutes
+          } : null
+        });
+      } catch (error) {
+        Logger.error('Failed to get current mood:', error);
+        this._view.webview.postMessage({
+          command: 'currentMood',
+          data: null
+        });
+      }
+    }
+  }
+
+  private async sendMoodInterventions(data: { mood: string; intensity: number }): Promise<void> {
+    if (this._view) {
+      try {
+        const { MoodDetectionAnalyzer } = await import('../services/activityIntegration/moodDetectionAnalyzer');
+        const moodAnalyzer = MoodDetectionAnalyzer.getInstance();
+        const interventions = moodAnalyzer.getMoodInterventions(
+          data.mood as MoodState,
+          data.intensity,
+          [] // No recent interventions for now
+        );
+
+        this._view.webview.postMessage({
+          command: 'moodInterventions',
+          data: interventions.map((intervention: MoodIntervention) => ({
+            type: intervention.type,
+            reason: intervention.reason,
+            urgency: intervention.urgency,
+            duration: intervention.duration,
+            expectedEffectiveness: Math.round(intervention.expectedEffectiveness * 100)
+          }))
+        });
+      } catch (error) {
+        Logger.error('Failed to get mood interventions:', error);
+        this._view.webview.postMessage({
+          command: 'moodInterventions',
+          data: []
+        });
+      }
+    }
+  }
+
+  private async applyMoodIntervention(data: { type: string }): Promise<void> {
+    try {
+      const { MoodDetectionAnalyzer } = await import('../services/activityIntegration/moodDetectionAnalyzer');
+      const moodAnalyzer = MoodDetectionAnalyzer.getInstance();
+      moodAnalyzer.recordInterventionSuccess(data.type, true);
+
+      // Trigger the appropriate intervention based on type
+      switch (data.type) {
+        case 'breathing':
+          showBreathingExercise();
+          break;
+        case 'stretch':
+          showStretchExercise();
+          break;
+        case 'break':
+          takeBreak();
+          break;
+        case 'meditation':
+          // For now, show breathing as meditation alternative
+          showBreathingExercise();
+          break;
+        case 'walk':
+          vscode.window.showInformationMessage('Time for a short walk! Take a break from your screen.');
+          break;
+        default:
+          Logger.debug('Unknown intervention type:', data.type);
+      }
+
+      vscode.window.showInformationMessage(`Applied ${data.type} intervention for mood improvement!`);
+    } catch (error) {
+      Logger.error('Failed to apply mood intervention:', error);
+      vscode.window.showErrorMessage('Failed to apply mood intervention');
+    }
+  }
+
+  private async sendMoodAnalytics(data: { timeRange: string }): Promise<void> {
+    if (this._view) {
+      try {
+        const { MoodDetectionAnalyzer } = await import('../services/activityIntegration/moodDetectionAnalyzer');
+        const moodAnalyzer = MoodDetectionAnalyzer.getInstance();
+        const analytics = moodAnalyzer.getMoodAnalytics(data.timeRange as 'day' | 'week' | 'month');
+
+        this._view.webview.postMessage({
+          command: 'moodAnalytics',
+          data: {
+            dominantMoods: analytics.dominantMoods,
+            moodTransitions: analytics.moodTransitions,
+            peakStressTimes: analytics.peakStressTimes,
+            interventionEffectiveness: analytics.interventionEffectiveness
+          }
+        });
+      } catch (error) {
+        Logger.error('Failed to get mood analytics:', error);
+        this._view.webview.postMessage({
+          command: 'moodAnalytics',
+          data: null
+        });
+      }
+    }
+  }
+
+  private showSettingsModal(): void {
+    if (this._view) {
+      // Send message to webview to show the settings modal
+      this._view.webview.postMessage({
+        command: 'showSettingsModal'
+      });
+    }
   }
 }

@@ -1,4 +1,4 @@
-// TypeScript type definitions for Break Bully extension
+// TypeScript type definitions for DotSense extension
 
 import * as vscode from 'vscode';
 
@@ -63,7 +63,7 @@ export interface Achievement {
   progress?: number;
 }
 
-export interface BreakBullyConfiguration {
+export interface DotSenseConfiguration {
   enabled: boolean;
   interval: number;
   showNotification: boolean;
@@ -366,7 +366,7 @@ export interface WebviewMessage {
   data?: unknown;
 }
 
-export interface BreakBullyActivityBarProvider extends vscode.WebviewViewProvider {
+export interface DotSenseActivityBarProvider extends vscode.WebviewViewProvider {
   updateStats(stats: BreakStats): void;
   updateStatus(): void;
   updateScreenTime(): void;

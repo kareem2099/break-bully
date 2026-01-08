@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { ExtensionStorage } from '../utils/storage';
-import { BreakBullyActivityBarProvider, BreakStats, ScreenTimeStats, WellnessGoal, WellnessChallenge, CustomExercise, SmartNotificationsData, Achievement, DailyWellnessData } from '../types';
+import { DotSenseActivityBarProvider, BreakStats, ScreenTimeStats, WellnessGoal, WellnessChallenge, CustomExercise, SmartNotificationsData, Achievement, DailyWellnessData } from '../types';
 import { BaseActivityMonitor } from '../services/activityIntegration/baseActivityMonitor';
 
 export const state = {
@@ -11,7 +11,7 @@ export const state = {
   statusBarItem: undefined as vscode.StatusBarItem | undefined,
   nextReminderTime: null as number | null,
   storage: undefined as ExtensionStorage | undefined,
-  activityBarProvider: null as BreakBullyActivityBarProvider | null,
+  activityBarProvider: null as DotSenseActivityBarProvider | null,
   activityMonitor: undefined as BaseActivityMonitor | undefined,
 
   // Data loaded from storage
@@ -61,10 +61,19 @@ export function initializeState(context: vscode.ExtensionContext): void {
   state.wellnessGoals = state.storage.loadWellnessGoals();
   state.wellnessChallenges = state.storage.loadWellnessChallenges();
 
+  // Convert date strings back to Date objects for screen time stats
+  state.screenTimeStats = {
+    ...state.screenTimeStats,
+    sessionStartTime: state.screenTimeStats.sessionStartTime ? new Date(state.screenTimeStats.sessionStartTime) : null,
+    lastBreakTime: state.screenTimeStats.lastBreakTime ? new Date(state.screenTimeStats.lastBreakTime) : null,
+    lastActivityTime: state.screenTimeStats.lastActivityTime ? new Date(state.screenTimeStats.lastActivityTime) : state.screenTimeStats.lastActivityTime,
+    codingSessionStart: state.screenTimeStats.codingSessionStart ? new Date(state.screenTimeStats.codingSessionStart) : null
+  };
+
   // Load achievements and convert unlockedAt strings back to Date objects
   state.achievements = state.storage.loadAchievements().map(achievement => ({
     ...achievement,
-    unlockedAt: achievement.unlockedAt ? new Date(achievement.unlockedAt) : achievement.unlockedAt
+    unlockedAt: achievement.unlockedAt ? new Date(achievement.unlockedAt) : undefined
   })) as Achievement[];
 
   state.dailyWellnessData = state.storage.loadDailyWellnessData();
